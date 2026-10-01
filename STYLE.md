@@ -37,7 +37,8 @@ IDEA.md STYLE.md README.md DEPLOY.md
   as `dist/library/index.html`, built from `work/library`, so no one can edit output by
   mistake. A section folder in `src/` holds that section's own sources.
 - A page links `assets/css/site.css`; from a section folder, `../assets/css/site.css`.
-- Full-height app pages (the database) put `class="app"` on `<body>`. Document pages use
+- Full-height app pages (the database, the library) put `class="app"` on `<body>` and use the
+  sheet shell: masthead, tabs, control bars, a scrolling grid. Document pages use
   `<main class="doc">`. The app shell only applies to `body.app`.
 - A section keeps its own pages in `src/<section>/`.
 - Page-specific CSS goes in a small `<style>` in that page. Nothing page-specific goes in
@@ -110,20 +111,22 @@ not a display job.
 ## Library
 
 `dist/library/index.html` is **generated** by `work/library/build/build_shelf.py` from the shelf
-in `work/library/data`, and `build_site.py` runs it on every build. It is a document page: it
-links `../assets/css/site.css` rather than inlining it, so restyling the site restyles it.
+in `work/library/data`, and `build_site.py` runs it on every build. It is an app page — the same
+sheet shell as the database — with two tabs: **Shelf** (one row per file) and **Links**. It links
+`../assets/css/site.css` rather than inlining it, so restyling the site restyles it.
 
 ```
 work/library/data/sources.csv            the shelf: one row per work. Edit this
 work/library/data/tags.csv               the tag vocabulary; a tag is declared before it is used
+work/library/data/links.csv              one link per row: work, label, url, source
 work/library/build/build_shelf.py        csv -> dist/library/index.html + SHELF.md + TAGS.md
 work/library/build/seed_from_corpus.py   one-time seed, kept for provenance
 src/library/notes/                       one note per work (step 2)
 ```
 
 The shelf is 45 sources. The build fails on a tag that is not declared, a file that is not on
-disk, or two rows on one file; it warns on a row with no year and on a tag used once. Columns,
-rules and the note format: `work/library/README.md`.
+disk, a link pointing at a work that is not on the shelf, or two rows on one file; it warns on a
+row with no year and on a tag used once. Columns, tabs and the note format: `work/library/README.md`.
 
 ## Not taramoves
 
