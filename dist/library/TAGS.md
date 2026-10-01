@@ -37,7 +37,7 @@
 | #intersubjectivity | 1 | concept | between bodies: intercorporeality |
 | #lecture | 1 | form | the lecture and the performance lecture |
 | #neuroscience | 1 | discipline | mirror mechanisms and the body |
-| #participation | 1 | concept | the audience as co-producer |
+| #participation | 1 | concept | people as the central artistic medium (Bishop): not interactivity, not audience engagement in general |
 | #pedagogy | 1 | discipline | teaching and learning |
 | #posthumanism | 1 | concept | virtual bodies and information |
 | #practiceasresearch | 1 | method | knowledge made by making |
