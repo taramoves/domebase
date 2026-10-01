@@ -92,3 +92,9 @@ node work/lab/check_family.cjs src/lab/3Dmath/fam_*.js    # every shape, at defa
 `work/lab/CONTRACT.md` is what a family file has to do: the interface, the rules, and the
 invariant its `verify()` must state with a number. Both checks report zero problems before a
 family joins the page.
+
+`dist/lab/instrument/index.html` is also hand-written and copied in by the build: a document
+page, not a spreadsheet, for the audience interaction system. It carries its own diagrams as
+inline SVG — the parts, the objects table, placement, playback, audio routing, the seat-error
+cross-section — so the page needs nothing but the one stylesheet. Its source is
+`src/lab/instrument/index.html`, and it is edited by hand.

@@ -174,6 +174,13 @@ cells, each with a sweep checkbox that animates it. No mesh files, no library, n
 Each shape states its own invariant in `verify()` and the checks must report zero problems
 before a family joins the page.
 
+`dist/lab/instrument/index.html` is hand-written and copied in by the build, and it is the one
+document page in the project with prose in it: the technology of the audience interaction
+system. It keeps the sheet's tokens — black on white, Arial, hairline rules, tables — without
+the spreadsheet shell: no tabs, no sticky headers, a single 760px column. Its diagrams are
+inline SVG in the same greys and black hairlines, and a shape that is active is filled where a
+resting one is hollow, since the sheet carries no second colour.
+
 ## Not taramoves
 
 `C:\Users\taram\OneDrive\Desktop\taramoves` (the `/dome/` pages on taramoves.com) is a
