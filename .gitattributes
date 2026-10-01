@@ -1,0 +1,16 @@
+# Keep the repo and every working tree byte-identical: the site is served as-is, so line
+# endings must not depend on which machine built it. Windows was writing CRLF into the
+# working copy while git committed LF, which made the deployed bytes differ from the local
+# file by one CR per line.
+* text=auto eol=lf
+
+# binary — never touched by any conversion
+*.woff binary
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.sqlite binary
+*.xlsx binary
