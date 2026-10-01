@@ -379,3 +379,31 @@ list): uploads through the page need a serverless endpoint (Vercel functions cap
 with a token), abuse control, and a contributions section in the review sheet. Auto-ingest on an
 accepted contribution needs a token plus a deploy hook, and depends on the build running in CI —
 which is still unverified.
+
+## 12. The catalogue source: FDDB (1 Oct 2026)
+
+**The Fulldome Database** (`fddb.org`) is the industry listing of shows available to planetariums and
+dome theatres. It is a *different kind of claim* from a festival programme: a catalogue entry says a
+work exists and is bookable, not that it played anywhere we hold. It enters as proposals, never edits.
+
+- **What it is**: 1,068 show pages listed in `fddb.org/shows/sitemap.xml`; four entries are already
+  dead (the site 404s them) and are kept in `catalogue.csv` with `http=404` so the count reconciles.
+- **How it is read**: each page's own `schema.org/Movie` JSON-LD (name, description, image,
+  datePublished, duration, genre, keywords, language, audience) plus the visible labels for what the
+  JSON-LD omits — `Type`, `Genre`, `Release date`, `Produced by` and the producing org's own page.
+- **The trap it set**: the listing page hands its own blurb to every show that has none of its own,
+  so 373 of 1,064 rows would have arrived carrying the same site tagline as their "description". Those
+  are rejected and `description_origin` records whether a description is the show's own (`json-ld`) or
+  absent. Real coverage: **691 of 1,064 shows (65%) have a description of their own.**
+- **What it cannot settle**: no person credits. 151 rows name a producing organisation; none name a
+  director. Our identity rule needs identical spelling *and* a shared artist, so a title match here is
+  a **question for a person, never a silent fill** — which is why the queue has an `identity` group
+  that no other source produced.
+- **Rights**: `robots.txt` allows `/shows`; no terms page states a licence for the text. Description
+  text is the producers'/catalogue's own synopsis. We carry it with `description_source` naming FDDB
+  and `description_page` linking the show, and mark the record `filled:fddb` (searchable as
+  `flags:filled`). If a paraphrase or removal is wanted later, the whole ingestion is one file.
+- **Storage cost, measured**: the cached crawl is 66 MB gzipped for 1,064 pages (raw pages ~283 MB,
+  not kept raw); `catalogue.csv` 677 KB, `proposals.csv` 618 KB. The published page grew from 3.72 MB
+  to 3.80 MB raw for 623 fills — a description costs about 1 KB. The crawl cache is *not* in git and
+  is prunable to the parsed rows once a catalogue is verified.
