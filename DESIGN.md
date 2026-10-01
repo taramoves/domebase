@@ -352,3 +352,30 @@ works rather than new events. The untracked dome leads it produced are **Fulldom
 Tinto Alcan, Adler, Clark, Fiske, Hamburg…) — planetariums matter as a source type this project does
 not yet read, because they produce their own dome shows.
 
+## 11. Contributions — the form on a record (1 Oct 2026)
+
+Asked for: on a film's record, a visitor can add up to three images, a video link, a description, and
+correct any field.
+
+**What a static site can do.** There is no backend and no server, so the form cannot write to the
+database. It **composes** the submission and hands it over; the composed text is shown on the page
+before it goes anywhere, and can be copied:
+
+- **email it** — leads, because it needs no account. Opens a prefilled message to the address in the
+  footer; image files are attached to that message.
+- **open a GitHub issue** — the same body in a prefilled issue on the public repo (issues enabled).
+  Needs a GitHub account, but it hosts the image files, which is how "up to three images" works without
+  a storage bill.
+- **copy** — for anything else, or when leaving the page is not wanted.
+
+**Everything is a proposal.** The form says so and the pipeline enforces it: a submission is a claim
+with a source, which is checked and then lands as a row in `qa/corrections.csv` or
+`enrichment/work_fills.csv`, exactly like a Hubblo proposal. Nothing a visitor types changes the
+published record on its own.
+
+**Not built, and what each would need** (see the assistant's note in the same session for the full
+list): uploads through the page need a serverless endpoint (Vercel functions cap a request body at
+4.5 MB), object storage (Vercel Blob or R2), a queue that is not email (KV/Postgres, or the GitHub API
+with a token), abuse control, and a contributions section in the review sheet. Auto-ingest on an
+accepted contribution needs a token plus a deploy hook, and depends on the build running in CI —
+which is still unverified.

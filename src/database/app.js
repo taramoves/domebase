@@ -811,6 +811,173 @@ function exportCSV(){
 }
 function closeD(){ $('#d').classList.remove('on'); }
 function kv(pairs){ return `<div class="kv">${pairs.filter(p => p[1]).map(p => `<div>${esc(p[0])}</div><div>${p[1]}</div>`).join('')}</div>`; }
+// ---------------------------------------------------------------- contribute
+// A static site has no backend, so this form cannot write to the database itself. It composes the
+// submission and hands it over: GitHub opens a prefilled issue, where the images are attached by
+// dragging them in (GitHub then hosts them). Everything here is a proposal — an accepted one goes
+// through the same review queue as any other source, and nothing changes on the site until then.
+const CF_FIELDS = [
+  ['cf-title', 'title',      'title'],
+  ['cf-artists', 'artist',   'artists / credits'],
+  ['cf-country', 'country',  'country'],
+  ['cf-years', 'year',       'festival years'],
+  ['cf-runtime', 'runtime',  'length'],
+  ['cf-company', 'company',  'production company'],
+  ['cf-fests', 'fest',       'festivals this played'],
+];
+
+function cfCurrent(mid){
+  const f = filmById[mid] || {titles: [], artists: [], countries: [], years: [], festivals: []};
+  const scr = DATA.screens.filter(r => r.master_id === mid);
+  const r0 = scr[0] || {};
+  const countries = (f.countries || []).filter(Boolean).join(', ');
+  return {
+    title: f.canonical || '',
+    artists: (f.artists || []).join('; '),
+    country: countries,
+    years: (f.years || []).join(', '),
+    runtime: r0.duration || '',
+    company: r0.production_company || '',
+    fests: (f.festivals || []).join(', '),
+    description: (f.description || '').trim(),
+    film_url: (f.film_url || '').trim(),
+  };
+}
+
+function cfBody(mid){
+  const cur = cfCurrent(mid), f = filmById[mid] || {};
+  const scr = DATA.screens.filter(r => r.master_id === mid);
+  const v = id => ($('#' + id) && $('#' + id).value || '').trim();
+  const changes = [], images = [];
+  for (const [id, name, label] of CF_FIELDS){
+    const now = v(id);
+    const was = {title: cur.title, artist: cur.artists, country: cur.country, year: cur.years,
+                 runtime: cur.runtime, company: cur.company, fest: cur.fests}[name];
+    if (now && now !== was) changes.push(`  ${label}: ${was || '(empty)'} -> ${now}`);
+  }
+  const desc = ($('#cf-desc') && $('#cf-desc').value || '').trim();
+  if (desc && desc !== cur.description) changes.push('  description: (see below)');
+  const url = v('cf-url');
+  if (url && url !== cur.film_url) changes.push(`  film page: ${cur.film_url || '(none)'} -> ${url}`);
+
+  for (const n of [1, 2, 3]){
+    const img = v('cf-img' + n);
+    if (img) images.push(`  ${n}. ${img}`);
+  }
+  const video = v('cf-video');
+  const source = v('cf-src'), by = v('cf-by');
+  const slug = (cur.title || mid).replace(/\s+/g, ' ').slice(0, 70);
+
+  const L = [];
+  L.push('domebase contribution');
+  L.push(`record: ${mid}  ${cur.title}`);
+  L.push(`page: https://domebase.vercel.app/database/#v=films&q=${encodeURIComponent(cur.title)}`);
+  const seen = [...new Set(scr.map(r => r.festival_id + ' ' + r.edition_year))];
+  L.push(`known to be: ${seen.join(', ') || 'nothing yet'}`);
+  L.push('');
+  L.push(changes.length ? 'changes' : 'changes\n  (none proposed)');
+  if (changes.length) L.push(changes.join('\n'));
+  if (desc) L.push('\ndescription proposed\n' + desc.split('\n').map(l => '  ' + l).join('\n'));
+  L.push('\nvideo\n  ' + (video || '(none)'));
+  L.push('\nimages\n' + (images.length ? images.join('\n') : '  (none)'));
+  if (images.length < 3) L.push('  (attach image files where you send this — the GitHub issue hosts them, or attach them to the email)');
+  L.push('\nsource\n  ' + (source || '(none given — a change without a source cannot be checked)'));
+  L.push('\nfrom\n  ' + (by || '(anonymous)'));
+  return L.join('\n');
+}
+
+function cfIssueURL(mid){
+  const cur = cfCurrent(mid);
+  const title = `[contribution] ${mid} ${cur.title}`.slice(0, 100);
+  const body = cfBody(mid);
+  const short = body.length > 6000
+    ? body.slice(0, 6000) + '\n\n(body too long for this link — paste the whole thing from the copy button)'
+    : body;
+  return 'https://github.com/taramoves/domebase/issues/new'
+       + '?title=' + encodeURIComponent(title)
+       + '&body=' + encodeURIComponent(short);
+}
+
+function contributeBlock(mid){
+  const cur = cfCurrent(mid);
+  const row = (id, label, val, ph) =>
+    `<div class="row"><label>${esc(label)}</label>` +
+    `<input type="text" id="${id}" value="${esc(val)}" placeholder="${esc(ph || '')}" spellcheck="false"></div>`;
+  return `
+    <h3>Add to this record</h3>
+    <div class="cf">
+      <div class="note">Everything here becomes a proposal. It is checked against a source before it
+        changes the record, so the source box matters more than the rest.</div>
+      ${row('cf-title', 'title', cur.title, 'as printed')}
+      ${row('cf-artists', 'artists', cur.artists, 'director, other credits — separate with ;')}
+      ${row('cf-country', 'country', cur.country, 'as many as apply')}
+      ${row('cf-years', 'years', cur.years, 'e.g. 2019, 2021')}
+      ${row('cf-runtime', 'length', cur.runtime, 'e.g. 24 min')}
+      ${row('cf-company', 'production', cur.company, '')}
+      ${row('cf-fests', 'festivals', cur.fests, 'festivals it played')}
+      <div class="row"><label>description</label><textarea id="cf-desc" rows="4"
+        placeholder="what the work is — your words, or from a page you cite below">${esc(cur.description)}</textarea></div>
+      <div class="row"><label>video</label><input type="text" id="cf-video" value=""
+        placeholder="a link to a trailer or a recorded show" spellcheck="false"></div>
+      <div class="row"><label>images</label><div class="imgs">
+        <input type="text" id="cf-img1" value="" placeholder="image 1 — link" spellcheck="false">
+        <input type="text" id="cf-img2" value="" placeholder="image 2 — link" spellcheck="false">
+        <input type="text" id="cf-img3" value="" placeholder="image 3 — link" spellcheck="false">
+        <div class="note">up to three. A link is enough; for a file on your computer, drag it into the
+          GitHub page that opens and it will be hosted there. Say who to credit, and that we may
+          publish it.</div>
+      </div></div>
+      ${row('cf-url', 'film page', cur.film_url, 'the work’s own page, if it has one')}
+      ${row('cf-src', 'source', '', 'where you know this from — a link, a programme, a person')}
+      ${row('cf-by', 'from', '', 'your name or handle — optional')}
+      <div class="btns">
+        <a class="pill" id="cf-mail" href="mailto:taramoves@gmail.com">email it</a>
+        <button class="pill" id="cf-send">open a GitHub issue</button>
+        <button class="pill" id="cf-copy">copy</button>
+      </div>
+      <div class="out" id="cf-out" hidden></div>
+    </div>`;
+}
+
+function wireContribute(mid){
+  const send = $('#cf-send'), copy = $('#cf-copy'), mail = $('#cf-mail'), out = $('#cf-out');
+  if (!send) return;
+  const jump = $('#cf-jump');
+  if (jump) jump.onclick = () => {
+    const cf = document.querySelector('.cf');
+    if (cf) cf.scrollIntoView({block: 'start'});
+  };
+  const show = (msg) => { out.hidden = false; out.textContent = msg; };
+  const mailURL = () => {
+    const cur = cfCurrent(mid);
+    return 'mailto:taramoves@gmail.com?subject=' +
+      encodeURIComponent('[domebase] ' + mid + ' ' + cur.title) +
+      '&body=' + encodeURIComponent(cfBody(mid));
+  };
+  send.onclick = () => {
+    show(cfBody(mid) + '\n\nopening GitHub — sign in, check it, attach any image files by dragging them in, then press Submit.');
+    window.open(cfIssueURL(mid), '_blank', 'noopener');
+  };
+  copy.onclick = async () => {
+    const body = cfBody(mid);
+    show(body);
+    let ok = false;
+    try { await navigator.clipboard.writeText(body); ok = true; }
+    catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = body; document.body.appendChild(ta); ta.select();
+      ok = document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    copy.textContent = ok ? 'copied' : 'copy blocked — select the text above';
+    setTimeout(() => { copy.textContent = 'copy'; }, 2200);
+  };
+  mail.onclick = (e) => {
+    e.preventDefault();
+    show(cfBody(mid) + '\n\nopening your email — attach the image files to the message.');
+    location.href = mailURL();
+  };
+}
+
 function openDetail(id){
   if (id && id.startsWith('FM')) return openFilm(id);
   if (id && id.includes('|')) { const [f, y] = id.split('|'); return openFestival(f, y); }
@@ -883,7 +1050,8 @@ function openFilm(mid){
   const scr = DATA.screens.filter(r => r.master_id === mid);
   $('#dc').innerHTML = `
     <h2>${esc(f.canonical)}</h2>
-    <div class="dim">${f.n_screens} screening${f.n_screens>1?'s':''} at ${f.festivals.length} festival${f.festivals.length>1?'s':''}</div>
+    <div class="dim">${f.n_screens} screening${f.n_screens>1?'s':''} at ${f.festivals.length} festival${f.festivals.length>1?'s':''}
+      <a class="link" id="cf-jump">add to this record</a></div>
     <h3>Title variants as printed</h3>
     ${f.titles.map(t => `<div class="chip"><b>${esc(t)}</b></div>`).join('')}
     <h3>Artists as printed</h3>
@@ -897,7 +1065,9 @@ function openFilm(mid){
                    (r.award ? ` · <span class="tag a">${esc(r.award)}</span>` : '') +
                    ` <a class="link" data-go="screen::${esc(r.row_id)}">source</a></div>`).join('')}
     ${f.flags.length ? `<h3>Flags on these rows</h3>` + f.flags.map(x => `<div class="chip">${esc(x)}</div>`).join('') : ''}
+    ${contributeBlock(mid)}
   `;
+  wireContribute(mid);
   $('#d').classList.add('on');
 }
 function openArtist(nm){
