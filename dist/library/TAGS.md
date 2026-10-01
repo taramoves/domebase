@@ -1,66 +1,47 @@
-# Tag vocabulary
+# Tags
 
-43 tags · updated 2026-10-01
-
-A tag is used only after it is declared here, in `data/tags.csv`.
-
-## field
-
-- **#dome** (10) — the medium itself: domes, planetariums, fulldome
-- **#production** (4) — making and staging the work
-- **#field** (2) — the field describing itself
-- **#poetics** (2) — writings that argue for a dome aesthetic
-- **#spatialaudio** (2) — sound in a dome: multichannel and spatial audio
-
-## discipline
-
-- **#performancestudies** (11) — performance and theatre studies
-- **#mediatheory** (10) — media theory and the virtual
-- **#arthistory** (6) — art history and art criticism
-- **#architecture** (5) — built space and its design
-- **#bauhaus** (4) — Bauhaus theatre, stage and figure
-- **#filmstudies** (4) — film and moving image
-- **#design** (3) — design practice and design thinking
-- **#philosophy** (3) — philosophy
-- **#sociology** (3) — social order and interaction
-- **#theatre** (3) — theatre as institution and form
-- **#anthropology** (2) — ethnography, ritual, sound
-- **#ontology** (2) — what exists and how things relate
-- **#phenomenology** (2) — first-person experience as method
-- **#politicaltheory** (2) — politics, ideology, critique
-- **#urbanism** (2) — the city, its image and its public space
-- **#culturaltheory** (1) — culture, the everyday, practice
-- **#intermediality** (1) — media meeting inside a performance
-- **#neuroscience** (1) — mirror mechanisms and the body
-- **#pedagogy** (1) — teaching and learning
-- **#queertheory** (1) — queer theory and futurity
-- **#soundstudies** (1) — listening and sonic knowledge
-
-## method
-
-- **#method** (2) — how the research is done
-- **#speculativedesign** (2) — design as proposition and fiction
-- **#practiceasresearch** (1) — knowledge made by making
-
-## form
-
-- **#lecture** (1) — the lecture and the performance lecture
-
-## concept
-
-- **#embodiment** (4) — the body as medium and as instrument
-- **#perception** (3) — how the space is seen and felt
-- **#space** (3) — space, place, dwelling
-- **#audienceresearch** (2) — what audiences actually do
-- **#immersion** (2) — immersion and its history
-- **#empathy** (1) — shared feeling and its mechanism
-- **#futurity** (1) — the not-yet-here
-- **#intersubjectivity** (1) — between bodies: intercorporeality
-- **#participation** (1) — the audience as co-producer
-- **#posthumanism** (1) — virtual bodies and information
-- **#ritual** (1) — ritual, liminality, anti-structure
-- **#spectacle** (1) — spectacle and its critique
-
-## note
-
-- **#review** (2) — this file is somebody else's review of the work
+| tag | n | group | gloss |
+|---|---|---|---|
+| #performancestudies | 11 | discipline | performance and theatre studies |
+| #dome | 10 | field | the medium itself: domes, planetariums, fulldome |
+| #mediatheory | 10 | discipline | media theory and the virtual |
+| #arthistory | 6 | discipline | art history and art criticism |
+| #architecture | 5 | discipline | built space and its design |
+| #bauhaus | 4 | discipline | Bauhaus theatre, stage and figure |
+| #embodiment | 4 | concept | the body as medium and as instrument |
+| #filmstudies | 4 | discipline | film and moving image |
+| #production | 4 | field | making and staging the work |
+| #design | 3 | discipline | design practice and design thinking |
+| #perception | 3 | concept | how the space is seen and felt |
+| #philosophy | 3 | discipline | philosophy |
+| #sociology | 3 | discipline | social order and interaction |
+| #space | 3 | concept | space, place, dwelling |
+| #theatre | 3 | discipline | theatre as institution and form |
+| #anthropology | 2 | discipline | ethnography, ritual, sound |
+| #audienceresearch | 2 | concept | what audiences actually do |
+| #field | 2 | field | the field describing itself |
+| #immersion | 2 | concept | immersion and its history |
+| #method | 2 | method | how the research is done |
+| #ontology | 2 | discipline | what exists and how things relate |
+| #phenomenology | 2 | discipline | first-person experience as method |
+| #poetics | 2 | field | writings that argue for a dome aesthetic |
+| #politicaltheory | 2 | discipline | politics, ideology, critique |
+| #review | 2 | note | this file is somebody else's review of the work |
+| #spatialaudio | 2 | field | sound in a dome: multichannel and spatial audio |
+| #speculativedesign | 2 | method | design as proposition and fiction |
+| #urbanism | 2 | discipline | the city, its image and its public space |
+| #culturaltheory | 1 | discipline | culture, the everyday, practice |
+| #empathy | 1 | concept | shared feeling and its mechanism |
+| #futurity | 1 | concept | the not-yet-here |
+| #intermediality | 1 | discipline | media meeting inside a performance |
+| #intersubjectivity | 1 | concept | between bodies: intercorporeality |
+| #lecture | 1 | form | the lecture and the performance lecture |
+| #neuroscience | 1 | discipline | mirror mechanisms and the body |
+| #participation | 1 | concept | the audience as co-producer |
+| #pedagogy | 1 | discipline | teaching and learning |
+| #posthumanism | 1 | concept | virtual bodies and information |
+| #practiceasresearch | 1 | method | knowledge made by making |
+| #queertheory | 1 | discipline | queer theory and futurity |
+| #ritual | 1 | concept | ritual, liminality, anti-structure |
+| #soundstudies | 1 | discipline | listening and sonic knowledge |
+| #spectacle | 1 | concept | spectacle and its critique |

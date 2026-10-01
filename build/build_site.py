@@ -25,6 +25,7 @@ DB = ROOT / "work" / "db"                                  # the data pipeline
 LIB = ROOT / "work" / "library"                            # the library section's pipeline
 SHEET = SRC / "assets" / "css" / "site.css"                # the one stylesheet
 DIST = ROOT / "dist"                                       # deploy this
+BINARY = {".woff", ".woff2", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".sqlite", ".xlsx"}
 PAGE = DIST / "database" / "index.html"                    # generated, deployed
 GENERATED = ("database", "library")   # sections whose page this build writes into dist/;
                                       # their sources stay in src/, and they are not copied in
@@ -85,6 +86,14 @@ def main():
             shutil.copy(item, target)
 
     files = [f for f in DIST.rglob("*") if f.is_file()]
+    crlf = [f for f in files if f.suffix.lower() not in BINARY
+            and b"\r" in f.read_bytes()]
+    if crlf:
+        print("\nREFUSING TO SHIP: these files carry carriage returns, so the bytes on the host")
+        print("would differ from the bytes here. Write them with newline=\"\\n\":")
+        for f in crlf:
+            print(f"   {f.relative_to(ROOT)}")
+        return 1
     raw = sum(f.stat().st_size for f in files)
     print(f"\ndist/ {raw / 1048576:.2f} MB in {len(files)} files")
     if PAGE.exists():
