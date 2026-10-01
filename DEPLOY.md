@@ -11,7 +11,7 @@ npx --yes vercel@latest deploy --prod
 endpoint and aborts with `this endpoint requires version 47.2.2 or later`. `vercel.json` points
 the deploy at `dist/`, and `.vercelignore` keeps `work/` off the upload.
 
-**From the GitHub repo** (`taramoves/domepage`): import it in Vercel with **no build command**,
+**From the GitHub repo** (GitHub `taramoves/domebase`): import it in Vercel with **no build command**,
 **no install command**, and **Output Directory = `dist`** — `dist/` is committed, so Vercel only
 has to serve it. Or connect the repo to the existing `domebase` project so every push deploys
 itself.
