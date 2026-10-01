@@ -306,6 +306,16 @@ already ours, 21 new — 15 VR-only excluded, 3 to decide. Where a source mixes 
 excluded rows in the source file with a `scope` column rather than deleting them, so the call stays
 reversible.
 
+**Confirmed as a rule (1 Oct 2026).** Dome works only, everywhere they play. One clause added:
+**a project that exists in both a dome and a VR version keeps its dome work, and the VR version is
+noted in that work's description** rather than being recorded as a second work. Worked example:
+*The Lost Garden* — we hold it as a dome work (Jena 2026, dir. Michel D.T. Lam, 8 min) and Hubblo
+lists it as VR (2023, same director). The dome record carries the note; the VR row stays in the
+source file as `out of scope`. Mechanically: notes live in `enrichment/work_notes.csv`, are lifted
+by `model.apply_notes()`, and sit in the description behind `model.NOTE_MARK`, which the publish
+trim protects and then strips — otherwise a 280-character trim of the description would silently
+eat the note.
+
 ### 10b. A work is not one kind: a performance can also be a film
 
 A live dome show gets recorded and is later **screened as a film**, and the same work can be
