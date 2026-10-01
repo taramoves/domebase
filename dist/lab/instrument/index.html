@@ -40,18 +40,20 @@ pre b{font-weight:700}
 
 <main class="doc">
 
-<p>A dome, one machine at the venue, and a phone in every hand. People aim the back of a phone at the dome and press; the hub reads each message and answers in projection and eight-channel sound.</p>
+<p>Dome as audience-playable audiovisual instrument.</p>
 
-<h2>1 parts</h2>
+<h2>1 Parts</h2>
 
-<p><b>Phone.</b> The audience opens a web app from a QR code. It reads the phone&rsquo;s sensors, takes the calibration picture, and reports every aim, tap and press. It draws nothing on the dome itself.</p>
+<p><b>Audience.</b> Takes actions that interact with objects in different ways.</p>
 
-<p><b>Hub.</b> One machine at the venue. It keeps a state for each phone, decides what every message means, runs the scene the artist chose, drives the output and writes a log.</p>
+<p><b>Hub.</b> Keeps track of and routes actions, objects, and contextual elements, drives the output and writes a log.</p>
 
-<p><b>Dome.</b> The projection and the eight-channel spatial audio. The hub sends both OSC: a position travels as azimuth and elevation, and the renderer applies the dome&rsquo;s own size and projection.</p>
+<p><b>Dome.</b> Actions, objects, and contextual elements rendered to projection and routed as spatial audio.</p>
+
+<p><b>Artist.</b> Manages available actions, objects, and contextual elements to create unified experience.</p>
 
 <figure>
-<svg viewBox="0 0 640 176" role="img" aria-label="Phones send to the hub over a WebSocket; the hub drives projection and spatial audio over OSC and is driven by the artist console.">
+<svg viewBox="0 0 640 176" role="img" aria-label="The audience sends to the hub; the hub drives projection and spatial audio and takes cues from the artist.">
   <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
   <g fill="none" stroke="#000" stroke-width="1">
     <rect x="8" y="46" width="104" height="34"/><rect x="8" y="96" width="104" height="34"/>
@@ -66,30 +68,28 @@ pre b{font-weight:700}
     <line x1="366" y1="88" x2="478" y2="88" marker-end="url(#ah)"/>
   </g>
   <g fill="#000" font-family="Arial" font-size="12.5" text-anchor="middle">
-    <text x="60" y="67">phone</text><text x="60" y="117">phone &hellip; &times;N</text>
-    <text x="291" y="23">artist console</text>
+    <text x="60" y="67">audience</text><text x="60" y="117">audience &hellip; &times;N</text>
+    <text x="291" y="23">artist</text>
     <text x="291" y="82" font-weight="700">hub</text>
-    <text x="291" y="100" font-size="11.5">state &middot; scenes</text>
+    <text x="291" y="100" font-size="11.5">actions &middot; objects</text>
     <text x="291" y="116" font-size="11.5">output &middot; log</text>
     <text x="213" y="60" font-style="italic" font-size="11.5" text-anchor="end">WebSocket</text>
     <text x="423" y="80" font-style="italic" font-size="11.5">OSC</text>
     <text x="536" y="92" font-weight="700">dome</text>
-    <text x="536" y="160" font-size="11.5">projection &middot; 8-channel audio</text>
+    <text x="536" y="160" font-size="11.5">projection &middot; spatial audio</text>
   </g>
 </svg>
-<figcaption><b>Figure 1.</b> Phone, hub, dome.</figcaption>
+<figcaption><b>Figure 1.</b> Audience, hub, dome, artist.</figcaption>
 </figure>
 
-<h2>2 the object</h2>
+<h2>2 Objects</h2>
 
-<p>An object is what a person holds: a shape the phone carries until the person places it, sends it or drops it. Everything else on the dome is what objects left behind &mdash; marks, words, drawings, tallies.</p>
+<p>Objects are what the system carries, places and triggers. An object exists whether or not anyone holds it: a person reaches one only through an action the scene allows. Every object carries an id, a shape, an active shape and a sound.</p>
 
-<h3>objects</h3>
-
-<p>Every object carries an id, a shape, an active shape and a sound.</p>
+<h3>Objects</h3>
 
 <table>
-  <thead><tr><th>id</th><th>shape</th><th>active</th><th>sound</th></tr></thead>
+  <thead><tr><th>id</th><th>shape</th><th>active shape</th><th>sound</th></tr></thead>
   <tbody>
     <tr><td>a</td><td><svg class="g" width="13" height="13" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#000"/></svg>circle</td><td><svg class="g" width="13" height="13" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/></svg>circle</td><td>wow.mp3</td></tr>
     <tr><td>b</td><td><svg class="g" width="13" height="13" viewBox="0 0 16 16"><polygon points="8,1.5 14.5,13.5 1.5,13.5" fill="none" stroke="#000"/></svg>triangle</td><td><svg class="g" width="13" height="13" viewBox="0 0 16 16"><polygon points="8,1.5 14.5,13.5 1.5,13.5"/></svg>triangle</td><td>ding.mp3</td></tr>
@@ -98,69 +98,75 @@ pre b{font-weight:700}
   </tbody>
 </table>
 
-<p>The hollow glyph is the resting state; the filled one is the active state, which an object takes while it sounds.</p>
+<p>A shape is whatever the renderer draws for the object and a sound is a sample or a synthesis voice. In the table above, the hollow glyph is the resting shape and the filled one the active shape.</p>
 
-<div class="note">
-  <p>Open. How wide can the shape and sound sets go, and does the audience choose, or the artist?</p>
-  <p>Does an active object bring an image, a video or a distortion with it?</p>
-  <p>Do we synthesise the sound from azimuth and elevation, or play and manipulate samples?</p>
-</div>
+<h3>Placement</h3>
 
-<h3>placement</h3>
-
-<p>The dome divides into eight sectors, and each sector feeds one output channel. The hub keeps one row per placed object.</p>
-
-<table>
-  <thead><tr><th>idP</th><th>id</th><th>az</th><th>el</th><th>ch</th></tr></thead>
-  <tbody>
-    <tr><td>0</td><td>a</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>1</td><td>b</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>2</td><td>c</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>3</td><td>d</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>4</td><td>a</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>5</td><td>b</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>6</td><td>c</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-    <tr><td>7</td><td>d</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-  </tbody>
-</table>
+<p>The dome divides into eight channels, one per sector. The hub tracks every placement: the object&rsquo;s azimuth and elevation on the dome, and the channel that position falls in.</p>
 
 <div class="pane">
 <figure>
-<svg viewBox="0 0 320 300" role="img" aria-label="The dome from below, divided into eight numbered sectors, with four objects placed in it.">
+<svg viewBox="0 0 320 320" role="img" aria-label="The dome from below, drawn as eight channels, with eight placed objects marked by their placement number.">
+  <g fill="none" stroke="#000" stroke-width="1.4"><circle cx="160" cy="160" r="132"/></g>
   <g fill="none" stroke="#000" stroke-width="1">
-    <circle cx="160" cy="160" r="130"/>
-    <circle cx="160" cy="160" r="70" stroke="#c9c9c9"/>
-    <line x1="160" y1="30" x2="252" y2="252"/><line x1="252" y1="68" x2="68" y2="252"/>
-    <line x1="290" y1="160" x2="30" y2="160"/><line x1="252" y1="252" x2="68" y2="68"/>
-    <line x1="160" y1="290" x2="68" y2="68"/><line x1="68" y1="252" x2="252" y2="68"/>
-    <line x1="30" y1="160" x2="290" y2="160"/>
+    <line x1="160.0" y1="28.0" x2="160.0" y2="292.0"/>
+    <line x1="253.3" y1="66.7" x2="66.7" y2="253.3"/>
+    <line x1="292.0" y1="160.0" x2="28.0" y2="160.0"/>
+    <line x1="253.3" y1="253.3" x2="66.7" y2="66.7"/>
   </g>
   <g fill="#000" font-family="Arial" font-size="11.5" text-anchor="middle">
-    <text x="160" y="24">1</text><text x="258" y="52">2</text><text x="298" y="158">3</text>
-    <text x="258" y="278">4</text><text x="160" y="300">5</text><text x="62" y="278">6</text>
-    <text x="22" y="158">7</text><text x="62" y="52">8</text>
+    <text x="204.5" y="56.4">1</text>
+    <text x="267.4" y="119.3">2</text>
+    <text x="267.4" y="208.3">3</text>
+    <text x="204.5" y="271.2">4</text>
+    <text x="115.5" y="271.2">5</text>
+    <text x="52.6" y="208.3">6</text>
+    <text x="52.6" y="119.3">7</text>
+    <text x="115.5" y="56.4">8</text>
   </g>
   <g>
-    <circle cx="196" cy="86" r="7" fill="none" stroke="#000" stroke-width="1.4"/>
-    <polygon points="126,132 136,148 116,148" fill="none" stroke="#000" stroke-width="1.4"/>
-    <rect x="196" y="176" width="13" height="13" fill="none" stroke="#000" stroke-width="1.4"/>
-    <polygon points="132,208 135,216 143,216 137,221 139,229 132,224 125,229 127,221 121,216 129,216" fill="none" stroke="#000" stroke-width="1.4"/>
+  <circle cx="185.7" cy="115.5" r="6" fill="none" stroke="#000" stroke-width="1.3"/>
+  <polygon points="94.3,146.7 101.8,159.7 86.8,159.7" fill="none" stroke="#000" stroke-width="1.3"/>
+  <rect x="232.2" y="113.2" width="11" height="11" fill="none" stroke="#000" stroke-width="1.3"/>
+  <polygon points="248.1,198.3 250.2,203.9 256.2,204.2 251.5,207.9 253.1,213.7 248.1,210.4 243.1,213.7 244.7,207.9 240.0,204.2 246.0,203.9" fill="none" stroke="#000" stroke-width="1.3"/>
+  <circle cx="162.4" cy="142.6" r="6" fill="none" stroke="#000" stroke-width="1.3"/>
+  <polygon points="140.6,220.2 148.1,233.2 133.1,233.2" fill="none" stroke="#000" stroke-width="1.3"/>
+  <rect x="74.6" y="183.6" width="11" height="11" fill="none" stroke="#000" stroke-width="1.3"/>
+  <polygon points="129.5,124.0 131.6,129.6 137.6,129.9 132.9,133.6 134.5,139.4 129.5,136.1 124.5,139.4 126.1,133.6 121.4,129.9 127.4,129.6" fill="none" stroke="#000" stroke-width="1.3"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="10" font-style="italic" text-anchor="middle">
+    <text x="199.7" y="118.9">0</text>
+    <text x="108.3" y="157.6">1</text>
+    <text x="223.7" y="122.1">2</text>
+    <text x="234.1" y="210.2">3</text>
+    <text x="176.4" y="146.0">4</text>
+    <text x="154.6" y="231.1">5</text>
+    <text x="94.1" y="192.5">6</text>
+    <text x="143.5" y="135.9">7</text>
   </g>
 </svg>
-<figcaption><b>Figure 2.</b> Placement: eight sectors, four objects.</figcaption>
+<figcaption><b>Figure 2.</b> Eight placements, numbered as the hub records them.</figcaption>
 </figure>
-<div>
-<p>The numbers are not computed yet. Azimuth, elevation and channel follow from the sector rule once it is fixed.</p>
-<div class="note" style="border-top:0;padding-top:0">
-  <p>Open. Does an object keep the channel of where it was placed, or take the channel of the sector it passes through while it moves?</p>
-  <p>Does placing on the dome&rsquo;s 2D surface map to the 3D audio, or does it need a second mapping?</p>
-</div>
-</div>
+<table>
+  <thead><tr><th>idP</th><th>id</th><th>az</th><th>el</th><th>ch</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>a</td><td>30</td><td>55</td><td>1</td></tr>
+    <tr><td>1</td><td>b</td><td>275</td><td>45</td><td>7</td></tr>
+    <tr><td>2</td><td>c</td><td>62</td><td>30</td><td>2</td></tr>
+    <tr><td>3</td><td>d</td><td>118</td><td>22</td><td>3</td></tr>
+    <tr><td>4</td><td>a</td><td>8</td><td>78</td><td>1</td></tr>
+    <tr><td>5</td><td>b</td><td>196</td><td>42</td><td>5</td></tr>
+    <tr><td>6</td><td>c</td><td>250</td><td>32</td><td>6</td></tr>
+    <tr><td>7</td><td>d</td><td>312</td><td>62</td><td>7</td></tr>
+  </tbody>
+</table>
 </div>
 
-<h3>playback</h3>
+<p>Azimuth runs clockwise from the front, elevation from the rim to the top of the dome, and the channel is the 45&deg; sector the azimuth falls in.</p>
 
-<p>A playhead crosses the dome. When the playhead&rsquo;s value equals an object&rsquo;s value, the object triggers.</p>
+<h3>Playback</h3>
+
+<p>A playhead crosses the dome on a recurring loop and starts at the top of the dome. When the playhead&rsquo;s value equals an object&rsquo;s value, the object triggers.</p>
 
 <div class="pane">
 <figure>
@@ -171,69 +177,82 @@ pre b{font-weight:700}
     <line x1="160" y1="110" x2="224" y2="174" marker-end="url(#ah)"/>
   </g>
 </svg>
-<figcaption><b>Circle loop.</b> The playhead is a ring growing outward from the top. Its value is elevation, so one pass sounds every object at that elevation; a ring of shapes plays as a bar.</figcaption>
+<figcaption><b>Figure 3, Circle Loop.</b> The playhead is a ring that starts at the top of the dome and grows outward. Its value is elevation, so the ring triggers every object at that elevation as it passes.</figcaption>
 </figure>
 <figure>
-<svg viewBox="0 0 320 220" role="img" aria-label="A ball falling along a curved path toward a star on the dome.">
+<svg viewBox="0 0 320 220" role="img" aria-label="A ball leaving the top of the dome along a curving path.">
   <g fill="none" stroke="#000" stroke-width="1">
     <circle cx="160" cy="110" r="90"/>
-    <path d="M132 40 C 190 70 176 120 138 132" stroke-dasharray="3 3"/>
-    <line x1="140" y1="128" x2="152" y2="140" marker-end="url(#ah)"/>
+    <path d="M160 110 C 198 112 218 140 215 176" stroke-dasharray="3 3" marker-end="url(#ah)"/>
   </g>
-  <circle cx="132" cy="40" r="5" fill="#000"/>
-  <polygon points="166,150 169,158 177,158 171,163 173,171 166,166 159,171 161,163 155,158 163,158" fill="none" stroke="#000" stroke-width="1.4"/>
+  <circle cx="160" cy="110" r="5" fill="#000"/>
 </svg>
-<figcaption><b>Pinball.</b> The playhead is a ball under gravity. It triggers the object it touches, so azimuth and elevation both count and the bounce sets the rhythm instead of a clock.</figcaption>
+<figcaption><b>Figure 4, Pinball.</b> The playhead is a ball that starts at the top of the dome and runs under gravity. It triggers an object when azimuth and elevation both match, so the bounce sets the rhythm.</figcaption>
 </figure>
 </div>
 
-<h3>audio routing</h3>
+<h3>Audio Routing</h3>
 
-<p>Channels stay fixed. An object sounds in the channel of its placement.</p>
+<p>Channels stay fixed: an object operates in the channel of its placement, and the orbit channels map onto the control grid one to one.</p>
 
-<div class="pane">
 <figure>
-<svg viewBox="0 0 320 260" role="img" aria-label="Eight channels sitting in the eight sectors of the dome.">
+<svg viewBox="0 0 660 290" role="img" aria-label="The eight orbit channels mapping one to one onto the eight control grid channels.">
   <g fill="none" stroke="#000" stroke-width="1">
-    <circle cx="160" cy="130" r="112"/>
-    <line x1="160" y1="18" x2="239" y2="209"/><line x1="239" y1="51" x2="81" y2="209"/>
-    <line x1="272" y1="130" x2="48" y2="130"/><line x1="239" y1="209" x2="81" y2="51"/>
-    <line x1="160" y1="242" x2="81" y2="51"/><line x1="81" y1="209" x2="239" y2="51"/>
-    <line x1="48" y1="130" x2="272" y2="130"/>
+    <circle cx="110" cy="130" r="105.0"/>
+    <line x1="110" y1="130" x2="110.0" y2="25.0"/>
+    <line x1="110" y1="130" x2="110.0" y2="235.0"/>
+    <line x1="110" y1="130" x2="184.2" y2="55.8"/>
+    <line x1="110" y1="130" x2="35.8" y2="204.2"/>
+    <line x1="110" y1="130" x2="215.0" y2="130.0"/>
+    <line x1="110" y1="130" x2="5.0" y2="130.0"/>
+    <line x1="110" y1="130" x2="184.2" y2="204.2"/>
+    <line x1="110" y1="130" x2="35.8" y2="55.8"/>
+    
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <text x="322" y="69" text-anchor="end">1</text><line x1="332" y1="64.5" x2="392" y2="64.5"/><text x="402" y="69">1</text>
+    <text x="322" y="92" text-anchor="end">2</text><line x1="332" y1="87.5" x2="392" y2="87.5"/><text x="402" y="92">2</text>
+    <text x="322" y="115" text-anchor="end">3</text><line x1="332" y1="110.5" x2="392" y2="110.5"/><text x="402" y="115">3</text>
+    <text x="322" y="138" text-anchor="end">4</text><line x1="332" y1="133.5" x2="392" y2="133.5"/><text x="402" y="138">4</text>
+    <text x="322" y="161" text-anchor="end">5</text><line x1="332" y1="156.5" x2="392" y2="156.5"/><text x="402" y="161">5</text>
+    <text x="322" y="184" text-anchor="end">6</text><line x1="332" y1="179.5" x2="392" y2="179.5"/><text x="402" y="184">6</text>
+    <text x="322" y="207" text-anchor="end">7</text><line x1="332" y1="202.5" x2="392" y2="202.5"/><text x="402" y="207">7</text>
+    <text x="322" y="230" text-anchor="end">8</text><line x1="332" y1="225.5" x2="392" y2="225.5"/><text x="402" y="230">8</text>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <circle cx="530" cy="130" r="105"/>
   </g>
   <g fill="#000" font-family="Arial" font-size="11.5" text-anchor="middle">
-    <text x="160" y="42">1</text><text x="222" y="72">2</text><text x="248" y="134">3</text>
-    <text x="222" y="196">4</text><text x="160" y="222">5</text><text x="98" y="196">6</text>
-    <text x="72" y="134">7</text><text x="98" y="72">8</text>
+    <text x="143.7" y="52.7">1</text>
+    <text x="191.3" y="100.3">2</text>
+    <text x="191.3" y="167.7">3</text>
+    <text x="143.7" y="215.3">4</text>
+    <text x="76.3" y="215.3">5</text>
+    <text x="28.7" y="167.7">6</text>
+    <text x="28.7" y="100.3">7</text>
+    <text x="76.3" y="52.7">8</text>
+    <text x="563.7" y="52.7">1</text>
+    <text x="611.3" y="100.3">2</text>
+    <text x="611.3" y="167.7">3</text>
+    <text x="563.7" y="215.3">4</text>
+    <text x="496.3" y="215.3">5</text>
+    <text x="448.7" y="167.7">6</text>
+    <text x="448.7" y="100.3">7</text>
+    <text x="496.3" y="52.7">8</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="12.5" text-anchor="middle">
+    <text x="110" y="266">orbits</text>
+    <text x="530" y="266">control grid</text>
   </g>
 </svg>
-<figcaption><b>Orbits.</b> The eight channels sit in the eight sectors.</figcaption>
+<figcaption><b>Figure 5.</b> The eight orbit channels and the control grid, channel for channel.</figcaption>
 </figure>
-<figure>
-<svg viewBox="0 0 320 260" role="img" aria-label="Eight channels spread over the dome as rows and columns of a grid.">
-  <g fill="none" stroke="#000" stroke-width="1">
-    <circle cx="160" cy="130" r="112"/>
-    <line x1="48" y1="130" x2="272" y2="130"/><line x1="160" y1="18" x2="160" y2="242"/>
-    <line x1="81" y1="51" x2="239" y2="209"/><line x1="81" y1="209" x2="239" y2="51"/>
-    <rect x="112" y="94" width="48" height="36"/><rect x="160" y="94" width="48" height="36"/>
-    <rect x="112" y="130" width="48" height="36"/><rect x="160" y="130" width="48" height="36"/>
-  </g>
-  <g fill="#000" font-family="Arial" font-size="11.5" text-anchor="middle">
-    <text x="136" y="116">1</text><text x="184" y="116">2</text><text x="136" y="152">3</text><text x="184" y="152">4</text>
-    <text x="72" y="134">5</text><text x="248" y="134">6</text><text x="160" y="42">7</text><text x="160" y="228">8</text>
-  </g>
-</svg>
-<figcaption><b>Control grid.</b> The channels spread over the dome as rows and columns.</figcaption>
-</figure>
-</div>
 
-<div class="note"><p>Open. Both routings need a test in the dome.</p></div>
-
-<h2>3 calibrate</h2>
+<h2>3 Calibrate</h2>
 
 <p>Until a phone calibrates, it has no cursor: the hub knows what the person does but not where they point.</p>
 
-<h3>what the phone knows on its own</h3>
+<h3>What the Phone Knows on Its Own</h3>
 
 <p>The back of the phone is the pointer and the screen faces the person. The browser reports three angles.</p>
 <ul>
@@ -242,7 +261,7 @@ pre b{font-weight:700}
   <li><b>Seat is unknown.</b> The phone has no idea where in the room it is.</li>
 </ul>
 
-<h3>why the seat matters</h3>
+<h3>Why the Seat Matters</h3>
 
 <p>Someone off-centre who aims at a spot points along a different line from someone at the centre. At distance <i>d</i> from the centre of a dome of radius <i>R</i>, the two directions differ by up to arcsin(<i>d</i>/<i>R</i>) &mdash; 30&deg; half-way out, 49&deg; at three-quarters. Calibration supplies the seat, so the hub traces the aim from where the person actually sits.</p>
 
@@ -270,10 +289,10 @@ pre b{font-weight:700}
     <text x="222" y="220" text-anchor="middle">d</text>
   </g>
 </svg>
-<figcaption><b>Figure 3.</b> O is the centre, P the seat, T the target the aim reaches, and the hollow dot the cursor that lands where the hub traces the same aim from the centre instead. The two directions differ by &epsilon;, up to arcsin(<i>d</i>/<i>R</i>).</figcaption>
+<figcaption><b>Figure 6.</b> O is the centre, P the seat, T the target the aim reaches, and the hollow dot the cursor that lands where the hub traces the same aim from the centre instead. The two directions differ by &epsilon;, up to arcsin(<i>d</i>/<i>R</i>).</figcaption>
 </figure>
 
-<h3>the marker</h3>
+<h3>The Marker</h3>
 
 <p>The dome shows five bright dots in an X at the top, about 20&deg; across, with one tip drawn as a ring to mark the front. The person looks up, points the back of the phone at it, and the phone takes the picture. It finds the dots itself and sends their pixel positions, so no image leaves the phone.</p>
 
@@ -281,13 +300,13 @@ pre b{font-weight:700}
 
 <p>Browsers do not report focal length. The phone takes a burst of about twenty frames while the hand moves a little: the sensors say how far the phone turned, the dots say how far they moved in the picture, and the difference gives the focal length. It works with whichever rear lens the phone picks.</p>
 
-<h3>the check</h3>
+<h3>The Check</h3>
 
 <p>The person aims at a mark at the front and taps. A cursor that lands off the mark means calibrating again. The whole exchange takes about ten seconds, and the artist can show the marker in any scene for latecomers or for drift.</p>
 
-<h2>4 the phone</h2>
+<h2>4 The Phone</h2>
 
-<h3>what a phone can do</h3>
+<h3>What a Phone Can Do</h3>
 
 <p>A phone does five things. The scene decides what the dome makes of each.</p>
 
@@ -307,7 +326,7 @@ pre b{font-weight:700}
 
 <p>Answering and sending need no cursor, so they need no calibration and a latecomer can join them at once. A press reports twice, down and then up, so that a line and a drag both know when the press ended.</p>
 
-<h3>the screen</h3>
+<h3>The Screen</h3>
 <ul>
   <li><b>Dark by default.</b> The screen stays black between actions and dims during them, so phones neither light the room nor wash out the projection.</li>
   <li><b>One big button.</b> The press area is large enough to hit without looking, with a second button only when the scene needs one, such as send. The phone shows no tool menu; the scene decides what a press means.</li>
@@ -316,7 +335,7 @@ pre b{font-weight:700}
   <li><b>Leaving is logged.</b> The browser reports when the page hides and when it returns.</li>
 </ul>
 
-<h2>5 the scene</h2>
+<h2>5 The Scene</h2>
 
 <p>A scene sets what the phones show, what the dome does with each action, and what ends it. A show is an ordered list of scenes. The artist writes both; the hub runs them.</p>
 
@@ -354,7 +373,7 @@ pre b{font-weight:700}
 
 <p>The artist works from four controls: next, back, show the marker, blackout. The console is another client of the hub, so it runs on a laptop or a phone, or takes cues from the visuals software over OSC. Scenes advance on a share of the audience rather than all of it, since some phones are always idle, and every scene still has to read as an image if nobody takes part.</p>
 
-<h2>6 the hub</h2>
+<h2>6 The Hub</h2>
 
 <p>The hub keeps a state for every phone, runs the scene the artist chose, drives the output and logs everything.</p>
 
@@ -378,7 +397,7 @@ pre b{font-weight:700}
 
 <p>Every message goes into one line of log with the hub&rsquo;s time, the phone id, the scene and the phone&rsquo;s seat; aim is thinned to five per second and ids carry nothing personal. The log answers four questions: who joined and how long calibration took, how accurate the calibration and the presses were, who took part in each scene and from where in the room, and when phones left the app.</p>
 
-<h2>7 build</h2>
+<h2>7 Build</h2>
 
 <p>Six phases, each ending in something testable.</p>
 
@@ -390,16 +409,6 @@ pre b{font-weight:700}
   <li><b>Scene system.</b> Scenes and shows written as files and run end to end under the artist&rsquo;s console.</li>
   <li><b>Log and evaluation.</b> One log file per show and an analysis that answers the four questions in the hub section.</li>
 </ol>
-
-<h3>open</h3>
-<ul>
-  <li>What a phone shows when the person refuses motion or camera.</li>
-  <li>Who approves photos during a show, and how fast. Nothing reaches the dome before approval.</li>
-  <li>How often a phone recalibrates: measure the drift first.</li>
-  <li>How a person finds their own mark among many &mdash; a flash on press, a matching shape on the phone, or haptics.</li>
-  <li>Whether shows are sequenced live or fixed in advance.</li>
-  <li>How long drawings and photos are kept, and whether audience-made images may appear in documentation. The consent notice belongs on the join screen.</li>
-</ul>
 
 </main>
 
