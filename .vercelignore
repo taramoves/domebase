@@ -1,0 +1,4 @@
+# Never upload the data pipeline to a deploy: only src/ and dist/ are the site.
+# dist/ must NOT be listed here — it is the output the deploy serves.
+work/
+.git/

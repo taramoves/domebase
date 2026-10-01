@@ -1,0 +1,13 @@
+# the data pipeline stays local: it holds the festival programme text, its provenance and the
+# raw source dumps, none of which the site repo needs or should republish
+work/
+
+# deploy tooling state
+.vercel/
+
+# scratch
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>domebase/database</title>
+<style>
+/*__CSS__*/
+</style></head><body class="app">
+<header>
+  <h1>domebase/database</h1>
+</header>
+<nav>
+  <button data-v="films" class="on">Films</button>
+  <button data-v="artists">Artists</button>
+  <button data-v="editions">Festivals</button>
+</nav>
+<div class="bar barhead">
+  <button class="tgl" id="ftoggle" aria-expanded="true" title="show or hide the search and filter controls (f)">▲ search &amp; filters</button>
+  <span class="sortinfo" id="sortinfo"></span>
+  <span class="fsum" id="fsum"></span>
+  <span class="count" id="count"></span>
+  <button class="pill" id="reset">reset</button>
+  <button class="pill" id="link">copy link</button>
+  <button class="pill" id="csv">export view → CSV</button>
+</div>
+<div id="filters">
+<div class="bar">
+  <input type="search" id="q" placeholder='search — title: artist: country: fest: year:2010-2016 · "exact phrase" · -exclude'>
+  <select id="scope" title="which fields the search reads">
+    <option value="any">in: anywhere</option>
+    <option value="title">in: film title (+ variants)</option>
+    <option value="artist">in: artist / credits</option>
+    <option value="country">in: country</option>
+    <option value="award">in: award / jury</option>
+    <option value="section">in: section / slot</option>
+    <option value="description">in: description / synopsis</option>
+    <option value="source">in: source text &amp; quote</option>
+    <option value="flags">in: data flags</option>
+  </select>
+</div>
+<div class="bar qhint" id="qhint" hidden>
+  <span>one term per box: <b>title:</b> <b>artist:</b> <b>country:</b> <b>award:</b> <b>section:</b>
+  <b>desc:</b> <b>source:</b> <b>flags:</b> <b>fest:</b> <b>year:2010-2016</b> &nbsp;·&nbsp; a word matches
+  from its start, <b>~</b> anywhere inside it &nbsp;·&nbsp; <b>-</b> in front of anything excludes it
+  &nbsp;·&nbsp; <b>"two words"</b> is one phrase &nbsp;·&nbsp; <b>F00123</b> is a row</span>
+</div>
+<div class="bar">
+  <span class="lbl">programmed at</span><span id="ms-fest"></span>
+  <span class="lbl">country</span><span id="ms-country"></span>
+  <span class="lbl">award status</span><span id="ms-status"></span>
+  <span class="lbl">award category</span><span id="ms-acat"></span>
+</div>
+<div class="bar">
+  <span class="grp"><span class="lbl">films at</span>
+    <input type="number" id="nfmin" min="1" max="6" placeholder="min"><span class="dash">–</span>
+    <input type="number" id="nfmax" min="1" max="6" placeholder="max">
+    <span class="lbl">festivals</span></span>
+  <span class="grp"><span class="lbl">years</span>
+    <input type="number" id="y1" placeholder="from"><span class="dash">–</span>
+    <input type="number" id="y2" placeholder="to"></span>
+  <span class="grp"><span class="lbl">length in</span>
+    <input type="number" id="d1" placeholder="min"><span class="dash">–</span>
+    <input type="number" id="d2" placeholder="max">
+    <span class="lbl">minutes</span></span>
+</div>
+<div class="bar">
+  <label class="chk"><input type="checkbox" id="awarded"> awarded only</label>
+  <select id="flag" title="rows carrying a caveat, by kind"><option value="">any flag state</option></select>
+  <label class="chk"><input type="checkbox" id="vt"> title varies between festivals</label>
+  <label class="chk"><input type="checkbox" id="va"> artist spelling varies</label>
+  <label class="chk"><input type="checkbox" id="desc"> with a printed description</label>
+  <label class="chk"><input type="checkbox" id="fpage"> with an external film page</label>
+  <label class="chk"><input type="checkbox" id="people" checked> people only <span class="dim">(artists view)</span></label>
+</div>
+</div>
+<main><div class="tw"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+<div class="foot">Questions? Feedback? Additions? <a href="mailto:taramoves@gmail.com">Email: taramoves@gmail.com</a></div></main>
+<aside id="d"><button class="x" onclick="closeD()">×</button><div id="dc"></div></aside>
+<script>
