@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domebase/lab/3d math</title>
+<link rel="stylesheet" href="../../assets/css/site.css">
+<style>/* 3d math — this page only */
+body.app > main{flex-direction:row}
+#indexcol{flex:0 0 auto;width:228px;overflow:auto;border-right:1px solid var(--line);scrollbar-gutter:stable}
+#side{flex:0 0 auto;width:268px;overflow:auto;border-left:1px solid var(--line);scrollbar-gutter:stable}
+#stage{position:relative;flex:1 1 auto;min-width:0;background:var(--paper);overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#cv.drag{cursor:grabbing}
+#stage .say{position:absolute;left:12px;top:10px;font-size:12.5px}
+table{width:100%}
+#index th,#params th,#spec th{cursor:default}
+#index td,#index th,#params td,#params th,#spec td,#spec th{padding:2px 6px;font-size:12px}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.row.on td{background:var(--head);font-weight:700}
+tr.row.off,#indexcol.hide{display:none}
+#colour{margin-left:5px;padding:0 2px}
+#params input[type=number]{width:60px;padding:1px 3px;text-align:right}
+#params input.p{width:44px;border-color:var(--hair)}
+#params select{max-width:126px;padding:1px 2px}
+td.k{white-space:nowrap}
+#spec td.v{text-align:right;white-space:nowrap}
+#spec a{text-decoration:none;border-bottom:1px solid var(--hair)}
+</style>
+</head>
+<body class="app">
+
+<header>
+  <h1>domebase/lab/3d math</h1>
+</header>
+
+<nav id="tabs"></nav>
+
+<div class="bar barhead">
+  <label class="chk"><input type="checkbox" id="spin" checked>spin</label>
+  <label class="chk"><input type="checkbox" id="sweep">animate</label>
+  <label class="chk"><input type="checkbox" id="depth" checked>depth</label>
+  <label class="chk"><input type="checkbox" id="edges" checked>edges</label>
+  <label class="chk"><input type="checkbox" id="faces" checked>faces</label>
+  <label class="chk">colour<select id="colour"><option value="0">off</option><option value="1">data</option><option value="2" selected>normal</option></select></label>
+  <button class="pill" id="front">front</button>
+  <span class="count" id="count"></span>
+</div>
+
+<main>
+  <div id="indexcol">
+    <table id="index">
+      <thead><tr><th>shape</th><th class="n">verts</th><th class="n">lines</th><th class="n">tris</th></tr></thead>
+      <tbody id="indexbody"></tbody>
+    </table>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="side">
+    <table id="params">
+      <thead><tr><th>parameter</th><th class="n">value</th><th>sweep</th><th class="n">s</th></tr></thead>
+      <tbody id="parambody"></tbody>
+    </table>
+    <table id="spec">
+      <thead><tr><th>measure</th><th class="n">value</th></tr></thead>
+      <tbody id="specbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="geom.js"></script>
+<script>/* the registry every family file pushes its shapes into */
+const SHAPES3D = { list: [], define: function (d) { this.list.push(d); } };</script>
+<script src="fam_polytopes.js"></script>
+<script src="fam_packing.js"></script>
+<script src="fam_fractal.js"></script>
+<script src="fam_surface.js"></script>
+<script src="fam_curve.js"></script>
+<script src="fam_attractor.js"></script>
+<script src="fam_dome.js"></script>
+<script src="viewer.js"></script>
+</body>
+</html>

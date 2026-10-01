@@ -4,7 +4,7 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ## Rules
 
-- Black on white. All text `#000`. No colour.
+- Black on white. All text `#000`. No colour. (The lab canvas is the one exception — see Lab.)
 - **Arial**, everywhere. No webfont, no serif.
 - A spreadsheet, not a document: ruled grid, sheet tabs, boxed controls, `#efefef` header
   fill. Structure comes from rules and fills.
@@ -112,21 +112,60 @@ not a display job.
 
 `dist/library/index.html` is **generated** by `work/library/build/build_shelf.py` from the shelf
 in `work/library/data`, and `build_site.py` runs it on every build. It is an app page — the same
-sheet shell as the database — with two tabs: **Shelf** (one row per file) and **Links**. It links
-`../assets/css/site.css` rather than inlining it, so restyling the site restyles it.
+sheet shell as the database — with two tabs: **Shelf** (one row per file, with its links on the
+row) and **Ideas** (the review's arguments). It links `../assets/css/site.css` rather than
+inlining it, so restyling the site restyles it.
 
 ```
 work/library/data/sources.csv            the shelf: one row per work. Edit this
 work/library/data/tags.csv               the tag vocabulary; a tag is declared before it is used
 work/library/data/links.csv              one link per row: work, label, url, source
-work/library/build/build_shelf.py        csv -> dist/library/index.html + SHELF.md + TAGS.md
+work/library/data/wiki.txt               the vault the ideas are read from, one line
+work/library/build/build_shelf.py        csv -> dist/library/index.html + SHELF.md + IDEAS.md + TAGS.md
+work/library/build/add_source.py         a new source -> the file, its text, its shelf row
+work/library/build/extract.py            a source file -> page-marked text
+work/library/build/tags.py               list / add / rename / merge / drop tags, safely
 work/library/build/seed_from_corpus.py   one-time seed, kept for provenance
-src/library/notes/                       one note per work (step 2)
 ```
 
+The **Ideas** tab is read from the vault, not written here: the fulldome project's
+`wiki/concepts/*.md` are already claims, each carrying the quote bullets that support them, and
+the shelf maps each cited record back to the work it came from. The library publishes them; the
+wiki owns them, and its own machinery verifies the quotes. A work whose record is not on the
+shelf fails the build. Nothing sits in `src/` for this section — the library has no hand-written
+source files, only the data in `work/library/data`.
+
 The shelf is 45 sources. The build fails on a tag that is not declared, a file that is not on
-disk, a link pointing at a work that is not on the shelf, or two rows on one file; it warns on a
-row with no year and on a tag used once. Columns, tabs and the note format: `work/library/README.md`.
+disk, a link pointing at a work that is not on the shelf, an idea resting on a record that is not
+on the shelf, or two rows on one file; it warns on a row with no year and on a tag used once.
+Columns, tabs and the workflow: `work/library/README.md`.
+
+## Lab
+
+`dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page —
+masthead, family tabs, a control bar, the shape index on the left, the canvas in the middle,
+the parameter and measure tables on the right — and it links `../../assets/css/site.css` from
+a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
+`#c9c9c9`) with black hairlines. The canvas is the one exception to the sheet's black and
+white, in two modes: the greys of a lit form, or — with `colour` set to `data` or `normal` —
+the full spectrum of the shape's own value, which is how Knill's figures are coloured (his
+colours map data, not light). The frame, the tables and every word stay black on white, and
+`off` puts the figure back in the greys.
+
+```
+src/lab/3Dmath/index.html  the page: markup and the page's own CSS
+src/lab/3Dmath/viewer.js   the renderer and the controls
+src/lab/3Dmath/geom.js     the geometry helpers every family builds on
+src/lab/3Dmath/fam_*.js    one file per family: polytopes packing fractal surface curve attractor dome
+work/lab/CONTRACT.md       what a family file must do, and how it is checked
+work/lab/check_geom.cjs    the helpers against known values
+work/lab/check_family.cjs  every shape at its default and at each parameter extreme
+```
+
+Every shape is procedural and parameterised — a function of numbers the page exposes as table
+cells, each with a sweep checkbox that animates it. No mesh files, no library, no network.
+Each shape states its own invariant in `verify()` and the checks must report zero problems
+before a family joins the page.
 
 ## Not taramoves
 

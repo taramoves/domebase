@@ -9,9 +9,11 @@ src/                    what the site is — hand-written pages and assets, noth
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
+  lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
   archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
+work/lab/               the lab's shape checks: CONTRACT.md and the two node checks
 build/build_site.py     the site build
 dist/                   the deploy root — generated; the only thing that is ever served
 IDEA.md  STYLE.md  README.md  DEPLOY.md
@@ -70,3 +72,21 @@ Static files only. **No server, no database and no backend**: the page carries i
 so the host only ever serves files. Deploy `dist/` — see `DEPLOY.md`. Nothing under `work/`
 is copied into `dist/`, so the programme text dumps, the SQLite file and the build scripts
 never become public URLs.
+
+## Lab
+
+`dist/lab/3Dmath/index.html` is hand-written and copied in by the build — no generator, no
+data. It draws Knill's `3dprinter/math` figures as live geometry: one WebGL context, no
+library, no network, no mesh files. Every shape is a function of numeric parameters the page
+exposes as table cells (with a per-parameter sweep, so any of them animates), built from
+`geom.js` and one `fam_<family>.js` per family: polytopes, packing, fractal, surface, curve,
+attractor, dome.
+
+```bash
+node work/lab/check_geom.cjs                              # the helpers, against known values
+node work/lab/check_family.cjs src/lab/3Dmath/fam_*.js    # every shape, at defaults and at each parameter extreme
+```
+
+`work/lab/CONTRACT.md` is what a family file has to do: the interface, the rules, and the
+invariant its `verify()` must state with a number. Both checks report zero problems before a
+family joins the page.
