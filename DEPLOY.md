@@ -1,7 +1,9 @@
 # Deploying domebase
 
-**Live now: <https://domebase.vercel.app>** — Vercel project `domebase`, team `nft-arot`.
-There is no git connection yet: a deploy is a CLI push of this folder.
+**Live now: <https://domebase.vercel.app>** — Vercel project `domebase`, team `nft-arot`,
+linked to this GitHub repo (`taramoves/domebase`, production branch `main`). **A push to `main`
+is the whole deploy**: Vercel builds and promotes it automatically. The CLI below is the
+fallback for the times you want to publish without committing.
 
 ```
 npx --yes vercel@latest deploy --prod
