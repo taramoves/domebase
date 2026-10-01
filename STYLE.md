@@ -23,16 +23,19 @@ src/                    hand-written pages and assets — what the site is
   assets/css/site.css   the one stylesheet: document pages link it, the database page inlines it
   assets/fonts/         cmu-serif-roman.woff, OFL.txt (kept, unused since Arial)
   database/             app.html + app.js — the database section's own page source
-  archive/ library/ lab/ learn/        a folder per section, as they are built
+  library/notes/        the library's notes, one per work
+  archive/ lab/ learn/  a folder per section, as they are built
 work/db/                the database pipeline: sources, parsers, page build
-build/build_site.py     builds the database page, then dist/
+work/library/           the library pipeline: the shelf (data/) and its build
+build/build_site.py     builds the library page and the database page, then dist/
 dist/                   the deploy root — generated, and the only thing ever served
 IDEA.md STYLE.md README.md DEPLOY.md
 ```
 
 - Nothing generated ever sits in `src/`. The database page exists only as
-  `dist/database/index.html`, built from `src/database` + `work/db`, so no one can edit
-  output by mistake. A section folder in `src/` holds that section's own sources.
+  `dist/database/index.html`, built from `src/database` + `work/db`, and the library page only
+  as `dist/library/index.html`, built from `work/library`, so no one can edit output by
+  mistake. A section folder in `src/` holds that section's own sources.
 - A page links `assets/css/site.css`; from a section folder, `../assets/css/site.css`.
 - Full-height app pages (the database) put `class="app"` on `<body>`. Document pages use
   `<main class="doc">`. The app shell only applies to `body.app`.
@@ -77,7 +80,7 @@ The page's source files, none of which are the page itself:
 | `build/build_site.py` | runs the generator and the publish step, then assembles `dist/` |
 
 ```
-python build/build_site.py              # the database page + dist/
+python build/build_site.py              # the library page, the database page, then dist/
 python build/build_site.py --skip-db    # dist/ only
 python build/build_site.py --full-prose # keep every quoted word (not for a public copy)
 ```
@@ -103,6 +106,24 @@ What the page does (all of it built into the pipeline, not edited into the outpu
 screening years, not production years, so the year travels with the festival. Adding production
 years means sourcing them (film pages, catalogues) as a new field — a data job in the pipeline,
 not a display job.
+
+## Library
+
+`dist/library/index.html` is **generated** by `work/library/build/build_shelf.py` from the shelf
+in `work/library/data`, and `build_site.py` runs it on every build. It is a document page: it
+links `../assets/css/site.css` rather than inlining it, so restyling the site restyles it.
+
+```
+work/library/data/sources.csv            the shelf: one row per work. Edit this
+work/library/data/tags.csv               the tag vocabulary; a tag is declared before it is used
+work/library/build/build_shelf.py        csv -> dist/library/index.html + SHELF.md + TAGS.md
+work/library/build/seed_from_corpus.py   one-time seed, kept for provenance
+src/library/notes/                       one note per work (step 2)
+```
+
+The shelf is 45 sources. The build fails on a tag that is not declared, a file that is not on
+disk, or two rows on one file; it warns on a row with no year and on a tag used once. Columns,
+rules and the note format: `work/library/README.md`.
 
 ## Not taramoves
 

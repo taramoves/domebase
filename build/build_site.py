@@ -9,6 +9,7 @@ Layout this script maintains:
 
     src/                 what the site is: hand-written pages and assets, nothing generated
     work/db/             the fulldome festival database: CSV + SQLite sources, parsers, page build
+    work/library/        the library section: the shelf (sources.csv, tags.csv) and its build
     build/build_site.py  this script
     dist/                the deploy root — the only place a server ever serves from
 
@@ -21,11 +22,12 @@ import argparse, gzip, pathlib, shutil, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent      # domebase/
 SRC = ROOT / "src"                                         # hand-written site
 DB = ROOT / "work" / "db"                                  # the data pipeline
+LIB = ROOT / "work" / "library"                            # the library section's pipeline
 SHEET = SRC / "assets" / "css" / "site.css"                # the one stylesheet
 DIST = ROOT / "dist"                                       # deploy this
 PAGE = DIST / "database" / "index.html"                    # generated, deployed
-GENERATED = ("database",)      # sections whose page this build writes into dist/;
-                               # their sources stay in src/, and they are not copied in
+GENERATED = ("database", "library")   # sections whose page this build writes into dist/;
+                                      # their sources stay in src/, and they are not copied in
 
 
 def sh(cmd, cwd):
@@ -52,6 +54,9 @@ def main():
     if DIST.exists():
         shutil.rmtree(DIST)
     (DIST / "database").mkdir(parents=True)
+
+    # the library section: the shelf page, written into dist/library/ by its own pipeline
+    sh([sys.executable, LIB / "build" / "build_shelf.py"], ROOT)
 
     if a.skip_db:
         if keep is None:
@@ -86,6 +91,11 @@ def main():
         b = PAGE.read_bytes()
         print(f"  the database page: {len(b)/1048576:.2f} MB raw · "
               f"{len(gzip.compress(b, 9))/1048576:.2f} MB gzipped over the wire")
+    lp = DIST / "library" / "index.html"
+    if lp.exists():
+        b = lp.read_bytes()
+        print(f"  the library page:  {len(b)/1024:.0f} KB raw · "
+              f"{len(gzip.compress(b, 9))/1024:.0f} KB gzipped over the wire")
     print("  deploy dist/ — see DEPLOY.md")
 
 

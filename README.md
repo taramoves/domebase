@@ -8,8 +8,10 @@ src/                    what the site is — hand-written pages and assets, noth
   assets/css/site.css   the one stylesheet
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
-  archive/ library/ lab/ learn/     one folder per section, as they are built
+  library/notes/        the library's notes, one per work
+  archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
+work/library/           the library: the shelf (data/) and its build
 build/build_site.py     the site build
 dist/                   the deploy root — generated; the only thing that is ever served
 IDEA.md  STYLE.md  README.md  DEPLOY.md
@@ -29,8 +31,9 @@ no descriptive lines. Brief: `IDEA.md` — five sections: database, archive, lib
 python build/build_site.py
 ```
 
-That runs the database pipeline (`work/db/build/make_browser.py`), publishes the page into
-`dist/database/index.html`, copies `src/` in beside it, and reports the sizes. Options:
+That runs the library build and the database pipeline (`work/db/build/make_browser.py`),
+writes `dist/library/index.html` and `dist/database/index.html`, copies `src/` in beside them,
+and reports the sizes. Options:
 
 | flag | effect |
 |---|---|
@@ -42,9 +45,10 @@ That runs the database pipeline (`work/db/build/make_browser.py`), publishes the
 
 **Nothing generated ever sits in `src/`.** Each section owns its own source: the database
 section's page is `src/database/app.html` plus `src/database/app.js`, its data comes from
-`work/db`, and its stylesheet is `src/assets/css/site.css`. The build writes the page to
-`dist/database/index.html` and nowhere else, so there is no built file anyone can edit by
-mistake.
+`work/db`; the library section's page comes from `work/library` and its notes are
+`src/library/notes`. Both stylesheets are the one `src/assets/css/site.css`. The build writes
+the pages to `dist/database/index.html` and `dist/library/index.html` and nowhere else, so
+there is no built file anyone can edit by mistake.
 
 ## The data
 
