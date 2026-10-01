@@ -12,19 +12,25 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   a sentence explaining what the page or a section is, and never a "how this works" block.
 - Anything you can open, sort, filter or go to is a link. Inside the sheet, links are not
   underlined until hover.
-- Dead links are fine in this project. The home page links to nothing at all.
+- Dead names are fine in this project; dead links are not. The home page names the five
+  sections and links the ones that have pages.
+- **Every page carries the site path in its header** — `domebase / section / page` — with each
+  part a link except the page itself, so no page is more than two clicks from the home page.
+  A section index is a document page in the home page's idiom: the path back, then one line per
+  page in that section.
 - Ship the smallest artifact that works.
 
 ## Files
 
 ```
 src/                    hand-written pages and assets — what the site is
-  index.html            home: the name and five section names, no links
+  index.html            home: the name and the five section names, linked where a page exists
   assets/css/site.css   the one stylesheet: document pages link it, the database page inlines it
   assets/fonts/         cmu-serif-roman.woff, OFL.txt (kept, unused since Arial)
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
-  archive/ lab/ learn/  a folder per section, as they are built
+  lab/index.html        the lab's own index: one line per page in the lab
+  archive/ learn/       a folder per section, as they are built
 work/db/                the database pipeline: sources, parsers, page build
 work/library/           the library pipeline: the shelf (data/) and its build
 build/build_site.py     builds the library page and the database page, then dist/
@@ -153,6 +159,7 @@ colours map data, not light). The frame, the tables and every word stay black on
 `off` puts the figure back in the greys.
 
 ```
+src/lab/index.html         the lab's index: the path back, one line per page
 src/lab/3Dmath/index.html  the page: markup and the page's own CSS
 src/lab/3Dmath/viewer.js   the renderer and the controls
 src/lab/3Dmath/geom.js     the geometry helpers every family builds on

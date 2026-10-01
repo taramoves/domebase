@@ -9,7 +9,9 @@ src/                    what the site is — hand-written pages and assets, noth
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
+  lab/index.html        the lab's index: one line per page in the lab
   lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
+  lab/instrument/       the instrument page: one hand-written document, diagrams inline
   archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
