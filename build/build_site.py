@@ -45,6 +45,8 @@ def main():
                     help="characters of quoted programme prose to keep (default 280, 0 = none)")
     ap.add_argument("--full-prose", action="store_true", help="keep all quoted prose")
     ap.add_argument("--no-posters", action="store_true", help="drop the hotlinked poster images")
+    ap.add_argument("--no-checks", action="store_true",
+                    help="skip the library's note lint and quote verification")
     a = ap.parse_args()
 
     # one stylesheet: the pipeline inlines the site sheet, so restyling the site restyles the page
@@ -58,6 +60,13 @@ def main():
 
     # the library section: the shelf page, written into dist/library/ by its own pipeline
     sh([sys.executable, LIB / "build" / "build_shelf.py"], ROOT)
+
+    # the library's own checks, on every build: the sheet and the vault must agree, and every
+    # quote must be verbatim on the page it claims. A page that ships without these is a page
+    # that lies, so they run here and fail the build rather than printing a warning.
+    if not a.no_checks:
+        sh([sys.executable, LIB / "build" / "lint_notes.py"], ROOT)
+        sh([sys.executable, LIB / "build" / "verify_quotes.py"], ROOT)
 
     if a.skip_db:
         if keep is None:
