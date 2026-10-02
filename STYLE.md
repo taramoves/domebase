@@ -174,10 +174,19 @@ cells, each with a sweep checkbox that animates it. No mesh files, no library, n
 Each shape states its own invariant in `verify()` and the checks must report zero problems
 before a family joins the page.
 
+`dist/lab/dome-diagram/index.html` is the SAT dome master, copied in by the build as it stands. It is
+a tool, not a sheet: `body` is a column of one header and one stage, the drawing fills the stage and
+the controls sit in its two bottom corners. Panel paint, speaker, projector and hover colours are
+kept because they carry meaning — the fourth colour is an exit — and they are the same exception the
+3d math canvas has. The frame, the controls and the numbers are black on white, and the page has no
+dark mode. One JPEG test pattern is embedded as a data URL, which is 0.6 MB of the page.
+
 `dist/lab/instrument/index.html` is hand-written and copied in by the build, and it is the one
 document page in the project with prose in it: the technology of the audience interaction
 system. It keeps the sheet's tokens — black on white, Arial, hairline rules, tables — without
-the spreadsheet shell: no tabs, no sticky headers, a single 760px column. Its diagrams are
+the spreadsheet shell: no tabs, no sticky headers, a single 760px column. It is the one document
+page with a script: the interaction demo in part 0, whose styles are scoped to `#w6` because the
+sheet's `.chip`, `th` and `td` rules are global. Its diagrams are
 inline SVG in the same greys and black hairlines, and a shape that is active is filled where a
 resting one is hollow, since the sheet carries no second colour.
 

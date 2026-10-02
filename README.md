@@ -11,6 +11,7 @@ src/                    what the site is — hand-written pages and assets, noth
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's index: one line per page in the lab
   lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
+  lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
@@ -93,8 +94,18 @@ node work/lab/check_family.cjs src/lab/3Dmath/fam_*.js    # every shape, at defa
 invariant its `verify()` must state with a number. Both checks report zero problems before a
 family joins the page.
 
+`dist/lab/dome-diagram/index.html` is the SAT dome master, published as it stands and copied in by
+the build: one SVG, no library and no network, with panel rings, projector circles and speaker
+rings drawn as percentages of the dome radius, numbers and a test pattern to switch on. It saves
+to `localStorage` and downloads a JSON save. Panels paint the four states, so it keeps the colours
+of the working tool; the frame and the controls are black on white like the rest of the site. Its
+source is `src/lab/dome-diagram/index.html`.
+
 `dist/lab/instrument/index.html` is also hand-written and copied in by the build: a document
 page, not a spreadsheet, for the audience interaction system. It carries its own diagrams as
-inline SVG — the parts, the objects table, placement, playback, audio routing, the seat-error
-cross-section — so the page needs nothing but the one stylesheet. Its source is
+inline SVG — the dome, the parts, the objects table, placement, playback, audio routing, the
+seat-error cross-section. Part 0 also runs the interaction demo, ported from the escargot
+outline's own widget: every rule it uses is scoped to `#w6`, it needs `--guide` and `--faint`
+(the sheet does not define them), and an `IntersectionObserver` starts and stops its frame loop
+as it scrolls in and out, so the page is idle when the demo is off screen. Its source is
 `src/lab/instrument/index.html`, and it is edited by hand.
