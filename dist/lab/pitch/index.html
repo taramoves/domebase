@@ -220,7 +220,8 @@ function stepScene(S,dt,now){
      b.ta={az:b.az+(Math.random()*2-1)*80,el:Math.max(14,Math.min(76,b.el+(Math.random()*2-1)*45))};}}
    else if(b.state=='draw'){aimTo(b,b.ta,dt,3.4);const q={az:b.az,el:b.el};
      if(b.n==1)spark(S,{az:-42,el:11},q,b.i,now);
-     if(b.stroke&&angleBetweenDeg(b.stroke[b.stroke.length-1],q)>.8)b.stroke.push(q);
+     if(b.stroke&&b.stroke.length){const o=b.stroke[b.stroke.length-1],da=((q.az-o.az+540)%360)-180,de=q.el-o.el,ang=Math.hypot(da,de);
+       if(ang>.8){const n=Math.max(1,Math.min(9,Math.round(ang/1.2)));for(let j=1;j<=n;j++)b.stroke.push({az:wrap360(o.az+da*j/n),el:o.el+de*j/n});}}
      S.stroke=b.stroke;strokeTube(S,b.stroke);
      if(++b.n>160||near(b,b.ta,3)){b.stroke=null;S.stroke=null;b.state='idle';b.t=.08+Math.random()*.22;}}});
   S.t+=dt;if(S.t>30){S.t=0;S.strokes.forEach(st=>{if(st._tube){S.grp.remove(st._tube);st._tube.geometry.dispose();}});S.strokes=[];}}

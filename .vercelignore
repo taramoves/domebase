@@ -2,3 +2,4 @@
 # dist/ must NOT be listed here — it is the output the deploy serves.
 work/
 .git/
+exports/
