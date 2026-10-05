@@ -168,10 +168,13 @@ colours map data, not light). The frame, the tables and every word stay black on
 - **The scene turns inside it.** The shape is drawn into the six faces of a cube map, one 90° camera
   per face, so each face lands in the 90° of sphere facing it: the top view at the centre of the
   master, the four side views as bands around the rim, the bottom view below the horizon and out of
-  a 180° master altogether. Dragging turns and tips the shape, `spin` is the same turn on a clock,
-  `size` is how near each face's camera sits — all of it inside a frame that does not budge.
+  a 180° master altogether. Dragging turns and tips the scene inside those faces, `spin` is the
+  same turn on a clock, `size` is how near each face's camera sits — all of it inside a frame that
+  does not budge. **Every path that changes the scene's orientation must mark the cube stale**
+  (`S.cubeStale`): with the master fixed, yaw and pitch no longer re-render anything by themselves,
+  so a drag that forgets it does nothing visible unless the spin happens to be re-rendering.
 - **The menu is a 2d layer placed in the master's coordinates, never in the scene.** It is a band on
-  the dome's back wall — altitudes 22°–68°, ±62° of azimuth — which is the top of the master, drawn
+  the dome's back wall — altitudes 18°–72°, ±62° of azimuth — which is the top of the master, drawn
   over the canvas so it stays crisp, stays clickable and holds still while the shape turns
   underneath it. Its up points at the zenith, which is the way round it must be drawn to read on a
   dome, so on the master it sits upside down. `placeMenu()` derives left, top, width and height from
@@ -179,7 +182,8 @@ colours map data, not light). The frame, the tables and every word stay black on
   layer's centre at the circle's centre-x and one radius above its centre-y, its corners inside `R`,
   its transform a rotation and a scale only, and a drag on the canvas leaving its rect identical.
 - The block is four panes sharing every edge — shapes, parameters, view, measures — in a 2×2 grid at
-  a nominal 488 css px, scaled to the width the dome geometry gives it. One function (`specRows()`)
+  a nominal 488 css px and 10px type on a 12.5px line, scaled to the width the dome geometry gives
+  it, which shows ten rows a pane: the parameters and the measures fit whole, the 29 shapes scroll. One function (`specRows()`)
   feeds the measures, so the layer and any copy of it cannot report different numbers.
 - `dome` off is the flat perspective view — the same shape, the same maths, for reference.
 - Drag turns the shape, the wheel sets `fov` in the dome (it zooms in the flat view), and `front`
