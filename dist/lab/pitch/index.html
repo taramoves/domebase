@@ -153,7 +153,7 @@ function makeScene(n){const S=Object.assign({grp:new THREE.Group(),marks:[],stro
    S.cubes.push({az:az,list:st,base:glyphMesh('shape',SHAPES[i],i,3.6)});
    place(S.cubes[i].base,sph(az,BASE_EL+1,RS-.2));S.grp.add(S.cubes[i].base);}}
  if(S.kind=='race'){S.runners=[];
-  for(let i=0;i<6;i++)S.runners.push({i:i,id:'p'+(i+1),p:0,rate:2.5+Math.random()*4,acc:0,az0:Math.random()*360,
+  for(let i=0;i<6;i++)S.runners.push({i:i,id:'p'+(i+1),p:0,rate:2.5+Math.random()*4,acc:0,az0:-26,
    mesh:glyphMesh('shape',SHAPES[i%4],i,2.6),trail:[]});
   S.runners.forEach(r=>{S.grp.add(r.mesh);});
   // the track: one hairline ring per lane, and the badge that names the winner
@@ -216,13 +216,13 @@ function stepScene(S,dt,now){
  const k=S.kind;
  if(k=='line'){S.bots.forEach(b=>{
    if(b.state=='idle'){b.t-=dt;if(b.t<=0){b.ta={az:Math.random()*360,el:16+Math.random()*56};b.state='to';}}
-   else if(b.state=='to'){aimTo(b,b.ta,dt,1.1);if(near(b,b.ta,2.5)){b.stroke=sDown(S,{az:b.az,el:b.el},b.i);b.state='draw';b.n=0;S.press=now;
+   else if(b.state=='to'){aimTo(b,b.ta,dt,2.6);if(near(b,b.ta,2.5)){b.stroke=sDown(S,{az:b.az,el:b.el},b.i);b.state='draw';b.n=0;S.press=now;
      b.ta={az:b.az+(Math.random()*2-1)*80,el:Math.max(14,Math.min(76,b.el+(Math.random()*2-1)*45))};}}
-   else if(b.state=='draw'){aimTo(b,b.ta,dt,1.4);const q={az:b.az,el:b.el};
+   else if(b.state=='draw'){aimTo(b,b.ta,dt,3.4);const q={az:b.az,el:b.el};
      if(b.n==1)spark(S,{az:-42,el:11},q,b.i,now);
-     if(b.stroke&&angleBetweenDeg(b.stroke[b.stroke.length-1],q)>1.4)b.stroke.push(q);
+     if(b.stroke&&angleBetweenDeg(b.stroke[b.stroke.length-1],q)>.8)b.stroke.push(q);
      S.stroke=b.stroke;strokeTube(S,b.stroke);
-     if(++b.n>110||near(b,b.ta,3)){b.stroke=null;S.stroke=null;b.state='idle';b.t=.25+Math.random()*.5;}}});
+     if(++b.n>160||near(b,b.ta,3)){b.stroke=null;S.stroke=null;b.state='idle';b.t=.08+Math.random()*.22;}}});
   S.t+=dt;if(S.t>30){S.t=0;S.strokes.forEach(st=>{if(st._tube){S.grp.remove(st._tube);st._tube.geometry.dispose();}});S.strokes=[];}}
  if(k=='loopers'){S.prevPhase=S.phase;S.phase=(S.phase+dt*1000/LOOP_MS*1.6)%1;
   sounders(S).forEach(it=>{const r=RHO(it.p);const hit=S.phase>=S.prevPhase?(r>S.prevPhase&&r<=S.phase):(r>S.prevPhase||r<=S.phase);
