@@ -13,6 +13,7 @@ src/                    what the site is — hand-written pages and assets, noth
   lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
+  lab/pitch/            the domemaster pitch: the lecture as dome masters, one per slide
   archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
@@ -109,3 +110,10 @@ outline's own widget: every rule it uses is scoped to `#w6`, it needs `--guide` 
 (the sheet does not define them), and an `IntersectionObserver` starts and stops its frame loop
 as it scrolls in and out, so the page is idle when the demo is off screen. Its source is
 `src/lab/instrument/index.html`, and it is edited by hand.
+
+`dist/lab/pitch/index.html` is the domemaster pitch: the lecture as dome masters, one per slide —
+title, concept, the schedule as a ring of bubbles, five demo slides, thank you. Three.js renders the
+scene to a cubemap and a fisheye shader flattens it to the dome, so the page shows what the dome
+shows; **S** saves the current slide as a PNG. It loads three.js, p5 and two handwriting fonts from
+CDNs, and keeps its own styling: dark ground, round nav buttons, ink on white cards. Its source is
+`src/lab/pitch/index.html`.

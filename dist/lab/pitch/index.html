@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>domemaster pitch</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}canvas{display:block;margin:auto}
+#nav{position:fixed;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:14px;z-index:9}
+#nav button{width:64px;height:64px;border-radius:50%;border:1px solid #ffffff88;background:#101011cc;color:#fff;font:28px Helvetica,sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#nav button.s{width:44px;height:44px;align-self:center;font-size:16px}#nav button:active{background:#ffffff44}</style>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Permanent+Marker&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head><body>
+<div id="nav"><button onclick="go(idx-1)" aria-label="Previous">◀</button><button class="s" onclick="guides=!guides">◎</button><button class="s" onclick="flip*=-1">⇋</button><button class="s" onclick="fullscreen(!fullscreen())">⛶</button><button onclick="go(idx+1)" aria-label="Next">▶</button></div>
+<script>
+// ← → / buttons = slides · S = save domemaster PNG · G = guides · M = mirror · F = fullscreen
+// ================= ALL ON-SCREEN TEXT: edit here. Pairs are [French, English] (French on top, English italic) =================
+const COPY={
+ title:'Fulldome 101',   // see the 20 title options in chat
+ s1:['Une conférence-performance en fulldome sur la performance, les conférences et le fulldome','A fulldome performance lecture about performance, lectures, and fulldome'],
+ contact:['Tara Rose Morris','@taramoves','taramoves@gmail.com'],
+ s2title:'Concept',
+ s2main:['Un méta-récit sur le fulldome comme médium qui combine spectacle, présence en direct, collectivité, incarnation et communication scientifique afin de sensibiliser le public aux technologies sous-jacentes de l’espace et de nos vies.','A meta narrative on fulldome as a medium that combines spectacle, liveness, collectivity, embodiment, and scientific communication to foster audience awareness of the underlying technologies of the space and our lives.'],
+ s2subs:[['Thème : technologies de l’information et orientation','Theme: information technology and orientation'],
+  ['Public cible : adultes et jeunes adultes accros à la technologie','Target audience: technology pilled adults and young adults'],
+  ['Rôle du public : étudiant·es qui participent activement au cours (mais qui sont aussi accros à leur téléphone)','Audience role: students actively participating in class (but who also are addicted to their phones)'],
+  ['Lieu : dôme','Location: dome'],['Durée : 1 heure','Time: 1 hour']],
+ s3:[['Bienvenue. Le « prof » se présente et présente la classe','Welcome in. “Teacher” introduces themselves and the class'],
+  ['Les téléphones comme outils interactifs','Phones introduced as interactive tools'],['Sondage des participant·es','Survey of participants'],
+  ['Tout le monde dessine un oiseau','Everyone draws a bird'],['Observation d’oiseaux et Bixi','Bird watching and Bixi biking'],
+  ['Orientation / calibration des téléphones','Orientation / calibration of phones'],['Le dôme comme instrument audiovisuel','Dome as audiovisual instrument'],
+  ['Histoire / théorie du fulldome','History / theory of fulldome'],['Skeuomorphisme dans les conférences / dômes','Skeuomorphism in lectures / domes'],
+  ['Principes du design (Bauhaus)','Principles of design (Bauhaus)'],['« Difficultés techniques »','“Technical difficulties”'],
+  ['On parle des difficultés techniques','Technical difficulties talked about'],['Incarnation et performance','Embodiment and performance'],
+  ['Jeu (quiz)','Game play (quiz)'],['Prix de fin de cours','End of class prizes']],
+ demo:[['Dessiner sur le dôme','Draw on the dome'],['Boucles audiovisuelles','AV loopers'],['Envoyer un dessin','Send a drawing'],['Poésie magnétique','Magnetic poetry'],['Sondage et course (Kahoot)','Kahoot poll + race']],
+ words:[['dôme','dome'],['téléphone','phone'],['oiseau','bird'],['orienter','orient'],['signal','signal'],['classe','class'],['corps','body'],['écouter','listen'],['carte','map'],['vélo','bike'],['jouer','play'],['trouver','find']],
+ poll:['Sondage','Poll'], race:['Course','Race'], board:['Classement','Leaderboard'], names:['Alex','Sam','Noor','Mika','Jo'],
+ s9:['Merci !','Thank you!']
+};
+// =====================================================================================================================
+const BG='#101011',FOV=210,RES=2048,CUBE=1024,INK='#111',YEL='#ffe45c',ACC=['#ff5a4d','#3fa7ff','#ffe45c','#35c46b'];
+const F={b:'"Patrick Hand","Comic Sans MS",cursive',d:'"Permanent Marker","Marker Felt",cursive'};
+let R,cubeRT,cubeCam,scene3,fishScene,fishCam,fishMat,SC,DOT,deco=[],cards=[],extras=[],loop,tick=null,idx=0,guides=true,flip=1;
+
+// ---------- text cards: black on white, French first, English italic below ----------
+function wrap(s,w,sz,it){SC.textFont(F.b);SC.textSize(sz);SC.textStyle(it?ITALIC:NORMAL);const o=[];let l='';s.split(' ').forEach(wd=>{const t=l?l+' '+wd:wd;if(SC.textWidth(t)>w&&l){o.push(l);l=wd}else l=t});o.push(l);return o;}
+function tc(o){const sz=o.size||36,ld=sz*1.3,gap=sz*.8,tw=o.w||500,P=24,pad=40,bub=o.shape=='bubble',c=o.align!='l';
+ const fl=o.fr?wrap(o.fr,tw,sz,0):[],en=o.en?wrap(o.en,tw,sz,1):[],tl=o.tail||[],tsz=sz*2;
+ const th=(o.title?tsz*1.3+gap:0)+fl.length*ld+(en.length?gap+en.length*ld:0)+(tl.length?gap*1.2+tl.length*ld:0);
+ const W=bub?tw/.7+2*P:tw+2*pad+2*P,H=bub?th/.62+2*P:th+2*pad+2*P;
+ return Object.assign({},o,{w:W,h:H,draw:g=>{g.clear();const x=g.drawingContext;x.save();x.shadowColor='rgba(0,0,0,.75)';x.shadowBlur=22;x.shadowOffsetY=10;g.fill(o.bg||'#fff');
+  if(bub){g.stroke(INK);g.strokeWeight(6);g.ellipse(W/2,H/2,W-2*P,H-2*P);}else{g.noStroke();g.rect(P,P,W-2*P,H-2*P,5);}x.restore();
+  g.noStroke();g.fill(INK);g.textAlign(c?CENTER:LEFT,TOP);let y=(H-th)/2;const X=c?W/2:P+pad;
+  if(o.title){g.textFont(F.d);g.textStyle(NORMAL);g.textSize(tsz);g.text(o.title,X,y);y+=tsz*1.3+gap;}
+  g.textFont(F.b);g.textSize(sz);g.textStyle(NORMAL);fl.forEach(l=>{g.text(l,X,y);y+=ld});
+  if(en.length){y+=gap;g.textStyle(ITALIC);en.forEach(l=>{g.text(l,X,y);y+=ld});g.textStyle(NORMAL);}
+  if(tl.length){y+=gap*1.2;tl.forEach(l=>{g.text(l,X,y);y+=ld});}}});}
+function box(g,W,H){g.clear();const x=g.drawingContext;x.save();x.shadowColor='rgba(0,0,0,.75)';x.shadowBlur=22;x.shadowOffsetY=10;g.fill('#fff');g.noStroke();g.rect(24,24,W-48,H-48,5);x.restore();g.fill(INK);g.textFont(F.b);g.textAlign(LEFT,TOP);}
+function bi(g,p,x,y,sz,al){g.textAlign(al||LEFT,TOP);g.textFont(F.b);g.textSize(sz);g.fill(INK);g.textStyle(NORMAL);g.text(p[0],x,y);g.textStyle(ITALIC);g.text(p[1],x,y+sz*1.25);g.textStyle(NORMAL);}
+function glyph(g,k,x,y,s){g.noStroke();if(k==0)g.ellipse(x,y,s,s);else if(k==1)g.triangle(x,y-s/2,x-s/2,y+s/2,x+s/2,y+s/2);else if(k==2)g.rect(x-s/2,y-s/2,s,s);
+ else{g.beginShape();for(let i=0;i<10;i++){const r=i%2?s*.22:s*.5,a=-HALF_PI+i*PI/5;g.vertex(x+r*cos(a),y+r*sin(a));}g.endShape(CLOSE);}}
+function bird(g,cx,cy,s,v){g.push();g.translate(cx,cy);g.scale(s*(v%2?-1:1),s);g.rotate((v%3-1)*.15);g.noFill();g.stroke(INK);g.strokeWeight(7/s);
+ g.ellipse(0,10,100,64);g.ellipse(46,-22,40,40);g.triangle(64,-26,90,-18,64,-12);g.point(50,-26);g.arc(-6,8,52,40,PI*.9,PI*1.9);g.line(-4,42,-8,70);g.line(10,42,14,70);g.line(-8,70,-22,72);g.line(14,70,0,72);g.line(-50,6,-84,-6+v*4);g.pop();}
+// ---------- demo cards ----------
+const SH=[0,1,2,3],SCOL=[ACC[0],ACC[1],ACC[2],ACC[3]];
+function pollDraw(g,t=0){box(g,640,520);bi(g,COPY.poll,56,50,36);for(let i=0;i<4;i++){const v=.3+.65*(.5+.5*Math.sin(t*.7+i*1.9)),x=140+i*140,h=v*210;g.stroke(INK);g.strokeWeight(3);g.fill(SCOL[i]);g.rect(x-40,430-h,80,h);g.noStroke();g.fill(INK);glyph(g,i,x,470,40);g.textAlign(CENTER,BOTTOM);g.textSize(32);g.text(Math.round(v*40),x,424-h);}}
+function raceDraw(g,t=0){box(g,640,520);bi(g,COPY.race,56,50,36);const m=[1,.82,1.12,.94];for(let i=0;i<4;i++){const y=180+i*72,p=min(1,(t*.1*m[i])%1.3);g.stroke(INK);g.strokeWeight(2);g.line(60,y+34,540,y+34);g.noStroke();g.fill(SCOL[i]);glyph(g,i,80+p*440,y+20,46);}
+ for(let k=0;k<12;k++){g.fill(k%2?INK:'#fff');g.stroke(INK);g.strokeWeight(1);g.rect(560,170+k*24,22,24);}}
+function boardDraw(g,t=0){box(g,560,640);bi(g,COPY.board,56,50,36);const r=COPY.names.map((n,i)=>({n,s:60+i*14+22*Math.sin(t*.5+i*1.9)})).sort((a,b)=>b.s-a.s);
+ r.forEach((q,i)=>{const y=170+i*84;g.fill(INK);g.textAlign(LEFT,TOP);g.textSize(34);g.text((i+1)+'  '+q.n,56,y);g.stroke(INK);g.strokeWeight(3);g.fill(i?'#ddd':YEL);g.rect(250,y+4,q.s*2.2,34);g.noStroke();g.fill(INK);g.textSize(26);g.text(Math.round(q.s*10),256,y+8);});}
+function phone(scr){return{az:-42,el:11,ww:.95,rot:0,w:300,h:600,anim:1,draw:(g,t=0)=>{g.clear();const x=g.drawingContext;x.save();x.shadowColor='rgba(0,0,0,.75)';x.shadowBlur=16;x.shadowOffsetY=8;g.fill(INK);g.stroke('#bbb');g.strokeWeight(4);g.rect(24,24,252,552,34);x.restore();
+ g.noStroke();g.fill('#fff');g.rect(38,40,224,520,20);g.fill(INK);scr(g,t);}};}
+const PH=[(g,t)=>{bi(g,COPY.demo[0],150,60,26,CENTER);g.noFill();g.stroke(INK);g.strokeWeight(3);g.rect(56,150,188,380,10);const u=Math.min(1,(t%12)/7);g.strokeWeight(7);g.beginShape();for(let n=0;n<=u*50;n++)g.vertex(70+n/50*160,340+110*Math.sin(n/50*9)*(1-n/80));g.endShape();},
+ (g,t)=>{bi(g,COPY.demo[1],150,60,26,CENTER);for(let i=0;i<4;i++){const x=56+(i%2)*98,y=170+floor(i/2)*150;g.stroke(INK);g.strokeWeight(floor(t*1.5)%4==i?9:3);g.fill(SCOL[i]);g.rect(x,y,90,130,10);g.noStroke();g.fill(INK);glyph(g,i,x+45,y+65,46);}},
+ (g,t)=>{bi(g,COPY.demo[2],150,60,26,CENTER);bird(g,150,290,1.2,1);g.noFill();g.stroke(INK);g.strokeWeight(4);g.rect(62,460,176,64,12);g.noStroke();g.fill(INK);g.textAlign(CENTER,TOP);g.textSize(30);g.text('↑',150,474);},
+ (g,t)=>{bi(g,COPY.demo[3],150,60,26,CENTER);for(let i=0;i<3;i++){const y=170+i*100+(i==1?6*Math.sin(t*2):0);g.stroke(INK);g.strokeWeight(3);g.fill('#fff');g.rect(54,y,192,72,6);g.noStroke();g.fill(INK);g.textAlign(CENTER,CENTER);g.textSize(28);g.text(COPY.words[i][0]+' / '+COPY.words[i][1],150,y+36);}},
+ (g,t)=>{for(let i=0;i<4;i++){const x=52+(i%2)*100,y=70+floor(i/2)*245;g.stroke(INK);g.strokeWeight(floor(t*1.2)%4==i?10:3);g.fill(SCOL[i]);g.rect(x,y,96,230,10);g.noStroke();g.fill(INK);glyph(g,i,x+48,y+115,50);}}];
+// ---------- scenes ----------
+function cardsFor(i){
+ const lab=n=>tc({fr:COPY.demo[n][0],en:COPY.demo[n][1],w:560,size:44,az:0,el:67,ww:3.4});
+ if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:1000,size:40,az:0,el:40,ww:5.4})];
+ if(i==1){const P=[-52,-26,0,26,52];return[tc({fr:COPY.s2title,w:300,size:64,az:0,el:67,ww:2.4}),
+  tc({fr:COPY.s2main[0],en:COPY.s2main[1],w:900,size:34,align:'l',bg:YEL,az:0,el:42,ww:5,fl:1.5,rot:-.01}),
+  ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:300,size:28,align:'l',bg:YEL,az:P[k],el:14,ww:2,fl:1.5,rot:(k%2?.03:-.03)}))];}
+ if(i==2){const E=[22,48,32,56,26,44,36,52,24,46,34,58,28,42,50];
+  return COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:380,size:30,shape:'bubble',az:k*24,el:E[k],ww:2.7,r:7,fl:5}));}
+ if(i<8){const n=i-3,o=[lab(n),phone(PH[n])];
+  if(i==6)COPY.words.forEach((w,k)=>{const A=[-60,-30,0,30,60,-45,-15,15,45,-75,75,0],E=[22,26,20,28,24,44,48,46,42,40,38,60];o.push(tc({fr:w[0],en:w[1],w:260,size:40,az:A[k],el:E[k],ww:1.5,fl:6,rot:(k%3-1)*.05}));});
+  if(i==7)o.push({az:-30,el:42,ww:3,rot:-.02,w:640,h:520,draw:pollDraw,anim:1},{az:30,el:42,ww:3,rot:.02,w:640,h:520,draw:raceDraw,anim:1},{az:0,el:20,ww:2.3,rot:0,w:560,h:640,draw:boardDraw,anim:1});
+  return o;}
+ return[tc({fr:COPY.s9[0],en:COPY.s9[1],tail:COPY.contact,w:700,size:46,az:0,el:42,ww:4.4})];}
+// ---------- three.js ----------
+function sph(az,el,r){az*=Math.PI/180;el*=Math.PI/180;return new THREE.Vector3(Math.sin(az)*Math.cos(el)*r,Math.sin(el)*r,-Math.cos(az)*Math.cos(el)*r);}
+function setup(){
+  const s=min(windowWidth,windowHeight);createCanvas(s,s).style('touch-action','manipulation');pixelDensity(1);SC=createGraphics(10,10);
+  R=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});R.setSize(RES,RES,false);
+  cubeRT=new THREE.WebGLCubeRenderTarget(CUBE,{generateMipmaps:false,minFilter:THREE.LinearFilter});cubeCam=new THREE.CubeCamera(.1,200,cubeRT);
+  scene3=new THREE.Scene();scene3.background=new THREE.Color(BG);scene3.add(cubeCam);
+  scene3.add(new THREE.AmbientLight(0xffffff,.75));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(3,8,4);scene3.add(dl);
+  const dc=document.createElement('canvas');dc.width=dc.height=64;const dx=dc.getContext('2d');dx.fillStyle='#fff';dx.beginPath();dx.arc(32,32,30,0,7);dx.fill();DOT=new THREE.CanvasTexture(dc);
+  // dome sliced in 8, numbered near the edge (1 starts at the front, runs to the audience's right)
+  const LM=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.4});
+  for(let k=0;k<8;k++){const p=[];for(let e=0;e<=90;e+=5)p.push(sph(k*45,e,29.5));scene3.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),LM));
+    const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(8,8,112,112);x.fillStyle='#111';x.font='80px '+F.d;x.textAlign='center';x.textBaseline='middle';x.fillText(k+1,64,72);
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));m.position.copy(sph(k*45+22.5,7,28.5));m.lookAt(0,0,0);scene3.add(m);}
+  const rp=[];for(let a=0;a<=360;a+=5)rp.push(sph(a,0,29.5));scene3.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp),LM));
+  // manipulatives: mostly white/grey, yellow second, a few accents
+  const G=[new THREE.SphereGeometry(.5,16,12),new THREE.BoxGeometry(.8,.8,.8),new THREE.ConeGeometry(.5,.9,4),new THREE.TorusGeometry(.4,.16,10,20),new THREE.CylinderGeometry(.4,.4,.7,6),new THREE.OctahedronGeometry(.55)];
+  const DC=['#e6e6e6','#e6e6e6','#e6e6e6','#9a9a9a','#ffe45c','#ffe45c','#ff5a4d','#3fa7ff'];
+  for(let k=0;k<70;k++){const m=new THREE.Mesh(G[k%6],new THREE.MeshLambertMaterial({color:DC[k%8]}));m.userData={az:Math.random()*360,el:3+Math.random()*80,r:14+Math.random()*10,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.8+Math.random()*1.3);scene3.add(m);deco.push(m);}
+  const L='abcd12345+×=?!';for(let k=0;k<40;k++){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle='#ddd';x.font='100px '+F.d;x.textAlign='center';x.textBaseline='middle';x.fillText(L[k%L.length],64,70);
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,opacity:.45}));sp.scale.setScalar(1.6);sp.userData={az:Math.random()*360,el:4+Math.random()*80,r:12+Math.random()*12,sp:(Math.random()-.5)*4,sprite:1};scene3.add(sp);deco.push(sp);}
+  // AV looper: circle-loop ring from the zenith to the rim + a pinball; both trigger shapes
+  loop=new THREE.Group();loop.ring=new THREE.Mesh(new THREE.TorusGeometry(1,.02,8,96),new THREE.MeshBasicMaterial({color:0xffffff}));loop.ring.rotation.x=Math.PI/2;loop.add(loop.ring);
+  loop.ball=new THREE.Mesh(new THREE.SphereGeometry(.7,16,12),new THREE.MeshBasicMaterial({color:0xffffff}));loop.add(loop.ball);loop.items=[];
+  for(let k=0;k<20;k++){const col=['#e6e6e6',ACC[2],ACC[0],ACC[1],ACC[3]][k%5],m=new THREE.Mesh(G[[0,2,1,5][k%4]],new THREE.MeshBasicMaterial({color:col})),az=Math.random()*6.283,c=.25+Math.random()*1.2;
+    m.position.set(Math.sin(az)*Math.sin(c)*12,Math.cos(c)*12,-Math.cos(az)*Math.sin(c)*12);m.userData={c,col,f:0};loop.add(m);loop.items.push(m);}
+  scene3.add(loop);loop.visible=false;
+  fishScene=new THREE.Scene();fishCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  fishMat=new THREE.ShaderMaterial({uniforms:{t:{value:cubeRT.texture},fov:{value:FOV*Math.PI/180},flip:{value:1}},
+   vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
+   fragmentShader:`uniform samplerCube t;uniform float fov,flip;varying vec2 v;
+    void main(){vec2 p=v*2.-1.;float r=length(p);if(r>1.){gl_FragColor=vec4(0.,0.,0.,1.);return;}
+    float th=r*fov*.5,ph=atan(p.y,p.x);vec3 d=vec3(sin(th)*cos(ph),cos(th),sin(th)*sin(ph));d.x*=flip;gl_FragColor=textureCube(t,d);}`});
+  fishScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fishMat));
+  Promise.all(['40px "Permanent Marker"','30px "Patrick Hand"'].map(f=>document.fonts.load(f))).catch(()=>{}).then(()=>go(0));
+}
+function addCard(d){const g=createGraphics(d.w,d.h);g.pixelDensity(1);d.draw(g,0);const tex=new THREE.CanvasTexture(g.elt);tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(d.ww,d.ww*d.h/d.w),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
+  mesh.position.copy(sph(d.az,d.el,d.r||6));mesh.lookAt(0,0,0);mesh.rotateZ(d.rot||0);scene3.add(mesh);const c={mesh,g,tex,d};cards.push(c);return c;}
+function go(i){
+  idx=(i+9)%9;cards.forEach(c=>{scene3.remove(c.mesh);c.mesh.geometry.dispose();c.tex.dispose();c.g.remove();});cards=[];
+  extras.forEach(e=>scene3.remove(e));extras=[];tick=null;loop.visible=idx==4;
+  cardsFor(idx).forEach(addCard);
+  if(idx==2){const lines=[];for(let k=0;k<cards.length-1;k++){const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:20},()=>new THREE.Vector3())),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));scene3.add(l);extras.push(l);lines.push(l);}
+    tick=()=>lines.forEach((l,k)=>{const a=cards[k].mesh.position.clone().normalize(),b=cards[k+1].mesh.position.clone().normalize(),p=l.geometry.attributes.position;
+      for(let n=0;n<20;n++){const v=a.clone().lerp(b,n/19).setLength(6.8);p.setXYZ(n,v.x,v.y,v.z);}p.needsUpdate=true;});}
+  if(idx==3){const G=new THREE.Group(),it=[],C=[0xffffff,0xffe45c,0xff5a4d,0x3fa7ff,0xffffff,0x35c46b,0xffe45c],N=140;
+    for(let k=0;k<7;k++){const a0=-150+k*52+Math.random()*20,e0=25+Math.random()*40,P=new Float32Array(N*3);
+      for(let n=0;n<N;n++){const u=n/N,az=(a0+u*70+16*Math.sin(u*9+k))*Math.PI/180,el=Math.max(.12,(e0+22*Math.sin(u*5+k*2))*Math.PI/180);P.set([Math.sin(az)*Math.cos(el)*27.5,Math.sin(el)*27.5,-Math.cos(az)*Math.cos(el)*27.5],n*3);}
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:C[k],size:.8,map:DOT,transparent:true,alphaTest:.2,depthWrite:false}));
+      const hd=new THREE.Mesh(new THREE.SphereGeometry(.6,12,8),new THREE.MeshBasicMaterial({color:C[k]}));G.add(pts,hd);it.push({pts,hd,P,N,off:k*1.4});}
+    scene3.add(G);extras.push(G);tick=t=>it.forEach(o=>{const u=Math.min(1,(((t-o.off)%12+12)%12)/7),n=Math.max(1,Math.floor(u*o.N));o.pts.geometry.setDrawRange(0,n);o.hd.position.set(o.P[n*3-3],o.P[n*3-2],o.P[n*3-1]);o.hd.visible=u<1;});}
+  if(idx==5){const T=[];for(let v=0;v<4;v++){const g=createGraphics(260,260);g.pixelDensity(1);box(g,260,260);bird(g,130,140,.95,v);const t=new THREE.CanvasTexture(g.elt);t.minFilter=THREE.LinearFilter;T.push(t);extras.push({geometry:{dispose(){}},dispose(){g.remove()}});extras.pop();}
+    const D=[],s0=sph(-42,11,6);for(let k=0;k<14;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:T[k%4],transparent:true}));scene3.add(m);extras.push(m);D.push({m,s:s0,t:sph(-165+k*25,12+(k*17)%55,13+(k*7)%6),rz:(k%5-2)*.12});}
+    tick=t=>D.forEach((d,k)=>{const q=((t-k*.9)%14+14)%14,u=Math.min(1,q/4),e=u*u*(3-2*u),p=d.s.clone().lerp(d.t,e);p.y+=Math.sin(e*Math.PI)*3;d.m.position.copy(p);d.m.lookAt(0,0,0);d.m.rotateZ(d.rz*e);d.m.scale.setScalar(.2+.8*e);d.m.visible=q<13;});}
+}
+function draw(){
+  const t=millis()/1000;
+  cards.forEach((c,k)=>{const d=c.d;if(d.anim){d.draw(c.g,t);c.tex.needsUpdate=true;}
+    if(d.fl){const a=d.az+Math.sin(t*.23+k*1.7)*d.fl,e=d.el+Math.sin(t*.31+k*2.3)*d.fl*.5;c.mesh.position.copy(sph(a,e,d.r||6));c.mesh.lookAt(0,0,0);c.mesh.rotateZ(d.rot||0);}});
+  if(tick)tick(t);
+  deco.forEach(m=>{const u=m.userData;m.position.copy(sph(u.az+t*u.sp,u.el+Math.sin(t*.4+u.az)*2,u.r));if(!u.sprite){m.rotation.x=t*.3*(1+u.s);m.rotation.y=t*.4;}});
+  if(loop.visible){const c=((t%6)/6)*Math.PI/2*1.05;loop.ring.position.y=12*Math.cos(c);loop.ring.scale.setScalar(Math.max(.01,12*Math.sin(c)));
+    const bc=1.45*Math.abs(Math.sin(t*.9)),ba=t*.8;loop.ball.position.set(Math.sin(ba)*Math.sin(bc)*12,Math.cos(bc)*12,-Math.cos(ba)*Math.sin(bc)*12);
+    loop.items.forEach(m=>{const u=m.userData;if(Math.abs(c-u.c)<.05||m.position.distanceTo(loop.ball.position)<1.6)u.f=1;u.f*=.94;m.scale.setScalar(1+u.f*1.6);m.material.color.set(u.f>.35?'#ffffff':u.col);});}
+  cubeCam.position.set(0,0,0);cubeCam.update(R,scene3);fishMat.uniforms.flip.value=flip;R.render(fishScene,fishCam);
+  background(0);const s=width,x=drawingContext;x.save();x.beginPath();x.arc(s/2,s/2,s/2,0,Math.PI*2);x.clip();x.drawImage(R.domElement,0,0,s,s);x.restore();
+  if(guides){noFill();stroke(255,255,255,60);strokeWeight(1);circle(s/2,s/2,s-1);noStroke();fill(255,255,255,120);textFont('Helvetica');textSize(11);textAlign(CENTER,BOTTOM);text('FRONT',s/2,s-6);textAlign(LEFT,TOP);text((idx+1)+' / 9 · '+FOV+'°',8,6);}
+}
+function keyPressed(){
+  if(keyCode==RIGHT_ARROW)go(idx+1);else if(keyCode==LEFT_ARROW)go(idx-1);
+  else if(key=='g'||key=='G')guides=!guides;else if(key=='m'||key=='M')flip*=-1;else if(key=='f'||key=='F')fullscreen(!fullscreen());
+  else if(key=='s'||key=='S'){const a=document.createElement('a');a.download='domemaster_'+(idx+1)+'.png';a.href=R.domElement.toDataURL('image/png');a.click();}}
+function windowResized(){const s=min(windowWidth,windowHeight);resizeCanvas(s,s);}
+</script></body></html>
