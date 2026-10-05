@@ -132,7 +132,8 @@ function makeScene(n){const S=Object.assign({grp:new THREE.Group(),marks:[],stro
  phase:0,prevPhase:0,t:0,acc:0,stroke:null,timer:6,sparks:[],cubes:[],warn:null},SCENES[n]);
  S.grp.name='scene';scene3.add(S.grp);
  if(!VALID[S.act].includes(S.res)){S.warn=S.act+' -> no '+S.res;console.warn(S.warn);}
- if(S.kind=='line')for(let k=0;k<3;k++)S.bots.push({i:k,az:Math.random()*360,el:20+Math.random()*50,state:'idle',t:.1+k*.15,stroke:null});
+ if(S.kind=='line')for(let k=0;k<3;k++){const az=Math.random()*360,el=20+Math.random()*50;   // already aimed: the first stroke starts on frame one
+  S.bots.push({i:k,az:az,el:el,ta:{az:az,el:el},state:'to',t:0,stroke:null});}
  if(S.kind=='fly')for(let k=0;k<3;k++)S.bots.push({i:k,az:-40+k*40,el:14,obj:buildObject('draw'),t:.15+k*.15});
  if(S.kind=='poll'){S.cubes=[];
   for(let i=0;i<4;i++){const az=-54+i*36,st=[];
