@@ -80,7 +80,7 @@ const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>[...(r||document).queryS
 const CV=$('#cv'),X=CV.getContext('2d');
 const T=DATA.themes,TX=DATA.topics,S=DATA.texts,I=DATA.ideas;
 const N=[],LK=[],tid={},xid={},sid={},iid={};
-let W=800,H=600,hot=260,dirty=1,raf=0,fitted=0,cam={x:0,y:0,k:.8},sel=null,focus=null,go=null,hover=null;
+let W=800,H=600,hot=260,dirty=1,raf=0,fitted=0,gathered=null,needFit=1,cam={x:0,y:0,k:.8},sel=null,focus=null,go=null,hover=null;
 const off=new Set(),hits=new Set();
 let showIdeas=true,drag=null,gather=null,rings=null,path=null,pathA=null,pathArmed=false;
 let pathIdx=null,pathEdges=null;
@@ -124,12 +124,12 @@ function zoomAt(px,py,f){const cx=cxs();
   const wx=(px-cx)/cam.k+cam.x,wy=(py-H/2)/cam.k+cam.y;
   cam.k=Math.min(6,Math.max(.12,cam.k*f));cam.x=wx-(px-cx)/cam.k;cam.y=wy-(py-H/2)/cam.k;dirty=1}
 function neighbors(n){const s=new Set();LK.forEach(l=>{if(l.a===n)s.add(l.b);if(l.b===n)s.add(l.a)});return s}
-function visible(n){return n.show&&(n.kind!=='i'||showIdeas)}
+function visible(n){return (n.show||(gathered&&gathered.has(n)))&&(n.kind!=='i'||showIdeas)}
 function fitTo(list){const V=(list||N).filter(visible);if(!V.length)return;
   const xs=V.map(n=>n.x),ys=V.map(n=>n.y),a=Math.min.apply(null,xs),b=Math.max.apply(null,xs),
         c=Math.min.apply(null,ys),d=Math.max.apply(null,ys);
   cam={x:(a+b)/2,y:(c+d)/2,k:Math.min(vws()/(b-a+300),H/(d-c+200),2.2)};dirty=1}
-function openTopic(p,on){p.open=on;hot=Math.max(hot,on?240:120);
+function openTopic(p,on){p.open=on;if(on)needFit=1;hot=Math.max(hot,on?240:120);
   N.forEach(n=>{if(n.kind==='s'&&n.topic===p.id)n.show=on});dirty=1}
 function computeRings(v){
   const direct=(evidenceOf.get(v.id)||[]).slice();
@@ -188,11 +188,13 @@ function pick(n,quiet){
     dirty=1;return}
   sel=n;
   gather=null;rings=null;
-  if(!n){path=null;pathIdx=null;pathEdges=null;pathA=null;hot=Math.max(hot,90)}
+  if(!n){path=null;pathIdx=null;pathEdges=null;pathA=null;gathered=null;rings=null;gather=null;
+    hot=Math.max(hot,90)}
   if(n&&n.kind==='x'&&!quiet)openTopic(n,!n.open);
-  if(n&&n.kind==='i'){gather=n;rings=computeRings(n);hot=Math.max(hot,240);
-    (evidenceOf.get(n.id)||[]).forEach(s=>{const p=xid[s.topic];if(p&&!p.open)openTopic(p,true)})}
+  if(n&&n.kind==='i'){gather=n;rings=computeRings(n);hot=Math.max(hot,240);needFit=1;
+    if(rings)gathered=new Set(rings.r1.concat(rings.r2,rings.r3))}
   if(n&&n.kind==='s'){const p=xid[n.topic];if(p&&!p.open)openTopic(p,true)}
+  if(n&&(n.kind==='i'||n.kind==='x'))ensureVisible(n);
   if(path&&pathIdx)showPath();else showPanel(sel);
   dirty=1}
 function hit(px,py){const V=N.filter(visible);
@@ -324,15 +326,19 @@ function draw(){
 function step(){
   const V=N.filter(visible),k=hot>0?1:.32;
   for(let i=0;i<V.length;i++)for(let j=i+1;j<V.length;j++){
-    const a=V[i],b=V[j];let dx=a.x-b.x,dy=a.y-b.y;const d2=dx*dx+dy*dy+1;
+    const a=V[i],b=V[j];
+    /* A gathered dot is pinned on its ring: it must not push or pull anything, or clicking one
+       argument rearranges the whole map and the view has to re-fit away from where you were. */
+    if(gathered&&(gathered.has(a)||gathered.has(b)))continue;
+    let dx=a.x-b.x,dy=a.y-b.y;const d2=dx*dx+dy*dy+1;
     if(d2>640000)continue;
     const rank=(x)=>(x.kind==='s'?0:(x.kind==='i'?1:2));
     const apart=(a.themeId&&b.themeId&&a.themeId!==b.themeId)
       ?((a.kind==='x'&&b.kind==='x')?2.6:1.6):1;      // themes become visible clouds
     /* Repulsion by kind. Ideas used to sit in the middle pushing topics at the topic rate,
        which blew the whole map out to twice the height it needed. */
-    const s=(rank(a)===0&&rank(b)===0)?340
-      :((rank(a)===0||rank(b)===0)?1500
+    const s=(rank(a)===0&&rank(b)===0)?260
+      :((rank(a)===0||rank(b)===0)?700
       :((a.kind==='i'&&b.kind==='i')?9000:((a.kind==='i'||b.kind==='i')?6000:40000)));
     const sh=s*apart;
     const d=Math.sqrt(d2),f=sh/d2;dx=dx/d*f;dy=dy/d*f;a.vx+=dx;a.vy+=dy;b.vx-=dx;b.vy-=dy}
@@ -342,6 +348,7 @@ function step(){
   const sp=(a,b,L,k2)=>{const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,f=(d-L)*k2;
     a.vx+=dx/d*f;a.vy+=dy/d*f;b.vx-=dx/d*f;b.vy-=dy/d*f};
   LK.forEach(l=>{if(!visible(l.a)||!visible(l.b))return;
+    if(gathered&&(gathered.has(l.a)||gathered.has(l.b)))return;
     if(l.t==='tt')sp(l.a,l.b,255,.035);
     else if(l.t==='xx')sp(l.a,l.b,210,.015);
     else if(l.t==='it')sp(l.a,l.b,70,.03);
@@ -353,7 +360,9 @@ function step(){
         sp(n,{x:cx/nb.length,y:cy/nb.length},60,.008)}}
     n.vx-=n.x*.0016;n.vy-=n.y*.0016;n.vx*=.82;n.vy*=.82;
     const v=Math.hypot(n.vx,n.vy);if(v>9){n.vx*=9/v;n.vy*=9/v}
-    n.x+=n.vx*k*1.35;n.y+=n.vy*k*.62});  // the canvas is wide; the map should be too
+    n.x+=n.vx*k*1.35;n.y+=n.vy*k*.62;     // the canvas is wide; the map should be too
+    const dd=Math.hypot(n.x,n.y);         // a hard field edge: no node may run for a corner
+    if(dd>2600){n.x*=2600/dd;n.y*=2600/dd;n.vx*=.2;n.vy*=.2}});
   placeRings()}
 
 /* ---- the panel ------------------------------------------------------------------- */
@@ -362,6 +371,11 @@ function el(tag,cls,txt,parent){const d=document.createElement(tag);if(cls)d.cla
   if(txt!==undefined)d.textContent=txt;(parent||host).appendChild(d);return d}
 function chips(list){const d=el('div','chips',null);list.forEach(t=>{
   const s=document.createElement('span');s.textContent=t;d.appendChild(s)})}
+/* Bring a node into view only when it sits at or past the edge: a click in the middle of the map
+   must not move the map at all. */
+function ensureVisible(n){if(!n)return;const q=sc(n),m=70,
+  x0=cxs()-vws()/2+m,x1=cxs()+vws()/2-m,y0=m,y1=H-m;
+  if(q[0]<x0||q[0]>x1||q[1]<y0||q[1]>y1)go={x:n.x,y:n.y}}
 function showPanel(n){
   const p=$('#panel');p.innerHTML='';host=p;
   if(!n){document.body.dataset.panel='0';sel=null;return}
@@ -540,9 +554,9 @@ const HINT='click a topic to open it \u00b7 click an argument to gather its evid
 $('#q').addEventListener('input',search);
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const first=Array.from(hits)[0];
   if(first){pick(first);go={x:first.x,y:first.y}}}});
-$('#ea').onclick=()=>{TX.forEach(t=>openTopic(t,true));showIdeas=true;$('#id').classList.add('on');
+$('#ea').onclick=()=>{needFit=1;TX.forEach(t=>openTopic(t,true));showIdeas=true;$('#id').classList.add('on');
   hot=280;setTimeout(()=>fitTo(),420)};
-$('#ca').onclick=()=>{TX.forEach(t=>openTopic(t,false));hot=160;setTimeout(()=>fitTo(),360)};
+$('#ca').onclick=()=>{needFit=1;TX.forEach(t=>openTopic(t,false));hot=160;setTimeout(()=>fitTo(),360)};
 $('#ft').onclick=()=>{focus=null;fitTo()};
 $('#cl').onclick=()=>{hover=null;hits.clear();$('#q').value='';
   $('#n').textContent=DATA.count+' texts';path=null;pathIdx=null;pathEdges=null;pathA=null;pathArmed=false;
@@ -569,7 +583,7 @@ setInterval(()=>{if(document.body.dataset.panel==='1')hashWrite()},1500);
 function tick(){raf=0;
   if(go){cam.x+=(go.x-cam.x)*.16;cam.y+=(go.y-cam.y)*.16;
     if(Math.hypot(go.x-cam.x,go.y-cam.y)<2)go=null;dirty=1}
-  if(hot>0){step();hot--;if(hot===0&&!fitted){fitted=1;fitTo()}dirty=1}
+  if(hot>0){step();hot--;if(hot===0&&(needFit||!fitted)){fitted=1;needFit=0;fitTo()}dirty=1}
   if(dirty){draw();dirty=0}
   raf=requestAnimationFrame(tick)}
 try{

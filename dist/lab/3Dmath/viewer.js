@@ -680,7 +680,7 @@
      it holds still while the shape turns underneath it. Its up points at the zenith, which is
      the way round it must be drawn to read on a dome; on the master that makes it upside down.
      Only its placement comes from the geometry, so it stays crisp and stays clickable. */
-  const MENU = { alt0: 22 * Math.PI / 180, alt1: 68 * Math.PI / 180, halfAz: 62 * Math.PI / 180 };
+  const MENU = { alt0: 18 * Math.PI / 180, alt1: 72 * Math.PI / 180, halfAz: 62 * Math.PI / 180 };
   const MENU_W = 488;                     /* the layer's own layout width, in css px */
   function placeMenu() {
     const el = document.getElementById('menu');
@@ -716,6 +716,9 @@
       S.yaw -= (e.clientX - px) * 0.0075;
       S.pitch = Math.max(-1.5, Math.min(1.5, S.pitch + (e.clientY - py) * 0.0075));
       px = e.clientX; py = e.clientY;
+      /* the master is fixed, so a drag turns the scene inside the cube faces: without this the
+         picture only moves while the spin happens to be re-rendering it */
+      S.cubeStale = true;
     });
     const up = () => { down = false; cv.classList.remove('drag'); };
     cv.addEventListener('pointerup', up);
