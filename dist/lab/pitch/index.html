@@ -306,10 +306,10 @@ function demoS(n){const S=makeScene(n);SCN=S;
 // ---------- the deck ----------
 function cardsFor(i){
  if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:1160,size:30,az:0,el:42})];
- if(i==1){const P=[-88,-44,0,44,88],E=[14,32,8,32,14],S5=['circle','triangle','square','star','flower'];
+ if(i==1){const P=[-88,-44,0,44,88],E=[12,10,6,10,12],S5=['circle','triangle','square','star','flower'];
   return[tc({title:COPY.s2title,w:600,size:60,az:0,el:72}),
    tc({fr:COPY.s2main[0],en:COPY.s2main[1],w:820,size:30,accent:4,az:0,el:44,fl:1.5,rot:-.01}),
-   ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:560,size:38,shape:'shape',sh:S5[k%5],accent:k,az:P[k],el:E[k],r:13,fl:2.5}))];}
+   ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:560,size:38,shape:'shape',sh:S5[k%5],accent:k,az:P[k],el:E[k],r:14.5,fl:2.5}))];}
  if(i==2){const E=[22,48,32,56,26,44,36,52,24,46,34,58,28,42],SP=360/COPY.s3.length;
   const K=['star','triangle','flower','square','circle','circle','square','circle','square','circle','circle','square','circle','circle'],shp=[];
   COPY.s3.map((b,k)=>k).sort((a,b)=>(COPY.s3[a][0].length+COPY.s3[a][1].length)-(COPY.s3[b][0].length+COPY.s3[b][1].length)).forEach((k,j)=>shp[k]=K[j]);
