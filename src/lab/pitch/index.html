@@ -314,7 +314,7 @@ function cardsFor(i){
   const K=['star','triangle','flower','square','circle','circle','square','circle','square','circle','circle','square','circle','circle'],shp=[];
   COPY.s3.map((b,k)=>k).sort((a,b)=>(COPY.s3[a][0].length+COPY.s3[a][1].length)-(COPY.s3[b][0].length+COPY.s3[b][1].length)).forEach((k,j)=>shp[k]=K[j]);
   const plot=COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:620,size:60,pad:34,shape:'shape',sh:shp[k],accent:k,az:k*SP,el:E[k],r:16.5,fl:3})),surv=[];
-  for(let j=0;j<6;j++)surv.push(tc({fr:'Sondage '+(j+1),en:'Survey '+(j+1),w:300,size:26,shape:'shape',sh:'circle',accent:j+3,az:SP/2+j*SP*2,el:24,r:20.4,fl:2}));
+  for(let j=0;j<6;j++)surv.push(tc({fr:'Sondage '+(j+1),en:'Survey '+(j+1),w:280,size:24,shape:'shape',sh:'circle',accent:j+3,az:SP/2+j*SP*2,el:14,r:23.5,fl:2}));
   return [tc({title:'SCRIPT',w:560,size:60,az:0,el:72})].concat(plot,surv);}
  if(i>=3&&i<8)return demoS(i-3);
  return[tc({fr:COPY.s9[0],en:COPY.s9[1],tail:COPY.contact,w:700,size:44,az:0,el:42})];}
