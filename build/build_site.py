@@ -61,6 +61,9 @@ def main():
     # declared, a link that is not a url, an idea that rests on a work that is not on the
     # shelf — so a broken library fails the build rather than shipping a page that lies.
     sh([sys.executable, LIB / "build" / "build_shelf.py"], ROOT)
+    # the map: the same shelf as a full-page graph, written by its own script. It reads
+    # sources.json, which build_shelf.py has just written, so the order here is load-bearing.
+    sh([sys.executable, LIB / "build" / "build_map.py"], ROOT)
 
     if a.skip_db:
         if keep is None:
@@ -103,11 +106,12 @@ def main():
         b = PAGE.read_bytes()
         print(f"  the database page: {len(b)/1048576:.2f} MB raw · "
               f"{len(gzip.compress(b, 9))/1048576:.2f} MB gzipped over the wire")
-    lp = DIST / "library" / "index.html"
-    if lp.exists():
-        b = lp.read_bytes()
-        print(f"  the library page:  {len(b)/1024:.0f} KB raw · "
-              f"{len(gzip.compress(b, 9))/1024:.0f} KB gzipped over the wire")
+    for name, label in (("index.html", "the library page: "), ("map.html", "the library map:  ")):
+        lp = DIST / "library" / name
+        if lp.exists():
+            b = lp.read_bytes()
+            print(f"  {label} {len(b)/1024:.0f} KB raw · "
+                  f"{len(gzip.compress(b, 9))/1024:.0f} KB gzipped over the wire")
     print("  deploy dist/ — see DEPLOY.md")
 
 
