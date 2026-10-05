@@ -349,7 +349,7 @@ function setup(){
   // the deck's own figures, for the slides that are not the demo: gradient chrome with a medium white outline
   const G=[new THREE.SphereGeometry(.5,20,14),new THREE.BoxGeometry(.8,.8,.8),new THREE.ConeGeometry(.5,.9,4),new THREE.TorusGeometry(.4,.16,12,24),new THREE.CylinderGeometry(.4,.4,.7,8),new THREE.OctahedronGeometry(.55)];
   for(let k=0;k<54;k++){const i=k%7,m=new THREE.Mesh(G[k%6],new THREE.MeshLambertMaterial({color:new THREE.Color(PACC(i)[0])}));
-    m.userData={az:45+Math.random()*270,el:3+Math.random()*80,r:15+Math.random()*9,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.5+Math.pow(Math.random(),1.9)*10.5);scene3.add(m);deco.push(m);}
+    m.userData={az:45+Math.random()*270,el:3+Math.random()*80,r:16+Math.random()*10,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.5+Math.pow(Math.random(),1.9)*8.5);scene3.add(m);deco.push(m);}
   // AV loopers: the circle that reads the dome. one ring sweeping from the zenith outward; the shapes only fire when it passes
   loop=new THREE.Group();loop.ring=new THREE.Mesh(new THREE.TorusGeometry(1,.011,8,120),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));loop.ring.rotation.x=Math.PI/2;loop.add(loop.ring);loop.items=[];
   for(let k=0;k<20;k++){const i=k%7,shape=SHAPES[k%4],m=glyphMesh('shape',shape,i,2.2+Math.pow(Math.random(),1.6)*8.8),
@@ -400,7 +400,7 @@ function draw(){
   cards.forEach((c,k)=>{const d=c.d;if(d.anim){d.draw(c.g,t);c.tex.needsUpdate=true;}
     if(d.fl){const a=d.az+Math.sin(t*.23+k*1.7)*d.fl,e=d.el+Math.sin(t*.31+k*2.3)*d.fl*.5;place(c.mesh,sph(a,e,d.r||6));c.mesh.rotateZ(d.rot||0);}});
   if(tick)tick(t);
-  deco.forEach(m=>{const u=m.userData;m.position.copy(sph(u.az+t*u.sp,u.el+Math.sin(t*.4+u.az)*2,u.r));m.rotation.x=t*.3*(1+u.s);m.rotation.y=t*.4;});
+  deco.forEach(m=>{const u=m.userData;m.position.copy(sph(u.az+Math.sin(t*.07+u.s*3)*9,u.el+Math.sin(t*.4+u.az)*2,u.r));m.rotation.x=t*.3*(1+u.s);m.rotation.y=t*.4;});
   if(loop.visible&&SCN){const rho=SCN.phase,R0=RS-.5,el=90*(1-rho);   // same parameterisation the trigger reads
     loop.ring.position.y=R0*Math.sin(el*D);loop.ring.scale.setScalar(Math.max(.01,R0*Math.cos(el*D)));
     loop.items.forEach(m=>{const u=m.userData;u.f*=.93;m.scale.setScalar(.9+u.f*.7);m.material.color.set(u.f>.45?u.hot:u.col);});}
