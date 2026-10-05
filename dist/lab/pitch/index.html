@@ -323,7 +323,7 @@ function domePlanCards(){return[tc({fr:'Panneaux, projecteurs, enceintes',en:'Pa
  pic(domePlan(1024),{wu:8.1,az:0,el:40})];}
 // ---------- the deck ----------
 function cardsFor(i){
- if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:1000,size:38,az:0,el:42})];
+ if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:880,size:34,az:0,el:42})];
  if(i==1){const P=[-88,-44,0,44,88];return[tc({fr:COPY.s2title,w:360,size:62,accent:5,az:0,el:72}),
   tc({fr:COPY.s2main[0],en:COPY.s2main[1],w:880,size:32,align:'l',accent:4,az:0,el:44,fl:1.5,rot:-.01}),
   ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:330,size:28,align:'l',accent:k,az:P[k],el:k%2?14:8,r:11,rot:(k%2?.02:-.02)}))];}
@@ -349,7 +349,7 @@ function setup(){
   // the deck's own figures, for the slides that are not the demo: gradient chrome with a medium white outline
   const G=[new THREE.SphereGeometry(.5,20,14),new THREE.BoxGeometry(.8,.8,.8),new THREE.ConeGeometry(.5,.9,4),new THREE.TorusGeometry(.4,.16,12,24),new THREE.CylinderGeometry(.4,.4,.7,8),new THREE.OctahedronGeometry(.55)];
   for(let k=0;k<54;k++){const i=k%7,m=new THREE.Mesh(G[k%6],new THREE.MeshLambertMaterial({color:new THREE.Color(PACC(i)[0])}));
-    m.userData={az:Math.random()*360,el:3+Math.random()*80,r:14+Math.random()*10,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.5+Math.pow(Math.random(),1.9)*10.5);scene3.add(m);deco.push(m);}
+    m.userData={az:45+Math.random()*270,el:3+Math.random()*80,r:15+Math.random()*9,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.5+Math.pow(Math.random(),1.9)*10.5);scene3.add(m);deco.push(m);}
   // AV loopers: the circle that reads the dome. one ring sweeping from the zenith outward; the shapes only fire when it passes
   loop=new THREE.Group();loop.ring=new THREE.Mesh(new THREE.TorusGeometry(1,.011,8,120),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));loop.ring.rotation.x=Math.PI/2;loop.add(loop.ring);loop.items=[];
   for(let k=0;k<20;k++){const i=k%7,shape=SHAPES[k%4],m=glyphMesh('shape',shape,i,2.2+Math.pow(Math.random(),1.6)*8.8),
