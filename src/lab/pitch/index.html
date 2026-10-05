@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>SCRIPT</title>
+<html><head><meta charset="utf-8"><title>Fulldome 101</title>
 <style>html,body{margin:0;height:100%;background:#000;overflow:hidden}canvas{display:block;margin:auto}
 #nav{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:12px;z-index:9}
 #nav button{width:58px;height:58px;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);background:rgba(10,11,13,.75);color:#fff;font:22px Inter,Helvetica,Arial,sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px)}
@@ -14,7 +14,7 @@
 // ← → / buttons = slides · S = save domemaster PNG · G = guides · M = mirror · F = fullscreen · ♪ = sound
 // ============ ALL ON-SCREEN TEXT: edit here. Pairs are [French, English] ============
 const COPY={
- title:'SCRIPT',
+ title:'FD 101 : surface et espace',
  s1:['Une conférence-performance en fulldome sur la performance, les conférences et le fulldome','A fulldome performance lecture about performance, lectures, and fulldome'],
  contact:['Tara Rose Morris','@taramoves','taramoves@gmail.com'],
  s2title:'Concept',
@@ -67,7 +67,7 @@ function tc(o){const sz=o.size||36,ld=Math.round(sz*1.3),gap=Math.round(sz*.9),b
  const esz=Math.round(sz*.86),tsz=Math.round(sz*1.9),ksz=Math.round(sz*.58);
  const th=(o.title?tsz*1.18+gap:0)+fl.length*ld+(en.length?gap*.8+en.length*Math.round(esz*1.3):0)+(tl.length?gap+tl.length*Math.round(sz*.8*1.3):0);
  const lw=Math.max(sz*3,...[...fl,...en,...tl].map(l=>{SC.drawingContext.font='500 '+sz+'px '+FONT;return SC.drawingContext.measureText(l).width;}));
- const shp=o.shape=='shape',R2=Math.round(Math.hypot(tw/2,th/2)*(o.sh=='circle'?1.06:o.sh=='square'?1.26:o.sh=='flower'?1.45:o.sh=='triangle'?1.5:1.75))+18;
+ const shp=o.shape=='shape',R2=Math.round(Math.hypot(tw/2,th/2)*(o.sh=='circle'?1.08:o.sh=='square'?1.32:o.sh=='flower'?1.58:o.sh=='triangle'?1.7:1.95))+18;
  const W=shp?2*(R2+10):Math.min(tw,lw)+2*pad,H=shp?2*(R2+10):th+2*pad;
  return Object.assign({},o,{w:W,h:H,draw:g=>{g.clear();const c=g.drawingContext;c.textBaseline='top';
   const ctr=o.align!='l',X=ctr?W/2:pad;c.textAlign=ctr?'center':'left';
@@ -75,7 +75,7 @@ function tc(o){const sz=o.size||36,ld=Math.round(sz*1.3),gap=Math.round(sz*.9),b
    c.fillStyle=lgx(c,W/2,H/2-R2,W/2,H/2+R2,[mixHex(ac[0],'#0b0c0e',.16),mixHex(ac[1],'#0b0c0e',.05)]);c.fill();
    c.lineWidth=3;c.strokeStyle=ac[0];c.stroke();c.restore();}
   let y=(H-th)/2;
-  if(o.title){c.font='600 '+tsz+'px '+FONT;c.fillStyle=lgx(c,X-tw/2,y,X+tw/2,y+tsz,PAL[0]);c.fillText(o.title,X,y);y+=tsz*1.18+gap;}
+  if(o.title){c.font='600 '+tsz+'px '+FONT;c.fillStyle='#fff';track(c,'.05em');c.fillText(o.title.toUpperCase(),X,y);track(c,'0px');y+=tsz*1.18+gap;}
   c.font='500 '+sz+'px '+FONT;c.fillStyle='#fff';fl.forEach(l=>{c.fillText(l,X,y);y+=ld});
   if(en.length){y+=gap*.8;c.font='italic 400 '+esz+'px '+FONT;c.fillStyle='#fff';en.forEach(l=>{c.fillText(l,X,y);y+=Math.round(esz*1.3)});}
   if(tl.length){y+=gap;c.font='italic 400 '+Math.round(sz*.8)+'px '+FONT;c.fillStyle='#fff';tl.forEach(l=>{c.fillText(l,X,y);y+=Math.round(sz*.8*1.3)});}}});}
@@ -280,7 +280,7 @@ function pBtn(c,x,y,w,h,label,i,on,press){if(press){x+=4;y+=4;w-=8;h-=8;}
 function cap(c,y,txt){c.fillStyle='#fff';c.font='500 18px '+FONT;c.textAlign='center';c.textBaseline='top';track(c,'.16em');c.fillText(txt.toUpperCase(),160,y);track(c,'0px');}
 // ---------- a demo slide: one scene, its phone, its label ----------
 function demoS(n){const S=makeScene(n);SCN=S;
- const out=[tc({fr:COPY.demo[n][0],en:COPY.demo[n][1],accent:n,w:600,size:40,az:0,el:72})];
+ const out=[tc({fr:COPY.demo[n][0],en:COPY.demo[n][1],accent:n,w:600,size:40,az:0,el:38})];
  if(n==0)out.push(phone(c=>{pBtn(c,60,240,200,120,'PRESS',0,true,millis()-(S.press||-1e9)<300);}));
  if(n==1)out.push(phone(c=>{cap(c,60,'aim only');
    c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.8;c.beginPath();c.arc(160,300,84,0,Math.PI*2);c.stroke();
@@ -296,41 +296,15 @@ function demoS(n){const S=makeScene(n);SCN=S;
  if(n==4)out.push(phone(c=>{pBtn(c,60,240,200,120,'TAP',4,true);}));
  return out;}
 
-// ---------- the dome plan: the lab's dome diagram, 2D, white with black outlines ----------
-function domePlan(px){const cv=c2d(px,px),c=cv.getContext('2d'),CX=px/2,K=px*.497/100,rad=Math.PI/180,
- N=[1,2,20,40,40,80,80,80,80,80,80,80],b=[0];
- for(let i=0;i<12;i++)b.push(b[i]+(i==0?2.7:i==1?5.4:9.19));
- const lw=Math.max(1.5,px*.003);
- for(let k=0;k<12;k++){const ri=b[k]*K,ro=b[k+1]*K,m=N[k];
-  if(!k){c.beginPath();c.arc(CX,CX,ro,0,Math.PI*2);c.fillStyle='#fff';c.fill();c.lineWidth=lw;c.strokeStyle='#000';c.stroke();continue;}
-  for(let i=0;i<m;i++){const a0=-Math.PI/2+i*2*Math.PI/m,a1=a0+2*Math.PI/m;
-   c.beginPath();c.arc(CX,CX,ro,a0,a1);c.arc(CX,CX,ri,a1,a0,true);c.closePath();
-   c.fillStyle='#fff';c.fill();c.lineWidth=lw;c.strokeStyle='#000';c.stroke();}}
- [[20,45],[20,135],[20,225],[20,315],[45,45],[45,135],[45,225],[45,315]].forEach(d=>{const t=d[1]*rad;
-  c.beginPath();c.arc(CX+d[0]*K*Math.sin(t),CX-d[0]*K*Math.cos(t),.75*K,0,Math.PI*2);
-  c.lineWidth=Math.max(1.2,px*.0022);c.strokeStyle='#0a9b6e';c.stroke();});
- const SPK=[[1,0],[4,22],[8,34],[16,47],[32,62],[32,80]];let num=0;
- c.textAlign='center';c.textBaseline='middle';c.font='600 '+Math.round(px*.0175)+'px '+FONT;
- SPK.forEach(sp=>{const n=sp[0],r=sp[1];
-  for(let i=0;i<n;i++){num++;const t=(n==1?0:360*i/n)*rad,x=CX+r*K*Math.sin(t),y=CX-r*K*Math.cos(t);
-   c.save();c.translate(x,y);c.rotate(n==1?0:360*i/n);
-   c.fillStyle='rgba(255,138,61,.92)';c.strokeStyle='#333';c.lineWidth=1;
-   c.fillRect(-4*K,-5*K,8*K,10*K);c.strokeRect(-4*K,-5*K,8*K,10*K);c.restore();
-   c.fillStyle='#000';c.fillText(String(num),x,y);}});
- return cv;}
-function pic(cv,o){return Object.assign({w:cv.width,h:cv.height,draw:g=>{g.clear();g.drawingContext.drawImage(cv,0,0);}},o);}
-function domePlanCards(){return[tc({fr:'Panneaux, projecteurs, enceintes',en:'Panels, projectors, speakers',w:720,size:34,az:0,el:80}),
- pic(domePlan(1024),{wu:8.1,az:0,el:40})];}
 // ---------- the deck ----------
 function cardsFor(i){
  if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:880,size:34,az:0,el:42})];
- if(i==1){const P=[-88,-44,0,44,88];return[tc({fr:COPY.s2title,w:360,size:62,accent:5,az:0,el:72}),
+ if(i==1){const P=[-88,-44,0,44,88];return[tc({title:COPY.s2title,w:600,size:60,az:0,el:72}),
   tc({fr:COPY.s2main[0],en:COPY.s2main[1],w:880,size:32,align:'l',accent:4,az:0,el:44,fl:1.5,rot:-.01}),
   ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:330,size:28,align:'l',accent:k,az:P[k],el:k%2?14:8,r:11,rot:(k%2?.02:-.02)}))];}
  if(i==2){const E=[22,48,32,56,26,44,36,52,24,46,34,58,28,42,50],S5=['circle','triangle','square','star','flower'];
-  return COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:310,size:23,shape:'shape',sh:S5[k%5],accent:k,az:k*24,el:E[k],r:14.2,fl:3}));}
+  return [tc({title:'SCRIPT',w:560,size:60,az:0,el:72})].concat(COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:320,size:24,shape:'shape',sh:S5[k%5],accent:k,az:k*24,el:E[k],r:16.5,fl:3})));}
  if(i>=3&&i<8)return demoS(i-3);
- if(i==8)return domePlanCards();
  return[tc({fr:COPY.s9[0],en:COPY.s9[1],tail:COPY.contact,w:700,size:44,az:0,el:42})];}
 // ---------- three.js ----------
 function setup(){
@@ -373,26 +347,26 @@ function addCard(d){const g=createGraphics(d.w,d.h);g.pixelDensity(1);d.draw(g,0
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(wu,hu),new THREE.MeshBasicMaterial({map:t,transparent:true}));
   place(mesh,sph(d.az,d.el,d.r||6));mesh.rotateZ(d.rot||0);scene3.add(mesh);const c={mesh,g,tex:t,d};cards.push(c);return c;}
 function go(i){
-  idx=(i+10)%10;cards.forEach(c=>{scene3.remove(c.mesh);c.mesh.geometry.dispose();c.tex.dispose();c.g.remove();});cards=[];
+  idx=(i+9)%9;cards.forEach(c=>{scene3.remove(c.mesh);c.mesh.geometry.dispose();c.tex.dispose();c.g.remove();});cards=[];
   extras.forEach(e=>scene3.remove(e));extras=[];tick=null;disposeScene(SCN);SCN=null;
   const demo=idx>=3&&idx<8;
-  loop.visible=idx==4;deco.forEach(m=>m.visible=!demo&&idx!=2&&idx!=8);
+  loop.visible=idx==4;deco.forEach(m=>m.visible=!demo&&idx!=2);
   cardsFor(idx).forEach(addCard);
-  if(idx==2){const rb=[];
-   for(let k=0;k<cards.length;k++){const cv=c2d(256,4),g2=cv.getContext('2d');
-    g2.fillStyle=lgx(g2,0,0,256,0,[PACC(k)[0],PACC((k+1)%cards.length)[0]]);g2.fillRect(0,0,256,4);
+  if(idx==2){const rb=[],RI=cards.map((c,k)=>k).slice(1);
+   for(let j=0;j<RI.length;j++){const cv=c2d(256,4),g2=cv.getContext('2d');
+    g2.fillStyle=lgx(g2,0,0,256,0,[PACC(j)[0],PACC((j+1)%RI.length)[0]]);g2.fillRect(0,0,256,4);
     const bg=new THREE.BufferGeometry();
     bg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(18),3));
     bg.setAttribute('uv',new THREE.BufferAttribute(new Float32Array([0,1,0,0,.5,1,.5,0,1,1,1,0]),2));
     bg.setIndex([0,1,2,1,3,2,2,3,4,3,5,4]);
     const m=new THREE.Mesh(bg,new THREE.MeshBasicMaterial({map:tex(cv),transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false}));
     scene3.add(m);extras.push(m);rb.push(m);}
-   tick=()=>rb.forEach((m,k)=>{const a=cards[k].mesh.position.clone(),z=cards[(k+1)%cards.length].mesh.position.clone();
-     const mid=a.clone().add(z).multiplyScalar(.5).setLength(14.7);
-     const nr=new THREE.Vector3().crossVectors(a,z).normalize().multiplyScalar(1.3);
+   tick=()=>rb.forEach((m,j)=>{const a=cards[RI[j]].mesh.position.clone(),z=cards[RI[(j+1)%RI.length]].mesh.position.clone();
+     const mid=a.clone().add(z).multiplyScalar(.5).setLength(17.0);
+     const nr=new THREE.Vector3().crossVectors(a,z).normalize().multiplyScalar(1.35);
      const pos=m.geometry.attributes.position,P3=[a,mid,z],h=[.08,1,.08];
-     P3.forEach((q,i)=>{const u=q.clone().add(nr.clone().multiplyScalar(h[i])),v=q.clone().sub(nr.clone().multiplyScalar(h[i])),j=i*2;
-       pos.setXYZ(j,u.x,u.y,u.z);pos.setXYZ(j+1,v.x,v.y,v.z);});pos.needsUpdate=true;});}
+     P3.forEach((q,i)=>{const u=q.clone().add(nr.clone().multiplyScalar(h[i])),v=q.clone().sub(nr.clone().multiplyScalar(h[i])),j2=i*2;
+       pos.setXYZ(j2,u.x,u.y,u.z);pos.setXYZ(j2+1,v.x,v.y,v.z);});pos.needsUpdate=true;});}
 }
 function draw(){
   const t=millis()/1000,now=performance.now(),dt=lastMs?Math.min(.05,(now-lastMs)/1000):0;lastMs=now;
@@ -407,7 +381,7 @@ function draw(){
   cubeCam.position.set(0,0,0);cubeCam.update(R,scene3);fishMat.uniforms.flip.value=flip;R.render(fishScene,fishCam);
   background(0);const s=width,x=drawingContext;x.save();x.beginPath();x.arc(s/2,s/2,s/2,0,Math.PI*2);x.clip();x.drawImage(R.domElement,0,0,s,s);x.restore();
   if(guides){noFill();stroke(255,255,255,55);strokeWeight(1);circle(s/2,s/2,s-1);noStroke();fill(255,255,255,120);textFont('Inter,Helvetica,Arial,sans-serif');textSize(11);textAlign(CENTER,BOTTOM);text('FRONT',s/2,s-6);textAlign(LEFT,TOP);
-   text((idx+1)+' / 10 · '+FOV+'°'+(SCN?' · '+SCN.act.toLowerCase()+' → '+SCN.res:'')+(SCN&&SCN.kind=='loopers'?' · rho '+SCN.phase.toFixed(2):'')+(SCN&&SCN.warn?' · '+SCN.warn:''),10,8);}
+   text((idx+1)+' / 9 · '+FOV+'°'+(SCN?' · '+SCN.act.toLowerCase()+' → '+SCN.res:'')+(SCN&&SCN.kind=='loopers'?' · rho '+SCN.phase.toFixed(2):'')+(SCN&&SCN.warn?' · '+SCN.warn:''),10,8);}
 }
 function keyPressed(){
   if(keyCode==RIGHT_ARROW)go(idx+1);else if(keyCode==LEFT_ARROW)go(idx-1);
