@@ -6,27 +6,32 @@
 <title>domebase/lab/3d math</title>
 <link rel="stylesheet" href="../../assets/css/site.css">
 <style>/* 3d math — this page only. A fullscreen domemaster: the circle is inscribed in the
-   viewport. The menu is one block of rectangles that fit together — the shapes list down the
-   left, the parameters, the view controls and the measures stacked at its right — and the same
-   block is drawn into the back face of the cube map, so turning round in the dome shows the
-   menu in dome format. The block is square, as the back face's texture is, so the two agree. */
-:root{--menu:min(520px, calc(50vw - 50vh - 8px) * 2, calc(100vh - 12px))}
+   viewport, the centre of the circle is the zenith, and the rim is the horizon, which is how a
+   master is addressed. The menu is not in the scene: it is a 2d layer placed in the master's own
+   coordinates, on the dome's back wall — the top of the master — and it stays exactly there while
+   the shape turns underneath it. It is drawn with its up pointing at the zenith, which is the way
+   round it reads on a dome, so on the master it sits upside down. The circle's corners are free
+   at 16:9, and the breadcrumb holds the top left one. */
+:root{--menu-w:488px}
 #stage{position:fixed;inset:0;background:#fff;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 #cv.drag{cursor:grabbing}
 #stage .say{position:fixed;left:50%;top:12px;transform:translateX(-50%);font-size:12.5px}
-#menu{position:fixed;left:0;top:0;z-index:3;display:grid;grid-template-columns:1.286fr 1fr;
-  grid-template-rows:34px 1fr 1fr 1fr;width:var(--menu);height:var(--menu);
-  background:rgba(255,255,255,.95);border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
-#menu > *{overflow:auto;min-width:0;min-height:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}
-header#crumb{grid-column:1 / -1;grid-row:1;display:flex;align-items:center;border-top:0;border-left:0}
-#menu header{padding:0 11px;border-bottom:0}
+#crumb{position:fixed;left:0;top:0;z-index:4;padding:9px 12px;background:#fff;
+  border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+/* the menu: 488 css px of layout, placed and scaled by placeMenu(). transform-origin is its own
+   centre, so the rotation is about the middle of the block. */
+#menu{position:fixed;left:50%;top:50%;z-index:3;transform-origin:50% 50%;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  width:var(--menu-w);height:230px;background:rgba(255,255,255,.95);
+  border:2px solid var(--line)}
+#menu > *{overflow:auto;min-width:0;min-height:0}
+.pane{border-top:1px solid var(--line);border-left:1px solid var(--line)}
+#pane-shapes{border-top:0;border-left:0}
+#pane-params{border-top:0}
+#pane-view{border-left:0}
 .pane .ph{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);
   padding:1px 6px;font-weight:700;font-size:12px}
-#pane-shapes{grid-row:2 / 5;grid-column:1}
-#pane-params{grid-row:2;grid-column:2}
-#pane-view{grid-row:3;grid-column:2}
-#pane-measures{grid-row:4;grid-column:2}
 table{width:100%}
 #index th,#params th,#spec th{cursor:default}
 #index td,#index th,#params td,#params th,#spec td,#spec th{padding:1px 6px;font-size:12px}
@@ -47,9 +52,9 @@ td.k{white-space:nowrap}
 
 <div id="stage"><canvas id="cv"></canvas></div>
 
-<div id="menu">
-  <header id="crumb"><h1><a href="../../">domebase</a>/<a href="../">lab</a>/3d math</h1></header>
+<header id="crumb"><h1><a href="../../">domebase</a>/<a href="../">lab</a>/3d math</h1></header>
 
+<div id="menu">
   <div class="pane" id="pane-shapes">
     <div class="ph">shapes</div>
     <table id="index">

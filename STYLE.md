@@ -149,7 +149,7 @@ Columns, tabs and the workflow: `work/library/README.md`.
 ## Lab
 
 `dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page — a
-fullscreen domemaster with the menu tiled into one block — and it links `../../assets/css/site.css`
+fullscreen domemaster whose menu is a 2d layer on the dome's back wall — and it links `../../assets/css/site.css`
 from a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
 `#c9c9c9`) with black hairlines. The canvas is the one exception to the sheet's black and
 white, in two modes: the greys of a lit form, or — with `colour` set to `data` or `normal` —
@@ -159,24 +159,31 @@ colours map data, not light). The frame, the tables and every word stay black on
 
 **The dome format.** The page is a domemaster, not a viewport with a picture in it:
 
-- The circle is inscribed in the window — its diameter is the shorter side — and the projection is
-  equidistant: distance from the centre is the angle from the direction at the centre, so the rim
-  is 90° (half of `fov`, default 180). Guides mark the rim, 30° and 60°, and the two axes.
-- The shape is drawn into the six faces of a cube map, one 90° camera per face, in the orientation
-  the cube map expects. **Five faces carry the shape seen from that side; the back face is the
-  menu's.** The wall behind you is therefore where the type goes, and it is reached by turning
-  round or by opening `fov` past 180. Text reads upright at the centre of a radius, so the back
-  face is the one place in the format where a menu is both on the dome and legible.
-- **The menu is one block of rectangles that fit together** — the shapes list down the left, the
-  parameters, the view controls and the measures stacked at its right, every pair sharing an edge,
-  and the block square because the back face's texture is. It is drawn twice from one set of rows:
-  as the page's corner block, where it is edited, and at 1024 square into the back face, where the
-  dome shows a warped but legible copy. `specRows()` is the shared source, so the two cannot report
-  different numbers. At 520 px the block overlaps the circle's rim on a window narrower than about
-  2:1; the shape itself stays clear.
+- **The master is a fixed frame, and its centre is the zenith.** The circle is inscribed in the
+  window — its diameter is the shorter side — and the projection is equidistant: distance from the
+  centre is the angle from the zenith, so the rim is the horizon and the top of the circle is the
+  back of the dome, the bottom the front. Guides mark the rim, 30° and 60°, and the two axes.
+  Nothing a viewer does moves that frame: a master that moved with the mouse would be a fisheye
+  viewport, not a master.
+- **The scene turns inside it.** The shape is drawn into the six faces of a cube map, one 90° camera
+  per face, so each face lands in the 90° of sphere facing it: the top view at the centre of the
+  master, the four side views as bands around the rim, the bottom view below the horizon and out of
+  a 180° master altogether. Dragging turns and tips the shape, `spin` is the same turn on a clock,
+  `size` is how near each face's camera sits — all of it inside a frame that does not budge.
+- **The menu is a 2d layer placed in the master's coordinates, never in the scene.** It is a band on
+  the dome's back wall — altitudes 22°–68°, ±62° of azimuth — which is the top of the master, drawn
+  over the canvas so it stays crisp, stays clickable and holds still while the shape turns
+  underneath it. Its up points at the zenith, which is the way round it must be drawn to read on a
+  dome, so on the master it sits upside down. `placeMenu()` derives left, top, width and height from
+  `fov`, so the band keeps its place on the dome when `fov` changes. Verify it by measurement: the
+  layer's centre at the circle's centre-x and one radius above its centre-y, its corners inside `R`,
+  its transform a rotation and a scale only, and a drag on the canvas leaving its rect identical.
+- The block is four panes sharing every edge — shapes, parameters, view, measures — in a 2×2 grid at
+  a nominal 488 css px, scaled to the width the dome geometry gives it. One function (`specRows()`)
+  feeds the measures, so the layer and any copy of it cannot report different numbers.
 - `dome` off is the flat perspective view — the same shape, the same maths, for reference.
-- Drag looks around the dome, the wheel sets `fov`, `size` is how near each face's camera sits
-  (which is how large the shape reads inside the circle), and `front` returns to the default view.
+- Drag turns the shape, the wheel sets `fov` in the dome (it zooms in the flat view), and `front`
+  returns to the default view. The frame never moves.
 
 ```
 src/lab/index.html         the lab's index: the path back, one line per page
