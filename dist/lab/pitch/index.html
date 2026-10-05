@@ -360,7 +360,7 @@ function go(i){
   idx=(i+9)%9;cards.forEach(c=>{scene3.remove(c.mesh);c.mesh.geometry.dispose();c.tex.dispose();c.g.remove();});cards=[];
   extras.forEach(e=>scene3.remove(e));extras=[];tick=null;disposeScene(SCN);SCN=null;
   const demo=idx>=3&&idx<8;
-  loop.visible=idx==4;deco.forEach(m=>m.visible=!demo&&idx!=2);
+  loop.visible=idx==4;deco.forEach(m=>m.visible=!demo&&idx!=2&&idx!=1);
   cardsFor(idx).forEach(addCard);
   if(idx==2){const rb=[],RI=cards.map((c,k)=>k).slice(1);
    for(let j=0;j<RI.length;j++){const cv=c2d(256,4),g2=cv.getContext('2d');
