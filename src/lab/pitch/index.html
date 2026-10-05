@@ -237,7 +237,7 @@ function stepScene(S,dt,now){
 // ---------- the picture ----------
 function syncScene(S,now){
  S.strokes.forEach(st=>strokeTube(S,st));
- S.flying.forEach(f=>{if(!f.mesh){f.mesh=birdMesh(f.i,4.6);S.grp.add(f.mesh);}
+ S.flying.forEach(f=>{if(!f.mesh){f.mesh=birdMesh(f.i,5.4);S.grp.add(f.mesh);}
   orient(f.mesh,sph(f.az,f.el,RS-.5));
   const s2=f.flash>now?1+.5*(f.flash-now)/280:1;f.mesh.scale.setScalar(s2);});
  if(S.kind=='poll'){const max=Math.max(2,...S.votes);
@@ -324,7 +324,7 @@ function setup(){
     m.userData={az:Math.random()*360,el:3+Math.random()*80,r:14+Math.random()*10,sp:(Math.random()-.5)*5,s:Math.random()*2};m.scale.setScalar(.7+Math.random()*1.1);scene3.add(m);deco.push(m);}
   // AV loopers: the circle that reads the dome. one ring sweeping from the zenith outward; the shapes only fire when it passes
   loop=new THREE.Group();loop.ring=new THREE.Mesh(new THREE.TorusGeometry(1,.011,8,120),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));loop.ring.rotation.x=Math.PI/2;loop.add(loop.ring);loop.items=[];
-  for(let k=0;k<20;k++){const i=k%7,shape=SHAPES[k%4],m=glyphMesh('shape',shape,i,1.9),
+  for(let k=0;k<20;k++){const i=k%7,shape=SHAPES[k%4],m=glyphMesh('shape',shape,i,2.7),
     az=(k*137.5)%360,el=12+64*((k*.618)%1);
     m.userData={az:az,el:el,col:PACC(i)[0],hot:mixHex(PACC(i)[0],'#ffffff',.55),shape:shape,lastHit:0,f:0};
     orient(m,sph(az,el,RS-.4));loop.add(m);loop.items.push(m);}
