@@ -148,15 +148,35 @@ Columns, tabs and the workflow: `work/library/README.md`.
 
 ## Lab
 
-`dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page —
-masthead, family tabs, a control bar, the shape index on the left, the canvas in the middle,
-the parameter and measure tables on the right — and it links `../../assets/css/site.css` from
-a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
+`dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page — a
+fullscreen domemaster with the menu tiled into one block — and it links `../../assets/css/site.css`
+from a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
 `#c9c9c9`) with black hairlines. The canvas is the one exception to the sheet's black and
 white, in two modes: the greys of a lit form, or — with `colour` set to `data` or `normal` —
 the full spectrum of the shape's own value, which is how Knill's figures are coloured (his
 colours map data, not light). The frame, the tables and every word stay black on white, and
 `off` puts the figure back in the greys.
+
+**The dome format.** The page is a domemaster, not a viewport with a picture in it:
+
+- The circle is inscribed in the window — its diameter is the shorter side — and the projection is
+  equidistant: distance from the centre is the angle from the direction at the centre, so the rim
+  is 90° (half of `fov`, default 180). Guides mark the rim, 30° and 60°, and the two axes.
+- The shape is drawn into the six faces of a cube map, one 90° camera per face, in the orientation
+  the cube map expects. **Five faces carry the shape seen from that side; the back face is the
+  menu's.** The wall behind you is therefore where the type goes, and it is reached by turning
+  round or by opening `fov` past 180. Text reads upright at the centre of a radius, so the back
+  face is the one place in the format where a menu is both on the dome and legible.
+- **The menu is one block of rectangles that fit together** — the shapes list down the left, the
+  parameters, the view controls and the measures stacked at its right, every pair sharing an edge,
+  and the block square because the back face's texture is. It is drawn twice from one set of rows:
+  as the page's corner block, where it is edited, and at 1024 square into the back face, where the
+  dome shows a warped but legible copy. `specRows()` is the shared source, so the two cannot report
+  different numbers. At 520 px the block overlaps the circle's rim on a window narrower than about
+  2:1; the shape itself stays clear.
+- `dome` off is the flat perspective view — the same shape, the same maths, for reference.
+- Drag looks around the dome, the wheel sets `fov`, `size` is how near each face's camera sits
+  (which is how large the shape reads inside the circle), and `front` returns to the default view.
 
 ```
 src/lab/index.html         the lab's index: the path back, one line per page

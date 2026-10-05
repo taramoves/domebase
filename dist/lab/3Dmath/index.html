@@ -5,67 +5,93 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>domebase/lab/3d math</title>
 <link rel="stylesheet" href="../../assets/css/site.css">
-<style>/* 3d math — this page only */
-body.app > main{flex-direction:row}
-#indexcol{flex:0 0 auto;width:228px;overflow:auto;border-right:1px solid var(--line);scrollbar-gutter:stable}
-#side{flex:0 0 auto;width:268px;overflow:auto;border-left:1px solid var(--line);scrollbar-gutter:stable}
-#stage{position:relative;flex:1 1 auto;min-width:0;background:var(--paper);overflow:hidden}
+<style>/* 3d math — this page only. A fullscreen domemaster: the circle is inscribed in the
+   viewport. The menu is one block of rectangles that fit together — the shapes list down the
+   left, the parameters, the view controls and the measures stacked at its right — and the same
+   block is drawn into the back face of the cube map, so turning round in the dome shows the
+   menu in dome format. The block is square, as the back face's texture is, so the two agree. */
+:root{--menu:min(520px, calc(50vw - 50vh - 8px) * 2, calc(100vh - 12px))}
+#stage{position:fixed;inset:0;background:#fff;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 #cv.drag{cursor:grabbing}
-#stage .say{position:absolute;left:12px;top:10px;font-size:12.5px}
+#stage .say{position:fixed;left:50%;top:12px;transform:translateX(-50%);font-size:12.5px}
+#menu{position:fixed;left:0;top:0;z-index:3;display:grid;grid-template-columns:1.286fr 1fr;
+  grid-template-rows:34px 1fr 1fr 1fr;width:var(--menu);height:var(--menu);
+  background:rgba(255,255,255,.95);border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+#menu > *{overflow:auto;min-width:0;min-height:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+header#crumb{grid-column:1 / -1;grid-row:1;display:flex;align-items:center;border-top:0;border-left:0}
+#menu header{padding:0 11px;border-bottom:0}
+.pane .ph{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);
+  padding:1px 6px;font-weight:700;font-size:12px}
+#pane-shapes{grid-row:2 / 5;grid-column:1}
+#pane-params{grid-row:2;grid-column:2}
+#pane-view{grid-row:3;grid-column:2}
+#pane-measures{grid-row:4;grid-column:2}
 table{width:100%}
 #index th,#params th,#spec th{cursor:default}
-#index td,#index th,#params td,#params th,#spec td,#spec th{padding:2px 6px;font-size:12px}
+#index td,#index th,#params td,#params th,#spec td,#spec th{padding:1px 6px;font-size:12px}
 td.n,th.n{text-align:right;white-space:nowrap}
 tr.row.on td{background:var(--head);font-weight:700}
-tr.row.off,#indexcol.hide{display:none}
 #colour{margin-left:5px;padding:0 2px}
-#params input[type=number]{width:60px;padding:1px 3px;text-align:right}
-#params input.p{width:44px;border-color:var(--hair)}
-#params select{max-width:126px;padding:1px 2px}
+#params input[type=number]{width:56px;padding:0 3px;text-align:right}
+#params input.p{width:42px;border-color:var(--hair)}
+#params select{max-width:118px;padding:0 2px}
 td.k{white-space:nowrap}
 #spec td.v{text-align:right;white-space:nowrap}
 #spec a{text-decoration:none;border-bottom:1px solid var(--hair)}
+#viewbody{padding:3px 6px;display:flex;flex-wrap:wrap;gap:1px 9px;align-items:center}
+#viewbody input[type=number]{width:50px;padding:0 3px;text-align:right}
 </style>
 </head>
 <body class="app">
 
-<header>
-  <h1><a href="../../">domebase</a>/<a href="../">lab</a>/3d math</h1>
-</header>
+<div id="stage"><canvas id="cv"></canvas></div>
 
-<nav id="tabs"></nav>
+<div id="menu">
+  <header id="crumb"><h1><a href="../../">domebase</a>/<a href="../">lab</a>/3d math</h1></header>
 
-<div class="bar barhead">
-  <label class="chk"><input type="checkbox" id="spin" checked>spin</label>
-  <label class="chk"><input type="checkbox" id="sweep">animate</label>
-  <label class="chk"><input type="checkbox" id="depth" checked>depth</label>
-  <label class="chk"><input type="checkbox" id="edges" checked>edges</label>
-  <label class="chk"><input type="checkbox" id="faces" checked>faces</label>
-  <label class="chk">colour<select id="colour"><option value="0">off</option><option value="1">data</option><option value="2" selected>normal</option></select></label>
-  <button class="pill" id="front">front</button>
-  <span class="count" id="count"></span>
-</div>
-
-<main>
-  <div id="indexcol">
+  <div class="pane" id="pane-shapes">
+    <div class="ph">shapes</div>
     <table id="index">
       <thead><tr><th>shape</th><th class="n">verts</th><th class="n">lines</th><th class="n">tris</th></tr></thead>
       <tbody id="indexbody"></tbody>
     </table>
   </div>
-  <div id="stage"><canvas id="cv"></canvas></div>
-  <div id="side">
+
+  <div class="pane" id="pane-params">
+    <div class="ph">parameters</div>
     <table id="params">
       <thead><tr><th>parameter</th><th class="n">value</th><th>sweep</th><th class="n">s</th></tr></thead>
       <tbody id="parambody"></tbody>
     </table>
+  </div>
+
+  <div class="pane" id="pane-view">
+    <div class="ph">view</div>
+    <div id="viewbody">
+      <label class="chk"><input type="checkbox" id="spin" checked>spin</label>
+      <label class="chk"><input type="checkbox" id="sweep">animate</label>
+      <label class="chk"><input type="checkbox" id="depth" checked>depth</label>
+      <label class="chk"><input type="checkbox" id="edges" checked>edges</label>
+      <label class="chk"><input type="checkbox" id="faces" checked>faces</label>
+      <label class="chk">colour<select id="colour"><option value="0">off</option><option value="1">data</option><option value="2" selected>normal</option></select></label>
+      <label class="chk"><input type="checkbox" id="dome" checked>dome</label>
+      <label class="chk">fov<input type="number" id="fov" value="180" min="90" max="300" step="5">°</label>
+      <label class="chk">size<input type="number" id="size" value="1.45" min="1.1" max="4" step="0.05"></label>
+      <label class="chk"><input type="checkbox" id="guides" checked>guides</label>
+      <button class="pill" id="front">front</button>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-measures">
+    <div class="ph">measures</div>
     <table id="spec">
       <thead><tr><th>measure</th><th class="n">value</th></tr></thead>
       <tbody id="specbody"></tbody>
     </table>
   </div>
-</main>
+</div>
 
 <script src="geom.js"></script>
 <script>/* the registry every family file pushes its shapes into */

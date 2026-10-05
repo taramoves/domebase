@@ -46,6 +46,15 @@
         o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
       }
       return o;
+    },
+    /* o must not alias a or b */
+    rotY(o, a) {
+      const c = Math.cos(a), s = Math.sin(a);
+      o[0] = c; o[1] = 0; o[2] = -s; o[3] = 0;
+      o[4] = 0; o[5] = 1; o[6] = 0; o[7] = 0;
+      o[8] = s; o[9] = 0; o[10] = c; o[11] = 0;
+      o[12] = 0; o[13] = 0; o[14] = 0; o[15] = 1;
+      return o;
     }
   };
 
@@ -167,6 +176,7 @@
     def: null, P: {}, out: null, geo: { triN: 0, lineN: 0, hasTone: false },
     dirty: true, buildMs: 0, lastBuild: 0, stats: {},
     yaw: -0.62, pitch: 0.30, dist: 4.4,
+    dome: true, fov: 180, guides: true, spinAng: 0, faceDist: 1.45, cubeStale: true,
     spin: true, sweep: false, depth: true, edges: true, faces: true, colour: 2,
     sweepOn: {}, period: {}, fps: 60, frames: 0, fpsAt: 0
   };
@@ -256,30 +266,294 @@
     gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride || 0, offset || 0);
   }
 
-  function draw() {
-    const aspect = resize();
-    gl.clearColor(1, 1, 1, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    if (!S.out) return;
-    gl.enable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-    gl.useProgram(prog);
+  /* ---------------- the dome ----------------
+     The shape is drawn into the six faces of a cube map: one 90-degree camera per
+     face, each in the orientation the cube map expects, so that textureCube samples
+     exactly what was drawn. A second pass maps the cube onto the domemaster circle:
+     a pixel's distance from the centre is its angle from the direction at the centre
+     of the circle. Five faces carry the shape seen from that side; the back face
+     carries nothing yet, which is why a 180-degree domemaster shows the shape at the
+     middle and stretches it at the rim, and why the back is reached by turning round
+     (or by opening the field of view past 180). */
+  const FACE = 1024;
+  const FACE_LOOK = [
+    { f: [1, 0, 0], u: [0, -1, 0] },     /* +X  right  */
+    { f: [-1, 0, 0], u: [0, -1, 0] },    /* -X  left   */
+    { f: [0, 1, 0], u: [0, 0, 1] },      /* +Y  top    */
+    { f: [0, -1, 0], u: [0, 0, -1] },    /* -Y  bottom */
+    { f: [0, 0, 1], u: [0, -1, 0] },     /* +Z  front  */
+    { f: [0, 0, -1], u: [0, -1, 0] }     /* -Z  back   */
+  ];
+  const FACE_BACK = 5;
+  const modelM = new Float32Array(16), tmpM = new Float32Array(16);
 
-    const cp = Math.cos(S.pitch);
-    const eye = [S.dist * cp * Math.cos(S.yaw), S.dist * Math.sin(S.pitch), S.dist * cp * Math.sin(S.yaw)];
-    M.lookAt(view, eye, [0, 0, 0], [0, 1, 0]);
-    M.perspective(proj, 32 * Math.PI / 180, aspect, 0.02, 60);
+  function link(vsSrc, fsSrc) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  }
+
+  const VSQ = [
+    'attribute vec2 aQ;',
+    'void main() { gl_Position = vec4(aQ, 0.0, 1.0); }'
+  ].join('\n');
+
+  const FSD = [
+    'precision highp float;',
+    'uniform samplerCube uCube;',
+    'uniform vec2 uRes;',
+    'uniform float uFov;',
+    'uniform float uYaw;',
+    'uniform float uPitch;',
+    'uniform float uGuide;',
+    'void main() {',
+    '  vec2 p = (gl_FragCoord.xy - 0.5 * uRes) / (0.5 * min(uRes.x, uRes.y));',
+    '  float r = length(p);',
+    '  if (r > 1.0) { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); return; }',
+    '  float th = r * radians(uFov) * 0.5;',
+    '  float ph = atan(p.y, p.x);',
+    '  vec3 c = vec3(cos(uPitch) * sin(uYaw), sin(uPitch), cos(uPitch) * cos(uYaw));',
+    '  vec3 rt = normalize(cross(vec3(0.0, 1.0, 0.0), c));',
+    '  vec3 up = cross(c, rt);',
+    '  vec3 dir = c * cos(th) + (rt * cos(ph) + up * sin(ph)) * sin(th);',
+    '  vec3 col = textureCube(uCube, dir).rgb;',
+    '  if (uGuide > 0.5) {',
+    '    float w = 1.7 / (0.5 * min(uRes.x, uRes.y));',
+    '    float g = 1.0 - smoothstep(0.0, w, abs(r - 1.0));',
+    '    g = max(g, 0.5 * (1.0 - smoothstep(0.0, w, abs(r - 0.3333))));',
+    '    g = max(g, 0.5 * (1.0 - smoothstep(0.0, w, abs(r - 0.6667))));',
+    '    g = max(g, 0.4 * (1.0 - smoothstep(0.0, w, abs(p.x))));',
+    '    g = max(g, 0.4 * (1.0 - smoothstep(0.0, w, abs(p.y))));',
+    '    col = mix(col, vec3(0.0), clamp(g, 0.0, 1.0) * 0.5);',
+    '  }',
+    '  gl_FragColor = vec4(col, 1.0);',
+    '}'
+  ].join('\n');
+
+  const progDome = link(VSQ, FSD);
+  const AD = { q: gl.getAttribLocation(progDome, 'aQ') };
+  const UD = {
+    cube: gl.getUniformLocation(progDome, 'uCube'),
+    res: gl.getUniformLocation(progDome, 'uRes'),
+    fov: gl.getUniformLocation(progDome, 'uFov'),
+    yaw: gl.getUniformLocation(progDome, 'uYaw'),
+    pitch: gl.getUniformLocation(progDome, 'uPitch'),
+    guide: gl.getUniformLocation(progDome, 'uGuide')
+  };
+
+  /* the cube the faces are drawn into, and the square the circle is drawn on */
+  const cube = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, cube);
+  for (let i = 0; i < 6; i++) {
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, FACE, FACE, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  }
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const cubeFbo = gl.createFramebuffer();
+  const cubeDepth = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, cubeDepth);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, FACE, FACE);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, cubeFbo);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, cubeDepth);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  buf.quad = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf.quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+  /* ---------------- the menu, and its face ----------------
+     The menu is one block of rectangles that fit together: the shapes list down the left, the
+     parameters, the view controls and the measures stacked at its right. The page lays that
+     block out in the corner; here the same block is drawn at 1024 square and hung on the back
+     face of the cube map, so turning round in the dome shows the menu at the centre of the
+     circle. The block is square because the face's texture is. */
+  const MENU = 1024;
+  const menuCv = document.createElement('canvas');
+  menuCv.width = MENU; menuCv.height = MENU;
+  const mg = menuCv.getContext('2d');
+  const FONT = 'Arial, Helvetica, sans-serif';
+  let menuStale = true, backStale = true;
+
+  function mgText(s, x, y, align, weight, size) {
+    mg.font = (weight ? weight + ' ' : '') + size + 'px ' + FONT;
+    mg.textAlign = align || 'left';
+    mg.fillStyle = '#000';
+    mg.fillText(s, x, y);
+  }
+  function mgRule(x0, y0, x1, y1, w) {
+    mg.strokeStyle = '#000';
+    mg.lineWidth = w || 1;
+    mg.beginPath(); mg.moveTo(x0 + 0.5, y0 + 0.5); mg.lineTo(x1 - 0.5, y1 - 0.5); mg.stroke();
+  }
+  /* a name long enough to leave its column is trimmed: the pane cannot grow */
+  function mgFit(s, w, size) {
+    mg.font = size + 'px ' + FONT;
+    let t = s;
+    while (t.length > 4 && mg.measureText(t).width > w) t = t.slice(0, -2);
+    return t === s ? s : t + '\u2026';
+  }
+
+  function menuPaint() {
+    const W = MENU, COL = 576, RH = 44;
+    mg.fillStyle = '#fff';
+    mg.fillRect(0, 0, W, W);
+    /* the frame, the path, and the two columns, as the page lays them out */
+    mgRule(1, 1, W - 1, 1, 2); mgRule(1, W - 1, W - 1, W - 1, 2);
+    mgRule(1, 1, 1, W - 1, 2); mgRule(W - 1, 1, W - 1, W - 1, 2);
+    mgText('domebase / lab / 3d math', 16, 38, 'left', 'bold', 24);
+    mgText(String(shapes.length) + ' shapes', W - 16, 38, 'right', '', 20);
+    mgRule(1, RH + 12, W - 1, RH + 12, 2);
+    mgRule(COL, RH + 12, COL, W - 1, 1);
+
+    /* shapes, down the left, one row each */
+    const top = RH + 44;
+    mgText('shapes', 16, top, 'left', 'bold', 22);
+    let y = top + 34;
+    const step = Math.min(32, (W - 12 - y) / Math.max(1, shapes.length));
+    for (const def of shapes) {
+      const on = S.def && def.id === S.def.id;
+      const st = lazyStats[def.id];
+      if (on) { mg.fillStyle = '#efefef'; mg.fillRect(2, y - 20, COL - 4, step); mg.fillStyle = '#000'; }
+      mgText(mgFit(def.name, 258, 20), 16, y, 'left', on ? 'bold' : '', 20);
+      if (st) {
+        mgText(st.vertices == null ? '\u2014' : Number(st.vertices).toLocaleString(), 400, y, 'right', on ? 'bold' : '', 19);
+        mgText(Number(st.segments).toLocaleString(), COL - 76, y, 'right', on ? 'bold' : '', 19);
+        mgText(st.triangles ? Number(st.triangles).toLocaleString() : '', COL - 12, y, 'right', on ? 'bold' : '', 19);
+      }
+      y += step;
+    }
+
+    /* the right column: parameters, the view controls, the measures — three rectangles that
+       share their edges and fill the column exactly */
+    const view = [
+      ['spin', S.spin ? 'on' : 'off'],
+      ['animate', S.sweep ? 'on' : 'off'],
+      ['depth', S.depth ? 'on' : 'off'],
+      ['edges', S.edges ? 'on' : 'off'],
+      ['faces', S.faces ? 'on' : 'off'],
+      ['colour', ['off', 'data', 'normal'][S.colour] || 'normal'],
+      ['dome', S.dome ? 'on' : 'off'],
+      ['fov', S.fov.toFixed(0) + '\u00b0'],
+      ['size', S.faceDist.toFixed(2)],
+      ['guides', S.guides ? 'on' : 'off'],
+      ['yaw / pitch', S.yaw.toFixed(2) + ' / ' + S.pitch.toFixed(2)]
+    ];
+    const params = (S.def ? S.def.params : []).map(p => [p.label || p.k, typeof S.P[p.k] === 'number' ? fmt(S.P[p.k]) : String(S.P[p.k]), S.sweepOn[p.k] ? 'sweep' : '']);
+    const meas = specRows().map(r => [r[0], r[1]]);
+    const panes = [
+      { t: 'parameters', rows: params.map(r => [r[0], r[1], r[2]]) },
+      { t: 'view', rows: view.map(r => [r[0], r[1], '']) },
+      { t: 'measures', rows: meas.map(r => [r[0], r[1], '']) }
+    ];
+    const body = W - 12 - top;
+    const nRows = panes.reduce((a, p) => a + p.rows.length, 0);
+    const rh = Math.max(19, Math.min(36, (body - panes.length * 40) / Math.max(1, nRows)));
+    let py = top;
+    for (const pane of panes) {
+      const h = pane.rows.length ? 40 + pane.rows.length * rh : 40;
+      if (py > top) mgRule(COL, py - 1, W - 1, py - 1, 1);
+      mgText(pane.t, COL + 16, py + 28, 'left', 'bold', 22);
+      mgRule(COL + 1, py + 40, W - 1, py + 40, 1);
+      let ry = py + 40 + rh - 6;
+      for (const r of pane.rows) {
+        mgText(mgFit(r[0], 210, 19), COL + 16, ry, 'left', '', 19);
+        mgText(mgFit(r[1], 150, 19), W - 16, ry, 'right', '', 19);
+        if (r[2]) mgText(r[2], W - 96, ry, 'right', '', 13);
+        ry += rh;
+      }
+      py += h;
+    }
+  }
+
+  const menuTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, menuTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  function menuUpload() {
+    gl.bindTexture(gl.TEXTURE_2D, menuTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, menuCv);
+  }
+
+  const VSQUAD = [
+    'attribute vec3 aP;',
+    'attribute vec2 aT;',
+    'uniform mat4 uMvp;',
+    'varying vec2 vT;',
+    'void main() { vT = aT; gl_Position = uMvp * vec4(aP, 1.0); }'
+  ].join('\n');
+  const FSQUAD = [
+    'precision mediump float;',
+    'uniform sampler2D uTex;',
+    'varying vec2 vT;',
+    'void main() { gl_FragColor = vec4(texture2D(uTex, vT).rgb, 1.0); }'
+  ].join('\n');
+  const progMenu = link(VSQUAD, FSQUAD);
+  const AM = { p: gl.getAttribLocation(progMenu, 'aP'), t: gl.getAttribLocation(progMenu, 'aT') };
+  const UM = { mvp: gl.getUniformLocation(progMenu, 'uMvp'), tex: gl.getUniformLocation(progMenu, 'uTex') };
+
+  /* the menu wall sits at radius 1 behind the viewer, sized to fill the 90 degree face.
+     u runs against the world's x and v against its y: that face's camera looks out with right
+     at -x and up at -y, so a quad laid out the naive way reads upside down. */
+  const menuQuad = gl.createBuffer();
+  function buildMenuQuad() {
+    const h = S.faceDist + 1, z = -1;
+    const v = new Float32Array([
+      -h, h, z, 1, 0,
+      h, h, z, 0, 0,
+      -h, -h, z, 1, 1,
+      h, -h, z, 0, 1
+    ]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, menuQuad);
+    gl.bufferData(gl.ARRAY_BUFFER, v, gl.DYNAMIC_DRAW);
+  }
+
+  function drawMenuFace() {
+    M.lookAt(view, [0, 0, S.faceDist], [0, 0, 0], FACE_LOOK[FACE_BACK].u);
+    M.perspective(proj, Math.PI / 2, 1, 0.02, 60);
     M.mul(mvp, proj, view);
+    gl.useProgram(progMenu);
+    gl.disable(gl.DEPTH_TEST);
+    gl.uniformMatrix4fv(UM.mvp, false, mvp);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, menuTex);
+    gl.uniform1i(UM.tex, 0);
+    attrib(AM.p, menuQuad, 3, 20, 0);
+    attrib(AM.t, menuQuad, 2, 20, 12);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.enable(gl.DEPTH_TEST);
+  }
 
+  /* one face: a camera faceDist outside the object on that side, 90 degrees across,
+     which is what that face of the cube holds */
+  function drawFace(F0) {
+    const d = S.faceDist;
+    M.lookAt(view, [-F0.f[0] * d, -F0.f[1] * d, -F0.f[2] * d], [0, 0, 0], F0.u);
+    M.perspective(proj, Math.PI / 2, 1, 0.02, 60);
+    M.rotY(modelM, S.spinAng);
+    M.mul(tmpM, proj, view);
+    M.mul(mvp, tmpM, modelM);
+    gl.useProgram(prog);
     gl.uniformMatrix4fv(U.mvp, false, mvp);
     gl.uniformMatrix4fv(U.view, false, view);
     gl.uniform3f(U.light, 0.40, 0.52, 0.75);
     gl.uniform4f(U.levels, 0.58, 0.30, 0.14, 0.05);
     gl.uniform1f(U.colour, S.colour);
     gl.uniform1f(U.hasTone, S.geo.hasTone ? 1 : 0);
-    gl.uniform1f(U.near, Math.max(0.01, S.dist - 1.02));
-    gl.uniform1f(U.far, Math.max(0.02, S.dist + 1.02));
+    gl.uniform1f(U.near, Math.max(0.01, d - 1.15));
+    gl.uniform1f(U.far, Math.max(0.02, d + 1.15));
+    drawPrims();
+  }
 
+  function drawPrims() {
     const g = S.geo;
     /* triangles first, pushed back a hair so the edges sit on top of them */
     if (S.faces && g.triN) {
@@ -303,6 +577,69 @@
       gl.uniform1f(U.fade, S.depth ? 1 : 0);
       gl.drawArrays(gl.LINES, 0, g.lineN);
     }
+  }
+
+  function drawFlat(aspect) {
+    const cp = Math.cos(S.pitch);
+    const eye = [S.dist * cp * Math.cos(S.yaw), S.dist * Math.sin(S.pitch), S.dist * cp * Math.sin(S.yaw)];
+    gl.useProgram(prog);
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    M.lookAt(view, eye, [0, 0, 0], [0, 1, 0]);
+    M.perspective(proj, 32 * Math.PI / 180, aspect, 0.02, 60);
+    M.mul(mvp, proj, view);
+    gl.uniformMatrix4fv(U.mvp, false, mvp);
+    gl.uniformMatrix4fv(U.view, false, view);
+    gl.uniform3f(U.light, 0.40, 0.52, 0.75);
+    gl.uniform4f(U.levels, 0.58, 0.30, 0.14, 0.05);
+    gl.uniform1f(U.colour, S.colour);
+    gl.uniform1f(U.hasTone, S.geo.hasTone ? 1 : 0);
+    gl.uniform1f(U.near, Math.max(0.01, S.dist - 1.02));
+    gl.uniform1f(U.far, Math.max(0.02, S.dist + 1.02));
+    drawPrims();
+  }
+
+  function drawDome() {
+    const all = S.cubeStale, back = S.cubeStale || backStale;
+    if (all || back) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, cubeFbo);
+      gl.viewport(0, 0, FACE, FACE);
+      gl.enable(gl.DEPTH_TEST);
+      gl.disable(gl.CULL_FACE);
+      for (let i = 0; i < 6; i++) {
+        if (i === FACE_BACK ? !back : !all) continue;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, cube, 0);
+        gl.clearColor(1, 1, 1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        if (i === FACE_BACK) drawMenuFace(); else drawFace(FACE_LOOK[i]);
+      }
+      S.cubeStale = false;
+      backStale = false;
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, cv.width, cv.height);
+    gl.disable(gl.DEPTH_TEST);
+    gl.useProgram(progDome);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, cube);
+    gl.uniform1i(UD.cube, 0);
+    gl.uniform2f(UD.res, cv.width, cv.height);
+    gl.uniform1f(UD.fov, S.fov);
+    gl.uniform1f(UD.yaw, S.yaw);
+    gl.uniform1f(UD.pitch, S.pitch);
+    gl.uniform1f(UD.guide, S.guides ? 1 : 0);
+    attrib(AD.q, buf.quad, 2);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  function draw() {
+    const aspect = resize();
+    gl.clearColor(1, 1, 1, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (!S.out) return;
+    if (!S.dome) { drawFlat(aspect); return; }
+    if (menuStale) { menuPaint(); menuUpload(); menuStale = false; backStale = true; }
+    drawDome();
   }
 
   /* ---------------- controls ---------------- */
@@ -341,7 +678,7 @@
     for (const p of def.params) {
       if (p.anim) { S.sweepOn[p.k] = true; S.period[p.k] = p.anim; }
     }
-    if (!keepView) { S.yaw = -0.62; S.pitch = 0.30; S.dist = 4.4; }
+    if (!keepView) front();
     paintParams();
     for (const tr of document.querySelectorAll('#indexbody tr.row')) {
       tr.classList.toggle('on', tr.dataset.id === def.id);
@@ -350,26 +687,6 @@
     location.hash = def.id;
   }
 
-  function paintTabs() {
-    const nav = $('#tabs');
-    const show = fam => {
-      for (const o of nav.children) o.classList.toggle('on', o.dataset.fam === fam);
-      for (const tr of document.querySelectorAll('#indexbody tr.row')) {
-        tr.classList.toggle('off', fam !== '' && tr.dataset.family !== fam);
-      }
-      $('#indexcol').classList.toggle('hide', fam === '');
-    };
-    const mk = (label, fam) => {
-      const b = document.createElement('button');
-      b.textContent = label;
-      b.dataset.fam = fam;
-      b.addEventListener('click', () => show(fam));
-      nav.appendChild(b);
-      return b;
-    };
-    mk('all', '').classList.add('on');
-    for (const f of FAM) mk(f, f);
-  }
 
   function paintIndex() {
     const body = $('#indexbody');
@@ -414,6 +731,7 @@
   }
 
   function paintParams() {
+    menuStale = true;
     const body = $('#parambody');
     body.innerHTML = '';
     for (const p of S.def.params) {
@@ -461,13 +779,14 @@
     }
   }
 
-  function paintSpec() {
-    const body = $('#specbody');
-    body.innerHTML = '';
+  /* the measures, and the source link, as rows — the page's table and the menu drawn into
+     the back face both read them, so the dome cannot show a different number */
+  function specRows() {
     const rows = [];
     const src = S.def.src || '';
     const m = /^knill\s+(.+)$/.exec(src);
-    rows.push(['source', m
+    const plain = m ? m[1] : src;
+    rows.push(['source', plain, m
       ? '<a href="https://people.math.harvard.edu/~knill/3dprinter/' + m[1].replace(/^3dprinter\//, '').replace(/\.html$/, '.html') + '" target="_blank" rel="noopener">' + m[1] + '</a>'
       : src]);
     const order = ['vertices', 'edges', 'faces', 'cells', 'spheres', 'segments', 'triangles', 'steps', 'points', 'fibres', 'struts', 'links', 'level', 'cubes', 'trees', 'branches'];
@@ -482,14 +801,22 @@
     rows.push(['ink', S.geo.hasTone ? 'fourth coordinate' : 'lit + depth']);
     rows.push(['build', S.buildMs.toFixed(0) + ' ms']);
     rows.push(['frame', S.fps.toFixed(0) + ' /s']);
-    for (const [k, v] of rows) {
+    return rows;
+  }
+
+  function paintSpec() {
+    menuStale = true;
+    const body = $('#specbody');
+    body.innerHTML = '';
+    for (const r of specRows()) {
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td class="k">' + k + '</td><td class="v">' + v + '</td>';
+      tr.innerHTML = '<td class="k">' + r[0] + '</td><td class="v">' + (r[2] || r[1]) + '</td>';
       body.appendChild(tr);
     }
   }
 
   function paintCount() {
+    menuStale = true;
     const s = S.stats;
     const bits = [];
     if (s.vertices) bits.push(Number(s.vertices).toLocaleString() + ' vertices');
@@ -500,7 +827,12 @@
   }
 
   function front() {
-    S.yaw = -0.62; S.pitch = 0.30; S.dist = 4.4;
+    if (S.dome) { S.yaw = 0; S.pitch = 0; S.fov = 180; S.spinAng = 0; }
+    else { S.yaw = -0.62; S.pitch = 0.30; }
+    S.dist = 4.4; S.cubeStale = true;
+    buildMenuQuad();
+    const f = document.getElementById('fov');
+    if (f) f.value = String(Math.round(S.fov));
   }
 
   /* ---------------- interaction ---------------- */
@@ -521,7 +853,13 @@
     cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => {
       e.preventDefault();
-      S.dist = Math.max(1.8, Math.min(18, S.dist * Math.exp(e.deltaY * 0.0012)));
+      if (S.dome) {
+        S.fov = Math.max(90, Math.min(300, S.fov * Math.exp(e.deltaY * 0.0006)));
+        const f = document.getElementById('fov');
+        if (f) f.value = String(Math.round(S.fov));
+      } else {
+        S.dist = Math.max(1.8, Math.min(18, S.dist * Math.exp(e.deltaY * 0.0012)));
+      }
     }, { passive: false });
     cv.addEventListener('dblclick', front);
     window.addEventListener('keydown', e => {
@@ -532,19 +870,36 @@
     });
     $('#spin').addEventListener('change', e => { S.spin = e.target.checked; });
     $('#sweep').addEventListener('change', e => { S.sweep = e.target.checked; });
-    $('#depth').addEventListener('change', e => { S.depth = e.target.checked; });
-    $('#edges').addEventListener('change', e => { S.edges = e.target.checked; });
-    $('#faces').addEventListener('change', e => { S.faces = e.target.checked; });
-    $('#colour').addEventListener('change', e => { S.colour = parseFloat(e.target.value) || 0; });
+    $('#depth').addEventListener('change', e => { S.depth = e.target.checked; S.cubeStale = true; });
+    $('#edges').addEventListener('change', e => { S.edges = e.target.checked; S.cubeStale = true; });
+    $('#faces').addEventListener('change', e => { S.faces = e.target.checked; S.cubeStale = true; });
+    $('#colour').addEventListener('change', e => { S.colour = parseFloat(e.target.value) || 0; S.cubeStale = true; });
     $('#front').addEventListener('click', front);
+    /* the dome's own controls; guarded, so the viewer runs before the page markup has them */
+    const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+    on('dome', 'change', e => { S.dome = e.target.checked; S.cubeStale = true; });
+    on('guides', 'change', e => { S.guides = e.target.checked; });
+    on('spin', 'change', e => { S.spin = e.target.checked; menuStale = true; });
+    on('size', 'input', e => {
+      const v = parseFloat(e.target.value);
+      if (v) { S.faceDist = Math.max(1.1, Math.min(4, v)); buildMenuQuad(); backStale = true; }
+    });
+    on('fov', 'input', e => {
+      const v = parseFloat(e.target.value);
+      if (v) S.fov = Math.max(90, Math.min(300, v));
+    });
   })();
 
   /* ---------------- loop ---------------- */
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
-    if (S.spin) S.yaw += dt * 0.32;
+    if (S.spin) {
+      if (S.dome) { S.spinAng += dt * 0.45; S.cubeStale = true; }
+      else S.yaw += dt * 0.32;
+    }
     if (sweepParams(now)) S.dirty = true;
+    if (S.dirty) S.cubeStale = true;
     if (S.dirty && now - S.lastBuild > Math.max(16, S.buildMs * 1.5)) rebuild(now);
     draw();
     S.frames++;
@@ -564,7 +919,6 @@
     $('#count').textContent = '0 shapes';
     return;
   }
-  paintTabs();
   paintIndex();
   const want = (location.hash || '').replace('#', '');
   load(shapes.some(s => s.id === want) ? want : shapes[0].id);
