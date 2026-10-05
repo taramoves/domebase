@@ -33,9 +33,9 @@ const COPY={
   ['Lieu : le dôme','Location: the dome'],['Durée : 1 heure','Time: 1 hour']],
  s3:[['Accueil','Welcome in'],['Téléphones','Phones as tools'],['Sondage','Survey'],
   ['Dessiner un oiseau','Draw a bird'],['Oiseaux et Bixi','Birds and Bixi'],['Orientation','Orientation'],
-  ['Le dôme, instrument','Dome as instrument'],['Histoire du fulldome','Fulldome history'],['Skeuomorphisme','Skeuomorphism'],
+  ['Dôme instrument','Dome instrument'],['Histoire du dôme','Fulldome history'],['Skeuomorphisme','Skeuomorphism'],
   ['Design (Bauhaus)','Design (Bauhaus)'],['« Difficultés »','“Difficulties”'],['En discuter','Talk it through'],
-  ['Incarnation','Embodiment'],['Quiz','Quiz'],['Prix de fin de cours','End of class prizes']],
+  ['Incarnation','Embodiment'],['Quiz','Quiz'],['Prix de fin','End prizes']],
  demo:[['Dessiner sur le dôme','Draw on the dome'],['Boucles audiovisuelles','AV loopers'],['Envoyer un dessin','Send a drawing'],['Sondage','Poll'],['Course','Race']],
  poll:['Sondage','Poll'], race:['Course','Race'], win:['GAGNANT·E','winner'],
  s9:['Merci !','Thank you!']
@@ -313,7 +313,7 @@ function cardsFor(i){
  if(i==2){const E=[22,48,32,56,26,44,36,52,24,46,34,58,28,42,50];
   const K=['star','triangle','flower','square','circle','circle','square','circle','square','circle','circle','square','circle','circle','circle'],shp=[];
   COPY.s3.map((b,k)=>k).sort((a,b)=>(COPY.s3[a][0].length+COPY.s3[a][1].length)-(COPY.s3[b][0].length+COPY.s3[b][1].length)).forEach((k,j)=>shp[k]=K[j]);
-  return [tc({title:'SCRIPT',w:560,size:60,az:0,el:72})].concat(COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:620,size:60,pad:40,shape:'shape',sh:shp[k],accent:k,az:k*24,el:E[k],r:16.5,fl:3})));}
+  return [tc({title:'SCRIPT',w:560,size:60,az:0,el:72})].concat(COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:620,size:60,pad:34,shape:'shape',sh:shp[k],accent:k,az:k*24,el:E[k],r:16.5,fl:3})));}
  if(i>=3&&i<8)return demoS(i-3);
  return[tc({fr:COPY.s9[0],en:COPY.s9[1],tail:COPY.contact,w:700,size:44,az:0,el:42})];}
 // ---------- three.js ----------
