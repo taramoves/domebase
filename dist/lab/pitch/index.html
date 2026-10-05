@@ -67,7 +67,7 @@ function tc(o){const sz=o.size||36,ld=Math.round(sz*1.3),gap=Math.round(sz*.9),b
  const esz=Math.round(sz*.86),tsz=Math.round(sz*1.9),ksz=Math.round(sz*.58);
  const th=(o.title?tsz*1.18+gap:0)+fl.length*ld+(en.length?gap*.8+en.length*Math.round(esz*1.3):0)+(tl.length?gap+tl.length*Math.round(sz*.8*1.3):0);
  const lw=Math.max(sz*3,...[...fl,...en,...tl].map(l=>{SC.drawingContext.font='500 '+sz+'px '+FONT;return SC.drawingContext.measureText(l).width;}));
- const shp=o.shape=='shape',R2=Math.round(Math.hypot(tw/2,th/2)*(o.sh=='circle'?1.06:o.sh=='square'?1.24:1.36))+18;
+ const shp=o.shape=='shape',R2=Math.round(Math.hypot(tw/2,th/2)*(o.sh=='circle'?1.06:o.sh=='square'?1.26:o.sh=='flower'?1.45:o.sh=='triangle'?1.5:1.75))+18;
  const W=shp?2*(R2+10):Math.min(tw,lw)+2*pad,H=shp?2*(R2+10):th+2*pad;
  return Object.assign({},o,{w:W,h:H,draw:g=>{g.clear();const c=g.drawingContext;c.textBaseline='top';
   const ctr=o.align!='l',X=ctr?W/2:pad;c.textAlign=ctr?'center':'left';
@@ -319,8 +319,8 @@ function domePlan(px){const cv=c2d(px,px),c=cv.getContext('2d'),CX=px/2,K=px*.49
    c.fillStyle='#000';c.fillText(String(num),x,y);}});
  return cv;}
 function pic(cv,o){return Object.assign({w:cv.width,h:cv.height,draw:g=>{g.clear();g.drawingContext.drawImage(cv,0,0);}},o);}
-function domePlanCards(){return[tc({fr:'Panneaux, projecteurs, enceintes',en:'Panels, projectors, speakers',w:720,size:34,az:0,el:78}),
- pic(domePlan(1024),{wu:7.4,az:0,el:38})];}
+function domePlanCards(){return[tc({fr:'Panneaux, projecteurs, enceintes',en:'Panels, projectors, speakers',w:720,size:34,az:0,el:80}),
+ pic(domePlan(1024),{wu:8.1,az:0,el:40})];}
 // ---------- the deck ----------
 function cardsFor(i){
  if(i==0)return[tc({title:COPY.title,fr:COPY.s1[0],en:COPY.s1[1],tail:COPY.contact,w:1000,size:38,az:0,el:42})];
@@ -328,7 +328,7 @@ function cardsFor(i){
   tc({fr:COPY.s2main[0],en:COPY.s2main[1],w:880,size:32,align:'l',accent:4,az:0,el:44,fl:1.5,rot:-.01}),
   ...COPY.s2subs.map((s,k)=>tc({fr:s[0],en:s[1],w:330,size:28,align:'l',accent:k,az:P[k],el:k%2?14:8,r:11,rot:(k%2?.02:-.02)}))];}
  if(i==2){const E=[22,48,32,56,26,44,36,52,24,46,34,58,28,42,50],S5=['circle','triangle','square','star','flower'];
-  return COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:330,size:25,shape:'shape',sh:S5[k%5],accent:k,az:k*24,el:E[k],r:14,fl:3}));}
+  return COPY.s3.map((b,k)=>tc({fr:b[0],en:b[1],w:310,size:23,shape:'shape',sh:S5[k%5],accent:k,az:k*24,el:E[k],r:14.2,fl:3}));}
  if(i>=3&&i<8)return demoS(i-3);
  if(i==8)return domePlanCards();
  return[tc({fr:COPY.s9[0],en:COPY.s9[1],tail:COPY.contact,w:700,size:44,az:0,el:42})];}
