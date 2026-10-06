@@ -113,14 +113,17 @@ as it scrolls in and out, so the page is idle when the demo is off screen. Its s
 `src/lab/instrument/index.html`, and it is edited by hand.
 
 `dist/lab/surface/index.html` is a slide editor for the dome, hand-written and copied in by the
-build. A deck is one JSON document; a slide is a ground and a set of cards, each tangent to the
+build. A deck is one JSON document; a slide is a background and a set of cards, each tangent to the
 sphere at an azimuth and an elevation. The canvas is the master itself — centre the zenith, rim the
 horizon, az 0 at the bottom of the disc, az 180 at the top — so authoring happens in the dome's own
 image: the notes come out upside down at the back and content at az 90 reads on its side, which is
 geometry rather than a flip. A second view shows what the audience sees from the middle of the
-room. One slide exports as the domemaster a projector takes: square, black beyond the rim, no grid
-and no chrome. Drag, resize and turn each solve their placement, because the tangent plane at a
-card's centre is not the plane the hand's offset was measured in. The deck lives in the browser
+room. The background is a colour and the ink that reads on it follows its brightness; a text card
+carries its own font. Presenting fits the slide to the smaller side of the screen. One slide exports
+as the domemaster a projector takes: square, black beyond the rim, no grid and no chrome. Drag,
+resize and turn each solve their placement, because the tangent plane at a card's centre is not the
+plane the hand's offset was measured in. A deck's pictures are decoded when it opens, so a slide
+change is an upload rather than a fetch. The deck lives in the browser
 (`localStorage`) or in a `.dome.json` file — no server, no account, no sync. Its files are
 `src/lab/surface/{index.html,dome.js,gl.js,editor.js}`.
 

@@ -19,14 +19,14 @@
 
   /* ---- the document --------------------------------------------------------------------- */
   function uid(p) { return (p || "e") + (++n) + "-" + Math.floor(Math.random() * 46656).toString(36); }
-  function inkFor(slide) { return slide.ground === "black" ? "white" : "black"; }
+  function inkFor(slide) { return G.bgInk(slide && slide.ground); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function wrapAz(a) { a = a % 360; return a < 0 ? a + 360 : a; }
   function num(v, d) { var x = parseFloat(v); return isNaN(x) ? (d || 0) : x; }
 
   function blank() {
     return { version: 1, name: "untitled deck", fov: 180, png: 2048,
-             slides: [{ id: uid("s"), ground: "paper", notes: "", prompt: true, promptSize: 3.2, elements: [] }] };
+             slides: [{ id: uid("s"), ground: "#ffffff", notes: "", prompt: true, promptSize: 3.2, elements: [] }] };
   }
   function starter() {
     var p = blank();
@@ -34,21 +34,21 @@
     var s = p.slides[0];
     s.notes = "Welcome. Point at the dome's back to read this.\nPitch is up, azimuth is around.";
     s.elements = [
-      { id: uid("e"), kind: "text", az: 0, el: 26, rot: 0, size: 9, text: "surface",
+      { id: uid("e"), kind: "text", az: 0, el: 26, rot: 0, size: 9, text: "surface", font: "Arial",
         weight: "bold", align: "center", ink: "black", locked: false },
-      { id: uid("e"), kind: "text", az: 0, el: 12, rot: 0, size: 4, text: "a slide tool for the dome",
+      { id: uid("e"), kind: "text", az: 0, el: 12, rot: 0, size: 4, text: "a slide tool for the dome", font: "Arial",
         weight: "regular", align: "center", ink: "black", locked: false },
       { id: uid("e"), kind: "rect", az: 0, el: 19, rot: 0, w: 34, h: 0.5, fill: true, ink: "black", locked: false },
-      { id: uid("e"), kind: "text", az: 90, el: 40, rot: 0, size: 3.5, text: "east",
+      { id: uid("e"), kind: "text", az: 90, el: 40, rot: 0, size: 3.5, text: "east", font: "Arial",
         weight: "regular", align: "center", ink: "black", locked: false }
     ];
     var b = blank().slides[0];
-    b.ground = "black";
-    b.notes = "A black ground: the ink flips to white.";
+    b.ground = "#000000";
+    b.notes = "A black background: the ink flips to white.";
     b.elements = [
-      { id: uid("e"), kind: "text", az: 0, el: 24, rot: 0, size: 7, text: "black ground",
+      { id: uid("e"), kind: "text", az: 0, el: 24, rot: 0, size: 7, text: "black background", font: "Arial",
         weight: "bold", align: "center", ink: "white", locked: false },
-      { id: uid("e"), kind: "text", az: 0, el: 10, rot: 0, size: 3.5, text: "az 0 is the front of the dome · az 180 the back",
+      { id: uid("e"), kind: "text", az: 0, el: 10, rot: 0, size: 3.5, text: "az 0 is the front of the dome · az 180 the back", font: "Arial",
         weight: "regular", align: "center", ink: "white", locked: false }
     ];
     p.slides.push(b);
@@ -59,16 +59,26 @@
     json.fov = json.fov || 180;
     json.png = json.png || 2048;
     json.slides.forEach(function (s) {
-      s.id = s.id || uid("s"); s.ground = s.ground === "black" ? "black" : "paper";
+      s.id = s.id || uid("s"); s.ground = G.bgHex(s.ground);
       s.notes = s.notes || ""; s.promptSize = num(s.promptSize, 3.2);
       s.elements = Array.isArray(s.elements) ? s.elements : [];
       s.elements.forEach(function (e) {
         e.id = e.id || uid("e"); e.rot = num(e.rot, 0); e.locked = !!e.locked;
         e.ink = e.ink === "white" ? "white" : "black";
+        if (e.kind === "text") e.font = G.FONTS[e.font] ? e.font : "Arial";
       });
     });
     S.project = json; S.i = 0; S.sel = null; S.undo.length = 0; S.redo.length = 0;
-    G.reset(); renderAll(); fit();
+    G.reset(true); renderAll(); fit(); warmDeck();
+  }
+  /* Every picture in the deck, decoded now: a slide handed to the projector should find its
+     textures already made, not start fetching them as it appears. */
+  function warmDeck() {
+    var srcs = [];
+    S.project.slides.forEach(function (s) {
+      s.elements.forEach(function (e) { if (e.kind === "image" && e.src) srcs.push(e.src); });
+    });
+    G.preload(srcs);
   }
 
   function curSlide() { return S.project.slides[clamp(S.i, 0, S.project.slides.length - 1)]; }
@@ -492,6 +502,7 @@
       el("eImgRow").style.display = e.kind === "image" ? "" : "none";
       el("eFillRow").style.display = e.kind === "rect" ? "" : "none";
       el("eWeight").value = e.weight === "bold" ? "bold" : "regular";
+      el("eFont").value = G.FONTS[e.font] ? e.font : "Arial";
       el("eAlign").value = e.align || "center";
       el("eInk").value = e.ink === "white" ? "white" : "black";
       el("eFill").value = e.fill === false ? "hollow" : "solid";
@@ -503,8 +514,10 @@
     el("pKind").textContent = s.elements.length + " cards";
     if (document.activeElement !== el("sNotes")) el("sNotes").value = s.notes || "";
     if (document.activeElement !== el("sPromptSize")) el("sPromptSize").value = num(s.promptSize, 3.2).toFixed(1);
-    el("btnPaper").setAttribute("aria-pressed", s.ground === "black" ? "false" : "true");
-    el("btnBlack").setAttribute("aria-pressed", s.ground === "black" ? "true" : "false");
+    var bg = G.bgHex(s.ground);
+    el("btnPaper").setAttribute("aria-pressed", bg === "#ffffff" ? "true" : "false");
+    el("btnBlack").setAttribute("aria-pressed", bg === "#000000" ? "true" : "false");
+    if (document.activeElement !== el("sBg")) el("sBg").value = bg;
     el("btnPrompt").setAttribute("aria-pressed", s.prompt ? "true" : "false");
     el("sPromptWhere").value = s.prompt ? "back, el 34°" : "off";
     if (document.activeElement !== el("projFov")) el("projFov").value = num(S.project.fov, 180).toFixed(0);
@@ -527,7 +540,7 @@
     var s = curSlide(), ae = viewCentre();
     e.az = wrapAz(Math.round(ae[0] * 2) / 2); e.el = clamp(Math.round(ae[1] * 2) / 2, 0, 90);
     if (e.kind === "text") { e.size = 6; e.text = e.text || "text"; e.align = "center";
-                             e.weight = "regular"; }
+                             e.weight = "regular"; e.font = G.FONTS[e.font] ? e.font : "Arial"; }
     e.ink = inkFor(s); e.rot = 0; e.locked = false;
     s.elements.push(e);
     S.sel = e.id;
@@ -542,7 +555,10 @@
      card at the pointer in every one of them */
   function addFromFile(f) {
     if (!f || !/^image\//.test(f.type || "")) return false;
-    readImage(f, function (src) { addEl({ id: uid("e"), kind: "image", src: src, w: 30 }); });
+    readImage(f, function (src) {
+      G.preload([src]);                      // decoded now, so the card draws whole as it lands
+      addEl({ id: uid("e"), kind: "image", src: src, w: 30 });
+    });
     return true;
   }
   function addFromPaste(dt) {
@@ -659,9 +675,14 @@
     S.present = on;
     document.body.classList.toggle("present", on);
     el("btnPresent").setAttribute("aria-pressed", on ? "true" : "false");
-    if (on) { if (stage.requestFullscreen) { try { stage.requestFullscreen(); } catch (er) {} } }
+    if (on) {
+      /* presenting shows one thing, whole: whatever the editor was zoomed to, the slide arrives
+         fitted to the smaller side of the screen */
+      S.zoom = 1; S.pan = [0, 0];
+      if (stage.requestFullscreen) { try { stage.requestFullscreen(); } catch (er) {} }
+    }
     else if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (er) {} }
-    G.fit(); draw();
+    fit(); draw();
   }
   function download() {
     var blob = new Blob([JSON.stringify(S.project, null, 1)], { type: "application/json" });
@@ -681,7 +702,9 @@
     canvas.addEventListener("pointerleave", function () { S.over = false; });
     canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     canvas.addEventListener("wheel", function (e) {
-      e.preventDefault(); zoomAt(pt(e), Math.exp(-e.deltaY * 0.0015));
+      e.preventDefault();
+      if (S.present) return;           // presenting shows the slide whole: nothing to zoom
+      zoomAt(pt(e), Math.exp(-e.deltaY * 0.0015));
     }, { passive: false });
     canvas.addEventListener("dblclick", function (e) {
       var hit = dome.pick(curSlide().elements, dirAt(pt(e)), texOf);
@@ -692,7 +715,10 @@
     document.addEventListener("fullscreenchange", function () {
       if (S.present && !document.fullscreenElement) { S.present = false; document.body.classList.remove("present"); G.fit(); draw(); }
     });
-    window.addEventListener("resize", function () { G.fit(); draw(); });
+    window.addEventListener("resize", function () {
+      if (S.present) { S.zoom = 1; S.pan = [0, 0]; }
+      fit(); draw();
+    });
 
     el("btnNew").onclick = function () {
       if (!confirm("Start a new deck? The current one stays in the browser's saved copy until you save over it.")) return;
@@ -748,7 +774,7 @@
       var f = ev.target.files[0]; if (!f) return;
       var mode = ev.target.dataset.mode;
       readImage(f, function (src) {
-        if (mode === "replace") { var e = sel(); if (!e) return; push(); e.src = src; e.kind = "image"; e.w = num(e.w, 30); }
+        if (mode === "replace") { var e = sel(); if (!e) return; push(); G.preload([src]); e.src = src; e.kind = "image"; e.w = num(e.w, 30); }
         else addEl({ id: uid("e"), kind: "image", src: src, w: 30 });
         G.reset(); renderProps(); draw(); save();
       });
@@ -768,8 +794,18 @@
     el("btnLock").onclick = function () { var s = sel(); if (!s) return; push(); s.locked = !s.locked; renderProps(); save(); };
     el("btnDup").onclick = dup;
     el("btnDel").onclick = del;
-    el("btnPaper").onclick = function () { push(); curSlide().ground = "paper"; renderProps(); draw(); save(); };
-    el("btnBlack").onclick = function () { push(); curSlide().ground = "black"; renderProps(); draw(); save(); };
+    el("btnPaper").onclick = function () { push(); curSlide().ground = "#ffffff"; renderProps(); draw(); save(); };
+    el("btnBlack").onclick = function () { push(); curSlide().ground = "#000000"; renderProps(); draw(); save(); };
+    /* The picker fires continuously while it is open, so one gesture is one undo step: the state
+       before the first colour of the gesture is what push records. Drawing tracks the picker live;
+       the deck is written once the choice settles, because a deck can be a large file. */
+    var bgLive = false;
+    el("sBg").addEventListener("input", function () {
+      if (!bgLive) { bgLive = true; push(); }
+      curSlide().ground = this.value;
+      draw();
+    });
+    el("sBg").addEventListener("change", function () { bgLive = false; renderProps(); save(); });
     el("btnPrompt").onclick = function () { push(); curSlide().prompt = !curSlide().prompt; renderProps(); draw(); save(); };
 
     var fields = ["eAz", "eEl", "eRot", "eSize", "eW", "eH"];
@@ -802,6 +838,7 @@
       curSlide().promptSize = Math.max(0.5, num(el("sPromptSize").value, 3.2)); draw(); save();
     });
     el("eWeight").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.weight = el("eWeight").value; G.reset(); draw(); save(); });
+    el("eFont").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.font = G.FONTS[el("eFont").value] ? el("eFont").value : "Arial"; G.reset(); draw(); save(); });
     el("eAlign").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.align = el("eAlign").value; G.reset(); draw(); save(); });
     el("eInk").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.ink = el("eInk").value; G.reset(); draw(); save(); });
     el("eFill").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.fill = el("eFill").value !== "hollow"; G.reset(); draw(); save(); });
@@ -823,11 +860,11 @@
     G.setOnChange(function () { draw(); });
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(LS)); } catch (e) {}
-    S.project = saved && saved.slides && saved.slides.length ? saved : starter();
-    if (!saved) S.undo.length = 0;
     wire();
-    G.fit();
-    renderAll(); draw();
+    /* through open(), saved deck and starter alike: one place that normalises a document and
+       warms its pictures */
+    open(saved && saved.slides && saved.slides.length ? saved : starter());
+    draw();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { G.reset(); draw(); });
     window.SURFACE = { S: S, G: G, dome: dome, draw: draw, chrome: chrome, cards: cards, curSlide: curSlide,
                        sel: sel, renderAll: renderAll, renderProps: renderProps, setView: setView,

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../../assets/css/site.css">
 <style>
 /* the tool's own shell. The sheet's rules for th/td are global, so panels here are divs, never
-   tables; the dome canvas is the only place the slide's own ground decides the colour. */
+   tables; the dome canvas is the only place the slide's own background decides the colour. */
 html,body{margin:0;height:100%}
 body.tool{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#fff;color:#000;
   font:12px/1.45 Arial,Helvetica,sans-serif}
@@ -25,6 +25,13 @@ header#top .sp{flex:1 1 auto}
 .b:hover{background:#000;color:#fff}
 .b[aria-pressed="true"]{background:#000;color:#fff}
 .b.wide{width:100%}
+/* the background swatch: a colour input wearing the same hairline as the buttons beside it */
+input.sw{-webkit-appearance:none;appearance:none;padding:0;width:34px;height:23px;border:1px solid #000;
+  border-radius:0;background:#fff;cursor:pointer}
+.grp input.sw{margin-left:-1px}
+input.sw::-webkit-color-swatch-wrapper{padding:0}
+input.sw::-webkit-color-swatch{border:0}
+input.sw::-moz-color-swatch{border:0}
 #wrap{flex:1 1 auto;display:flex;min-height:0}
 /* site.css gives every aside the sheet's detail-panel treatment — fixed, off the right edge,
    slid out of view. These two are the tool's own columns and have to sit in the flow. */
@@ -162,10 +169,11 @@ body.present #stage{background:#000}
 
     <div id="pSlide">
       <div class="f">
-        <label class="lb">ground</label>
+        <label class="lb" for="sBg">background</label>
         <div class="grp">
           <button class="b" id="btnPaper" aria-pressed="true">paper</button>
           <button class="b" id="btnBlack" aria-pressed="false">black</button>
+          <input class="sw" type="color" id="sBg" value="#ffffff" aria-label="background colour">
         </div>
       </div>
       <div class="f">
@@ -221,6 +229,16 @@ body.present #stage{background:#000}
       <div class="f" id="eTextRow">
         <label class="lb" for="eText">text</label>
         <textarea id="eText" rows="4"></textarea>
+        <div style="margin-top:6px">
+          <label class="lb" for="eFont">font</label>
+          <select id="eFont">
+            <option value="Arial">arial</option>
+            <option value="Verdana">verdana</option>
+            <option value="Georgia">georgia</option>
+            <option value="Times">times</option>
+            <option value="Courier">courier</option>
+          </select>
+        </div>
         <div class="pair" style="margin-top:6px">
           <div>
             <label class="lb" for="eWeight">weight</label>

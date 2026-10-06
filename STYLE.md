@@ -223,8 +223,9 @@ resting one is hollow, since the sheet carries no second colour.
 
 `dist/lab/surface/index.html` is the dome slide editor, hand-written and copied in by the build. It
 links `../../assets/css/site.css` and it is a tool rather than a sheet: a full-height column of
-header, side panels and status bar around the canvas. Black on white holds — the canvas takes the
-slide's own ground, white or black, and the ink flips with it, and nothing carries colour. Two
+header, side panels and status bar around the canvas. Black on white holds elsewhere — but the
+canvas takes the slide's own background, which is a colour the author picks (paper and black the
+two buttons that cover most decks), and the ink that reads on it follows its brightness. Two
 sheet rules have to be reset by the page itself: every `aside` is given the fixed, slid-out
 detail-panel treatment, so the tool's two columns set `position:static`, and `th`/`td` are global,
 which is why the panels are built from divs. What it edits is a domemaster, so the page's own

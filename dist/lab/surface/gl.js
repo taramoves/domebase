@@ -1,7 +1,8 @@
 /* gl.js — the three passes.
 
-   ground   the disc: paper or black, the horizon rim, an elevation ring at 30 and 60, eight
-            meridians. Everything in master coordinates, so it takes the same zoom and pan.
+   background the disc: any colour, paper and black the common two, the horizon rim, an elevation
+            ring at 30 and 60, eight meridians. Everything in master coordinates, so it takes the
+            same zoom and pan.
    master   every card, its vertices projected sphere -> disc. The card's frame arrives as
             uniforms over one shared unit-grid buffer, so a card is one draw call.
    centre   the same cards through a camera at the dome's centre: what the audience sees.
@@ -17,6 +18,75 @@ window.surfaceGL = function (canvas) {
   var view = { view: "master", zoom: 1, pan: [0, 0], yaw: 0, pitch: 16, fov: 100, mfov: 180 };
   var slide = null, chrome = null, onChange = null;
   var tex = {};
+
+  /* ---- a slide's background, and the ink that reads on it ------------------------------- */
+  /* A background is a colour. Paper and black are the two names the tool started with, kept
+     because they are the two right answers most of the time and shorter than a hex. The ink that
+     reads on a background follows its brightness, so a dark colour flips text to white. */
+  var BG_NAMED = { paper: "#ffffff", white: "#ffffff", black: "#000000" };
+  function bgHex(v) {
+    var s = String(v == null ? "" : v).trim().toLowerCase();
+    if (BG_NAMED[s]) return BG_NAMED[s];
+    if (/^#[0-9a-f]{6}$/.test(s)) return s;
+    if (/^#[0-9a-f]{3}$/.test(s)) return "#" + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+    return "#ffffff";
+  }
+  function bgRGB(v) {
+    var h = bgHex(v);
+    return [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+  }
+  function bgInk(v) {
+    var c = bgRGB(v);
+    return (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) > 0.5 ? "black" : "white";
+  }
+
+  /* ---- fonts ---------------------------------------------------------------------------- */
+  /* The fonts a dome deck can lean on, all of them on the machines this runs on. A text card's
+     texture is measured from its words, so the font decides the card's box as well as its look:
+     change the font and the card is remeasured, never squeezed. */
+  var FONTS = {
+    Arial: "Arial, Helvetica, sans-serif",
+    Georgia: "Georgia, 'Times New Roman', serif",
+    Courier: "'Courier New', Courier, monospace",
+    Times: "'Times New Roman', Times, serif",
+    Verdana: "Verdana, Geneva, sans-serif"
+  };
+  function fontStack(name) { return FONTS[name] || FONTS.Arial; }
+
+  /* ---- pictures ------------------------------------------------------------------------- */
+  /* A picture is decoded once per source and kept as a canvas ready for the GPU, so the second
+     time a slide arrives its texture is an upload rather than a fetch, a decode and a canvas. A
+     deck preloads its pictures when it opens: that is the second that a slide change was losing.
+     The canvases are capped, because a deck can hold more pictures than a browser should. */
+  var IMG = {}, IMG_ORDER = [], IMG_KEEP = 12;
+  function imageRec(src) {
+    if (!src) return null;
+    if (IMG[src]) return IMG[src];
+    var r = IMG[src] = { state: "loading", c: null }, img = new Image();
+    if (/^https?:/i.test(src)) img.crossOrigin = "anonymous";
+    function done() {
+      try {
+        var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+        var k = Math.min(1, 2048 / Math.max(w, h));
+        var cc = document.createElement("canvas");
+        cc.width = Math.max(1, Math.round(w * k)); cc.height = Math.max(1, Math.round(h * k));
+        cc.getContext("2d").drawImage(img, 0, 0, cc.width, cc.height);
+        r.state = "ready"; r.c = cc;
+        IMG_ORDER.push(src);
+        while (IMG_ORDER.length > IMG_KEEP) {
+          var old = IMG_ORDER.shift();
+          if (old !== src) delete IMG[old];           // the texture keeps the picture; the canvas need not
+        }
+      } catch (e) { r.state = "failed"; }
+      if (onChange) onChange();
+    }
+    function failed() { r.state = "failed"; if (onChange) onChange(); }
+    img.src = src;
+    if (img.decode) img.decode().then(done, failed);
+    else { img.onload = done; img.onerror = failed; }
+    return r;
+  }
+  function preload(srcs) { for (var i = 0; i < srcs.length; i++) if (srcs[i]) imageRec(srcs[i]); }
 
   /* ---- shaders ------------------------------------------------------------------------- */
   function sh(type, src) {
@@ -153,8 +223,9 @@ window.surfaceGL = function (canvas) {
   var WRAP = 1100, PAD = 24, LH = 1.25;
   function textCanvas(el, wrapPx) {
     var px = FONT, weight = el.weight === "bold" ? "700" : "400";
+    var face = weight + " " + px + "px " + fontStack(el.font);
     var c = document.createElement("canvas"), x = c.getContext("2d");
-    x.font = weight + " " + px + "px Arial, Helvetica, sans-serif";
+    x.font = face;
     var lines = [], para = String(el.text == null ? "" : el.text).split("\n");
     var limit = wrapPx || WRAP;
     for (var p = 0; p < para.length; p++) {
@@ -172,7 +243,7 @@ window.surfaceGL = function (canvas) {
     c.width = Math.max(4, Math.ceil(widest) + PAD * 2);
     c.height = Math.max(4, Math.ceil(lines.length * px * LH) + PAD * 2);
     x = c.getContext("2d");
-    x.font = weight + " " + px + "px Arial, Helvetica, sans-serif";
+    x.font = face;
     x.fillStyle = el.ink === "white" ? "#fff" : "#000";
     x.textBaseline = "middle";
     x.textAlign = el.align === "left" ? "left" : el.align === "right" ? "right" : "center";
@@ -193,37 +264,36 @@ window.surfaceGL = function (canvas) {
   }
 
   function sig(el) {
-    if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.wrap || 0].join("|");
+    if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.font || "", el.wrap || 0].join("|");
     if (el.kind === "rect") return ["r", el.ink, el.fill === false ? "hollow" : "solid"].join("|");
     return "i|" + (el.src || "").slice(-64) + "|" + (el.src || "").length;
   }
-  /* the texture a card draws with, and the pixel size its geometry is derived from */
+  /* the texture a card draws with, and the pixel size its geometry is derived from. A picture that
+     has not arrived yet draws as a blank of nominal size and is filled in when it lands, but once
+     it is in hand the upload is the only work left. */
   function texture(el) {
-    var s = sig(el), rec = tex[el.id];
+    var s = sig(el), rec = tex[el.id], ir, ready;
+    if (el.kind === "image") {
+      ir = imageRec(el.src);
+      ready = !!(ir && ir.state === "ready" && ir.c);
+      if (rec && rec.sig === s && (!ready || !rec.blank)) return rec;
+      if (rec && rec.t) gl.deleteTexture(rec.t);
+      rec = tex[el.id] = { sig: s, t: blank(), w: 4, h: 4, blank: true, kind: el.kind };
+      if (ready) {
+        rec.t = makeTexture(ir.c, ir.c.width, ir.c.height);
+        rec.w = ir.c.width; rec.h = ir.c.height; rec.blank = false;
+      }
+      return rec;
+    }
     if (rec && rec.sig === s) return rec;
     if (rec && rec.t) gl.deleteTexture(rec.t);
-    rec = tex[el.id] = { sig: s, t: blank(), w: 4, h: 4 };
+    rec = tex[el.id] = { sig: s, t: blank(), w: 4, h: 4, kind: el.kind };
     if (el.kind === "text") {
       var c = textCanvas(el, el.wrap);
       rec.t = makeTexture(c, c.width, c.height); rec.w = c.width; rec.h = c.height;
     } else if (el.kind === "rect") {
       var r = rectCanvas(el);
       rec.t = makeTexture(r, r.width, r.height); rec.w = r.width; rec.h = r.height;
-    } else if (el.kind === "image") {
-      var img = new Image();
-      if (/^https?:/i.test(el.src || "")) img.crossOrigin = "anonymous";
-      img.onload = function () {
-        var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
-        var k = Math.min(1, 2048 / Math.max(w, h));
-        var cc = document.createElement("canvas");
-        cc.width = Math.round(w * k); cc.height = Math.round(h * k);
-        cc.getContext("2d").drawImage(img, 0, 0, cc.width, cc.height);
-        rec.t = makeTexture(cc, cc.width, cc.height);
-        rec.w = cc.width; rec.h = cc.height;
-        if (onChange) onChange();
-      };
-      img.onerror = function () { rec.failed = true; };
-      img.src = el.src;
     }
     return rec;
   }
@@ -257,7 +327,7 @@ window.surfaceGL = function (canvas) {
 
   function draw(elements, selectedId) {
     fit();
-    var glass = slide && slide.ground === "black" ? [0, 0, 0] : [1, 1, 1];
+    var glass = bgRGB(slide && slide.ground);
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -323,7 +393,7 @@ window.surfaceGL = function (canvas) {
   /* The domemaster that goes to the projector: a square whose rim is the horizon, black beyond it,
      no grid and no chrome — the slide alone. It renders twice the size into a framebuffer and
      scales down, because a framebuffer has no antialiasing and a master's edges show it. */
-  function domemaster(size, elements, ss, ground) {
+  function domemaster(size, elements, ss, background) {
     ss = ss || 2;
     var inner = size * ss;
     var fb = gl.createFramebuffer(), txt = gl.createTexture();
@@ -343,7 +413,7 @@ window.surfaceGL = function (canvas) {
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    var glass = (ground === "black" ? [0, 0, 0] : [1, 1, 1]);
+    var glass = bgRGB(background);
     gl.clearColor(0, 0, 0, 1);                     // outside the rim the projector has nothing
     gl.clear(gl.COLOR_BUFFER_BIT);
     flatDraw(discBuf, gl.TRIANGLE_FAN, 130, glass, [1, 1], [0, 0], 0);
@@ -374,9 +444,9 @@ window.surfaceGL = function (canvas) {
   /* ---- chrome, in screen pixels --------------------------------------------------------- */
   function drawChrome() {
     if (!chrome) return;
-    var dark = !(slide && slide.ground === "black");
-    var ink = dark ? [0, 0, 0, 0.85] : [1, 1, 1, 0.9];        // the mark the ground can carry
-    var lift = dark ? [1, 1, 1, 1] : [0, 0, 0, 1];            // and what separates it from the card
+    var light = bgInk(slide && slide.ground) === "black";
+    var ink = light ? [0, 0, 0, 0.85] : [1, 1, 1, 0.9];        // the mark the background can carry
+    var lift = light ? [1, 1, 1, 1] : [0, 0, 0, 1];            // and what separates it from the card
     var a = [2 / V.w, -2 / V.h], b = [-1, 1];
     function poly(pts, col, mode) {
       if (pts.length < 2) return;
@@ -406,6 +476,8 @@ window.surfaceGL = function (canvas) {
 
   return {
     draw: draw, fit: fit, texture: texture, texSize: texSize,
+    bgHex: bgHex, bgRGB: bgRGB, bgInk: bgInk, fontStack: fontStack, FONTS: FONTS, preload: preload,
+    background: function () { return bgRGB(slide && slide.ground); },
     setView: function (v) { for (var k in v) view[k] = v[k]; },
     getView: function () { return view; },
     viewport: function () { return V; },
@@ -415,6 +487,14 @@ window.surfaceGL = function (canvas) {
     domemaster: domemaster,
     setChrome: function (c) { chrome = c; },
     setOnChange: function (f) { onChange = f; },
-    reset: function () { for (var id in tex) { if (tex[id].t) gl.deleteTexture(tex[id].t); } tex = {}; }
+    reset: function (all) {
+      /* a card's texture dies with the card's content; a picture is kept across an edit, since
+         only its source can change it — and across a new deck it must go, because the ids do */
+      for (var id in tex) {
+        if (!all && tex[id].kind === "image") continue;
+        if (tex[id].t) gl.deleteTexture(tex[id].t);
+        delete tex[id];
+      }
+    }
   };
 };
