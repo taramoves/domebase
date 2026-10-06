@@ -317,7 +317,7 @@ window.surfaceGL = function (canvas) {
   /* The domemaster that goes to the projector: a square whose rim is the horizon, black beyond it,
      no grid and no chrome — the slide alone. It renders twice the size into a framebuffer and
      scales down, because a framebuffer has no antialiasing and a master's edges show it. */
-  function domemaster(size, elements, ss) {
+  function domemaster(size, elements, ss, ground) {
     ss = ss || 2;
     var inner = size * ss;
     var fb = gl.createFramebuffer(), txt = gl.createTexture();
@@ -337,7 +337,7 @@ window.surfaceGL = function (canvas) {
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    var glass = slide && slide.ground === "black" ? [0, 0, 0] : [1, 1, 1];
+    var glass = (ground === "black" ? [0, 0, 0] : [1, 1, 1]);
     gl.clearColor(0, 0, 0, 1);                     // outside the rim the projector has nothing
     gl.clear(gl.COLOR_BUFFER_BIT);
     flatDraw(discBuf, gl.TRIANGLE_FAN, 130, glass, [1, 1], [0, 0], 0);

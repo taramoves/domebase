@@ -105,8 +105,16 @@
   function save() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      try { localStorage.setItem(LS, JSON.stringify(S.project)); } catch (e) {}
+      try {
+        localStorage.setItem(LS, JSON.stringify(S.project));
+      } catch (e) {
+        /* A deck carrying photographs outgrows the browser's few megabytes. Keep working — the
+           file is the copy that keeps up — and say so in the bar instead of failing in silence. */
+        el("note").textContent = "too big to keep in the browser — save the deck as a file";
+        return;
+      }
       el("note").textContent = "saved locally at " + new Date().toLocaleTimeString();
+      scheduleThumbs();
     }, 350);
   }
 
@@ -295,6 +303,22 @@
   }
 
   /* ---- panels ---------------------------------------------------------------------------- */
+  var thumbTimer = null;
+  function scheduleThumbs() { clearTimeout(thumbTimer); thumbTimer = setTimeout(thumbs, 450); }
+  /* A slide's row carries the master it makes, drawn through the export path at 2x its size —
+     the same picture the projector gets, so the list reads as the deck rather than as a summary. */
+  function thumbOf(slide, canvas) {
+    if (!canvas || !slide) return;
+    var c = G.domemaster(canvas.width * 2, cards(slide), 1, slide.ground);
+    if (!c) return;
+    var x = canvas.getContext("2d");
+    x.clearRect(0, 0, canvas.width, canvas.height);
+    x.drawImage(c, 0, 0, canvas.width, canvas.height);
+  }
+  function thumbs() {
+    var rows = el("slideList").querySelectorAll(".srow");
+    for (var i = 0; i < rows.length; i++) thumbOf(S.project.slides[i], rows[i].querySelector("canvas.th"));
+  }
   function renderAll() {
     el("name").value = S.project.name;
     el("noteDeck").textContent = S.project.slides.length + " slides · " +
@@ -310,7 +334,7 @@
       var title = "";
       for (var k = 0; k < s.elements.length; k++) if (s.elements[k].kind === "text") { title = s.elements[k].text; break; }
       row.innerHTML = '<span class="n">' + (i + 1) + '</span>' +
-        '<span class="g' + (s.ground === "black" ? " black" : "") + '"></span>' +
+        '<canvas class="th" width="48" height="48"></canvas>' +
         '<span class="t"></span>' +
         '<button class="k" data-up="1">↑</button><button class="k" data-down="1">↓</button><button class="k" data-del="1">✕</button>';
       row.querySelector(".t").textContent = (title || String(s.notes).split("\n")[0] || "—") +
@@ -331,6 +355,7 @@
         S.i = i; S.sel = null; renderAll(); draw();
       });
       list.appendChild(row);
+      thumbOf(s, row.querySelector("canvas.th"));
     });
     el("slideCount").textContent = S.project.slides.length;
   }
@@ -450,7 +475,8 @@
      beyond it. It carries whatever the master shows, the notes on the dome included. */
   function exportMaster() {
     var size = clamp(num(S.project.png, 2048), 256, 8192);
-    var c = G.domemaster(size, cards(curSlide()));
+    var s = curSlide();
+    var c = G.domemaster(size, cards(s), 2, s.ground);
     if (!c) { alert("WebGL refused a frame to read back, so there is no master to save."); return; }
     c.toBlob(function (b) {
       var a = document.createElement("a");
@@ -493,6 +519,13 @@
     if (e.key === "+" || e.key === "=") { var v = G.viewport(); return zoomAt([v.w / 2, v.h / 2], 1.15); }
     if (e.key === "-") { var v2 = G.viewport(); return zoomAt([v2.w / 2, v2.h / 2], 1 / 1.15); }
     var s = sel();
+    if (e.key === "Tab") {                       // walk the cards on this slide
+      e.preventDefault();
+      var arr = curSlide().elements; if (!arr.length) return;
+      var at = arr.indexOf(s), step = e.shiftKey ? -1 : 1;
+      S.sel = arr[at < 0 ? 0 : ((at + step) % arr.length + arr.length) % arr.length].id;
+      renderProps(); draw(); return;
+    }
     if (!s) return;
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); del(); return; }
     if (e.key === "[") { push(); zStep(s, -1); save(); renderProps(); draw(); return; }
@@ -711,7 +744,8 @@
                        sel: sel, renderAll: renderAll, renderProps: renderProps, setView: setView,
                        undo: undo, redo: redo, addEl: addEl, push: push, dirAt: dirAt, pt: pt,
                        zoomAt: zoomAt, open: open, save: save, download: download,
-                       exportMaster: exportMaster, addFromPaste: addFromPaste };
+                       exportMaster: exportMaster, addFromPaste: addFromPaste,
+                       thumbs: thumbs, thumbOf: thumbOf, renderSlides: renderSlides };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
