@@ -7,21 +7,35 @@
 <link rel="stylesheet" href="../../assets/css/site.css">
 <style>/* learn — this page only */
 .doc{padding:34px 24px 96px;max-width:760px}
-h2{font-size:14px;margin:36px 0 9px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+h2{font-size:14px;margin:38px 0 9px;padding-bottom:4px;border-bottom:2px solid var(--line)}
 h2:first-of-type{margin-top:24px}
 p{margin:0 0 11px;max-width:72ch}
 figure{margin:18px 0}
 figcaption{font-size:11.5px;margin-top:6px;max-width:72ch}
-svg{display:block;max-width:100%;height:auto}
+svg,canvas{display:block;max-width:100%;height:auto}
+canvas{touch-action:none;cursor:crosshair}
+canvas:focus-visible{outline:1px solid var(--line);outline-offset:2px}
+.panels{display:flex;flex-wrap:wrap;gap:2px 14px;align-items:flex-start;margin:0}
+.panels canvas{flex:1 1 200px;min-width:0}
+details{margin:14px 0 0;border-top:1px solid var(--hair);max-width:72ch}
+summary{cursor:pointer;font-size:11.5px;padding:6px 0;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+ "}
+details[open] summary::before{content:"\2013 "}
+details p{font-size:11.5px;margin:0 0 8px;max-width:72ch}
+details p:last-child{margin-bottom:10px}
 .pulse{fill:#000}
 .gloss{margin:2px 0 0}
 .gloss p{margin:0;padding:6px 0;border-top:1px solid var(--hair);max-width:72ch}
 .gloss p:first-child{border-top:0;padding-top:2px}
 .src{font-size:11.5px;margin:6px 0 0;max-width:72ch}
-canvas.master{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
-canvas.master:focus-visible{outline:1px solid var(--line);outline-offset:2px}
 .readout{font-size:12.5px;margin:8px 0 0;padding-top:6px;border-top:1px solid var(--hair);
   max-width:72ch}
+.math{font-size:11.5px;margin:6px 0 0;padding-top:6px;border-top:1px solid var(--hair);
+  max-width:72ch}
+.math span{display:block;padding:2px 0}
+.az{color:#b8452f}
+.el{color:#3f7d59}
 .hint{font-size:11.5px;margin:4px 0 0}
 @media (prefers-reduced-motion:reduce){.pulse{display:none}}
 </style>
@@ -32,52 +46,166 @@ canvas.master:focus-visible{outline:1px solid var(--line);outline-offset:2px}
 
 <main class="doc">
 
-<p>The dome as a delivery format: the master, the projectors, the loudspeakers.</p>
+<p>A fulldome work is made up of two elements: the visual and the audio.</p>
 
-<h2>1 The Master</h2>
+<h2>1 The visual</h2>
 
-<p>A dome master holds a hemisphere in a square frame, 720, 1024, 1536, 2048, 3200, 3600 or 4096 px
-a side. The picture fills the circle inscribed in the square and black fills the corners, carrying
-the show name, the timecode and the copyright. Frames travel as numbered PNG or TARGA with RLE, or
-as JPEG at the highest quality, 8, 10 or 12 bits a colour, at 30 or 60 fps; 24, 25, 29.97, 48 and
-59.94 turn up too.</p>
-
-<p>The projection is equidistant azimuthal: distance from the centre of the circle is the angle
-from the zenith, so the rings of latitude sit evenly spaced. In a 4096 master the rim is 2048 px
-from the centre and 45&deg; sits at 1024 px. The frame reaches 180&deg; from the zenith to the
-horizon and covers all 360&deg; of azimuth. The front of the dome lands at the bottom of the
-frame, the back at the top, and the right of the frame answers to the right of a viewer at the
-centre of the room. Action reads from where it sits: IMERSA puts the safe area within
-&plusmn;50&deg; of longitude around the front and 10&ndash;60&deg; of altitude, on a camera tilted
-15&deg;.</p>
+<p>The visual is usually in the format of a domemaster, which has the dimensions of 1:1. The circle
+is what gets projected on the dome.</p>
 
 <figure>
-  <canvas class="master" id="mx" width="420" height="420" tabindex="0" role="img"
-    aria-label="A dome master: a square frame, the image circle inscribed in it, the zenith at the centre of the circle and the horizon at the rim. A probe marks a point by azimuth and elevation."></canvas>
-  <p class="readout" id="mxout"></p>
-  <figcaption><b>Figure 1.</b> The master. Drag the probe, or tab to it and use the arrow keys: the
-  readout gives the azimuth, the elevation and the pixel it lands on in a 4096 master.
-  <span class="hint">Azimuth runs 0&deg; at the front, 90&deg; to the right of a viewer at the
-  centre; elevation runs 0&deg; at the rim to 90&deg; at the zenith.</span></figcaption>
+<svg viewBox="0 0 772 296" role="img" aria-label="Left: a square domemaster with the picture in the inscribed circle, black in the corners, the back at the top of the frame and the front at the bottom. Right: the same two labels on a dome seen at an angle, the front at the near rim and the back at the far rim.">
+  <rect x="36" y="26" width="200" height="200" fill="#000"/>
+  <circle cx="136" cy="126" r="100" fill="#fff"/>
+  <g fill="none" stroke="#c9c9c9" stroke-width="1">
+    <circle cx="136" cy="126" r="33.3"/><circle cx="136" cy="126" r="66.7"/>
+    <line x1="36" y1="126" x2="236" y2="126"/><line x1="136" y1="26" x2="136" y2="226"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <rect x="36" y="26" width="200" height="200"/>
+    <circle cx="136" cy="126" r="100"/>
+    <ellipse cx="560" cy="205" rx="150" ry="36"/>
+    <path d="M 410 205 A 150 150 0 0 1 710 205"/>
+    <path d="M 410 205 A 150 36 0 0 0 710 205"/>
+    <line x1="560" y1="55" x2="560" y2="205"/>
+    <line x1="560" y1="205" x2="560" y2="169" stroke="#7a5ea8" stroke-width="2"/>
+    <line x1="560" y1="205" x2="560" y2="241" stroke="#b8452f" stroke-width="2"/>
+  </g>
+  <g fill="none" stroke="#c9c9c9" stroke-width="1">
+    <ellipse cx="560" cy="63.6" rx="50" ry="12"/>
+    <ellipse cx="560" cy="93.2" rx="100" ry="24"/>
+    <ellipse cx="560" cy="95" rx="130" ry="31.2"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11.5" text-anchor="middle">
+    <text x="136" y="16" fill="#7a5ea8" font-weight="700">back</text>
+    <text x="136" y="244" fill="#b8452f" font-weight="700">front</text>
+    <text x="560" y="44">zenith</text>
+    <text x="560" y="160" fill="#7a5ea8" font-weight="700">back</text>
+    <text x="560" y="247" fill="#b8452f" font-weight="700">front</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="12.5" font-weight="700" text-anchor="middle">
+    <text x="136" y="280">domemaster</text>
+    <text x="560" y="280">the dome</text>
+  </g>
+</svg>
+<figcaption><b>Figure 1.</b> The file and the room. The front of the dome sits at the bottom of
+the frame and the back at the top &mdash; red and violet, here and on the dome &mdash; with the
+zenith at the centre of the circle.</figcaption>
 </figure>
 
-<p class="src">Source: IMERSA and AFDI, <i>Dome Master Specifications</i>, 2019 &mdash;
-<a href="https://imersa.org/guidelines">imersa.org/guidelines</a>.</p>
+<p>The domemaster can be a rendered video file or a realtime image. It can be two-dimensional or,
+more often, three-dimensional using 360 camera projection to construct the image.</p>
 
-<h2>2 Picture, Master to Dome</h2>
+<details>
+<summary>deeper</summary>
+<p>Frame sizes run 720, 1024, 1536, 2048, 3200, 3600 or 4096 px a side, as numbered PNG or TARGA
+with RLE or as JPEG at the highest quality, 8, 10 or 12 bits a colour, at 30 or 60 fps. The
+Satosph&egrave;re takes 4096 &times; 4096 at 60 fps, equidistant fisheye, 210&deg; of field of view
+on a screen 360&deg; &times; 210&deg;, and it previews a master at
+<a href="https://domeport.sat.qc.ca">domeport.sat.qc.ca</a>.</p>
+<p>A file plays the numbered frames or the movie; a live render sends each frame out as NDI over
+the network, or as SDI and HDMI on a cable.</p>
+<p>Renders come out of Blender, C4D or After Effects, by fisheye, cubemap or a dome camera;
+TouchDesigner, Processing, vvvv, Unreal, Unity and Ossia Score render in realtime. Resolume and
+VDMX cut dome clips at a square resolution, with FulldomeVJ, OKVJ and Nest Drop built for it.
+Festoon and Amateras preview a master on a flat screen or in a headset.</p>
+</details>
 
-<p>A player reads the master and puts it on the dome. A file plays the numbered frames or the
-movie; a live render sends each frame out as NDI over the network, or as SDI and HDMI on a
-cable.</p>
-
-<p>No projector covers a hemisphere on its own, so the show machine splits the master into one
-patch per projector, warps each patch onto the part of the dome its projector sees, and blends the
-band where two patches overlap. The room decides the split and the warp: where the projectors
-stand, the radius of the dome and the throw of each lens go into a mesh the GPU applies to every
-frame.</p>
+<p>The 360 camera works as follows:</p>
 
 <figure>
-<svg viewBox="0 0 772 220" role="img" aria-label="A dome master into the show computer, which takes a file or a live stream, into the mapping stage that splits the master into one patch per projector and blends the seams, into the projectors, onto the dome.">
+<div class="panels">
+  <canvas id="cube" width="740" height="250" tabindex="0" role="img"
+    aria-label="Three panels: a round camera with six lenses pointing out in six directions, each with the square it captures beyond it; the six squares laid flat as a cubemap, folding into a cube when clicked; the fisheye domemaster the six squares become, the top square at the centre of the circle and the four sides around it."></canvas>
+</div>
+<figcaption><b>Figure 2.</b> Left to right: the six lenses and the squares they capture, the six
+squares flat as a cubemap, and the domemaster that cubemap becomes. Click the cubemap to fold it,
+or tab to the figure and press enter. One colour per face, the same colour in all three panels.</figcaption>
+</figure>
+
+<p>In some cases, the camera can capture fisheye directly.</p>
+
+<h2>2 Covering the dome</h2>
+
+<p>Domes can have different visual specifications, but in general a combination of projectors cover
+the surface of the dome. This is done using software like NEST, 7thSense, domeprojection.com or
+MadMapper, or the warp and blend built into the projectors themselves. Historically it was done
+with a fisheye lens on one projector, or with a spherical mirror standing on the floor of the
+dome.</p>
+
+<figure>
+<svg viewBox="0 0 772 300" role="img" aria-label="Left: a domemaster cut into four wedges by lines running out from the centre. Right: the dome seen from above with the same four wedges as projector patches, a grey blend band along each join, and a projector sitting outside the rim of each wedge.">
+  <g>
+    <path d="M 150 130 L 150 230 A 100 100 0 0 0 250 130 Z" fill="#b8452f" fill-opacity="0.16"/>
+    <path d="M 150 130 L 250 130 A 100 100 0 0 0 150 30 Z" fill="#c08a2e" fill-opacity="0.16"/>
+    <path d="M 150 130 L 150 30 A 100 100 0 0 0 50 130 Z" fill="#7a5ea8" fill-opacity="0.16"/>
+    <path d="M 150 130 L 50 130 A 100 100 0 0 0 150 230 Z" fill="#3f7d59" fill-opacity="0.16"/>
+  </g>
+  <g>
+    <path d="M 560 130 L 560 230 A 100 100 0 0 0 660 130 Z" fill="#b8452f" fill-opacity="0.16"/>
+    <path d="M 560 130 L 660 130 A 100 100 0 0 0 560 30 Z" fill="#c08a2e" fill-opacity="0.16"/>
+    <path d="M 560 130 L 560 30 A 100 100 0 0 0 460 130 Z" fill="#7a5ea8" fill-opacity="0.16"/>
+    <path d="M 560 130 L 460 130 A 100 100 0 0 0 560 230 Z" fill="#3f7d59" fill-opacity="0.16"/>
+  </g>
+  <g fill="none" stroke="#d5d5d5" stroke-width="8">
+    <line x1="560" y1="130" x2="560" y2="230"/>
+    <line x1="560" y1="130" x2="660" y2="130"/>
+    <line x1="560" y1="130" x2="560" y2="30"/>
+    <line x1="560" y1="130" x2="460" y2="130"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <rect x="36" y="16" width="228" height="228"/>
+    <circle cx="150" cy="130" r="100"/>
+    <line x1="150" y1="130" x2="150" y2="230"/>
+    <line x1="150" y1="130" x2="250" y2="130"/>
+    <line x1="150" y1="130" x2="150" y2="30"/>
+    <line x1="150" y1="130" x2="50" y2="130"/>
+    <circle cx="560" cy="130" r="100"/>
+    <line x1="560" y1="130" x2="560" y2="230"/>
+    <line x1="560" y1="130" x2="660" y2="130"/>
+    <line x1="560" y1="130" x2="560" y2="30"/>
+    <line x1="560" y1="130" x2="460" y2="130"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <rect x="641.3" y="212.8" width="10" height="7"/>
+    <line x1="646.3" y1="212.8" x2="634" y2="202"/>
+    <rect x="641.3" y="40.2" width="10" height="7"/>
+    <line x1="646.3" y1="40.2" x2="634" y2="51"/>
+    <rect x="468.7" y="40.2" width="10" height="7"/>
+    <line x1="473.7" y1="40.2" x2="486" y2="51"/>
+    <rect x="468.7" y="212.8" width="10" height="7"/>
+    <line x1="473.7" y1="212.8" x2="486" y2="202"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11" text-anchor="middle">
+    <text x="192.4" y="176.4" fill="#b8452f" font-weight="700">1</text><text x="192.4" y="91.6" fill="#c08a2e" font-weight="700">2</text>
+    <text x="107.6" y="91.6" fill="#7a5ea8" font-weight="700">3</text><text x="107.6" y="176.4" fill="#3f7d59" font-weight="700">4</text>
+    <text x="602.4" y="176.4" fill="#b8452f" font-weight="700">1</text><text x="602.4" y="91.6" fill="#c08a2e" font-weight="700">2</text>
+    <text x="517.6" y="91.6" fill="#7a5ea8" font-weight="700">3</text><text x="517.6" y="176.4" fill="#3f7d59" font-weight="700">4</text>
+    <text x="150" y="240">front</text>
+    <text x="560" y="240">front</text>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <line x1="640" y1="118" x2="632" y2="132"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11" text-anchor="start">
+    <text x="644" y="114">blend</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="12.5" font-weight="700" text-anchor="middle">
+    <text x="150" y="280">the file, cut</text>
+    <text x="560" y="280">the dome, covered</text>
+  </g>
+</svg>
+<figcaption><b>Figure 3.</b> One patch per projector. Each projector takes a wedge of the file,
+warps it onto its part of the curve, and where two of them meet they overlap and the blend fades
+one into the other. Each patch keeps its colour from the file to the dome.</figcaption>
+</figure>
+
+<p>Each projector covers a piece of the dome. The piece is bent to fit the curve so that, once
+projected, it looks the way it did in the file. Where two pieces meet, they overlap and blend, and
+the seam reads as one picture.</p>
+
+<figure>
+<svg viewBox="0 0 772 220" role="img" aria-label="A domemaster into the show computer, which takes a file or a live stream, into the mapping stage that splits it into one patch per projector and blends the seams, into the projectors, onto the dome.">
   <g fill="none" stroke="#000" stroke-width="1">
     <defs><marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
     <rect x="12" y="58" width="88" height="88"/>
@@ -106,7 +234,7 @@ frame.</p>
     <text x="220" y="120">live &middot; NDI or SDI</text>
   </g>
   <g fill="#000" font-family="Arial" font-size="12.5" text-anchor="middle">
-    <text x="56" y="168" font-weight="700">master</text>
+    <text x="56" y="168" font-weight="700">domemaster</text>
     <text x="56" y="182" font-size="11.5">4096 &times; 4096</text>
     <text x="220" y="90" font-weight="700">computer</text>
     <text x="606" y="98" font-weight="700" font-size="11.5">projector</text>
@@ -127,26 +255,33 @@ frame.</p>
     <circle class="pulse" r="2.6" data-route="a4" cx="644" cy="102" opacity="0"/>
   </g>
 </svg>
-<figcaption><b>Figure 2.</b> The master into the show computer, through the mapping stage that
-slices it into one patch per projector and blends the seams, to the projectors and the
+<figcaption><b>Figure 4.</b> The domemaster into the show computer, through the mapping stage that
+cuts it into one patch per projector and blends the seams, to the projectors and the
 dome.</figcaption>
 </figure>
 
-<h2>3 Sound, File to Loudspeakers</h2>
+<details>
+<summary>deeper</summary>
+<p>No projector covers a hemisphere on its own. A 6 m dome takes three laser projectors at 2.2k or
+4k dome resolution and an 18 m dome takes eight at 4.8k, with the blend calibrated in minutes; the
+Satosph&egrave;re's 18 m screen takes eight (NEST, SAT).</p>
+<p>The mesh that bends each patch is built once for the room &mdash; where each projector stands,
+the radius of the dome, the throw of each lens &mdash; and the GPU applies it to every frame.</p>
+<p>Paul Bourke built the spherical mirror rig in 2003, and it is still the cheapest way to put one
+projector on a dome: the projector sits beside the mirror, the mirror spreads the picture over the
+screen. See <a href="https://paulbourke.net/dome/">paulbourke.net/dome</a>.</p>
+</details>
 
-<p>A spatial mix carries one channel per loudspeaker: eight, sixteen, or the room's own count. The
-room decodes those channels onto its speaker positions, or the sources carry positions and the
-software decodes them live.</p>
+<h2>3 The audio</h2>
 
-<p>SpatGRIS takes positions over OSC from ControlGRIS, places each source on the speaker setup
-drawn in the software, and writes one gain per speaker: a source becomes gains across the speakers
-nearest it, so the sound travels as the position moves. DOME pans that way for speaker domes; CUBE
-pans by matrix base amplitude for rings, halls and theatres; HYBRID sits between the two; BINAURAL
-and STEREO fold the mix down to headphones or two channels.</p>
+<p>The audio is routed through channels to the dome speakers, which often support spatialized
+audio. Spatial audio means that the channels, rather than routing in stereo to left and right, are
+routed to surround the audience.</p>
 
-<p>The output leaves through the audio interface, so its channel count sets how many loudspeakers
-the room can drive: one output per speaker, through amplifiers, into the rings at the dome's
-elevations. A festival takes the mix as stereo, 5.1 or 7.1.</p>
+<p>It is possible to have sound move around the room, or to break sound into its parts and have
+them come from different directions.</p>
+
+<p>There are various algorithms to make this happen that are embedded in tools.</p>
 
 <figure>
 <svg viewBox="0 0 772 220" role="img" aria-label="An eight channel audio file into SpatGRIS, which takes positions over OSC and writes one gain per speaker, into the audio interface with one output per speaker, through amplifiers, to the eight speakers of the dome's ring. One colour marks each channel from the file to the ring.">
@@ -239,31 +374,98 @@ elevations. A festival takes the mix as stereo, 5.1 or 7.1.</p>
     <circle class="pulse" r="2.6" data-route="b4" cx="604" cy="102" opacity="0"/>
   </g>
 </svg>
-<figcaption><b>Figure 3.</b> Eight channels in the file, eight gains out of SpatGRIS, eight
-outputs on the interface, eight speakers round the dome's ring: one colour marks a channel the
-whole way. The dashed lines are the two channels nearest the source.</figcaption>
+<figcaption><b>Figure 5.</b> Eight channels in the file, eight gains out of the software, eight
+outputs on the interface, eight speakers round the dome: one colour marks a channel the whole way.
+The dashed lines are the two speakers nearest the source.</figcaption>
 </figure>
 
-<p class="src">Source: GRIS, Universit&eacute; de Montr&eacute;al and SAT &mdash;
-<a href="https://github.com/GRIS-UdeM/SpatGRIS">github.com/GRIS-UdeM/SpatGRIS</a>.</p>
+<details>
+<summary>deeper</summary>
+<p>Multichannel spatialisation writes one channel per speaker: eight, sixteen, or the room's own
+count. A source becomes gains across the speakers nearest it &mdash; vector base amplitude, which
+SpatGRIS calls DOME; matrix base amplitude, its CUBE, suits rings, halls and theatres; HYBRID sits
+between the two.</p>
+<p>Ambisonics carries the mix instead as spherical harmonics, and the room decodes it to whatever
+speakers it has &mdash; ICST Ambisonics or Spat5 in Max, Envelop for Live. Other tools:
+Reaper, Nuendo and Pro Tools for the mix; SATIE in SuperCollider; Spat Revolution, Dolby Atmos
+Production Suite, XP4L. SpatGRIS itself is free, from GRIS at the Universit&eacute; de
+Montr&eacute;al, and writes 256 channels in and 256 out.</p>
+<p>The Satosph&egrave;re is 93 loudspeakers and 5 subwoofers over six height levels, and the
+SpatGRIS setup that ships for it is named <i>Dome93(32-32-16-8-1)Subs 5 Satosphere</i>.</p>
+</details>
 
-<h2>4 Glossary</h2>
+<h2>4 Sound with image</h2>
+
+<p>Sound and visual can be combined towards immersive effect by controlling the placement of
+objects in a space and sounds in a space with the same values. This can be directional &mdash; one
+responding to the other &mdash; or from a third party.</p>
+
+<figure>
+<canvas id="mix" width="560" height="266" role="img"
+  aria-label="A dome seen from above with the front marked at the bottom: a square for a pictured object and a circle for a sound, and a dashed line between them. Click to switch between the sound following the object and a third party placing both."></canvas>
+<p class="readout" id="mixout"></p>
+<figcaption><b>Figure 6.</b> The picture and the sound placed from the same two values, so the
+object and the sound sit in one direction. Click it to hand the two to a third party instead, and
+they part. The picture reads red, the sound teal.</figcaption>
+</figure>
+
+<h2>5 Azimuth and elevation</h2>
+
+<p>The dome is imagined with two values: azimuth and elevation. Those two values put a point in
+X, Y and Z space, and the flat picture needs only x and y.</p>
+
+<figure>
+<canvas id="az" width="420" height="420" tabindex="0" role="img"
+  aria-label="A square domemaster: the image circle inscribed, the zenith at the centre of the circle and the horizon at the rim. A probe marks a point, and the readout gives its azimuth, its elevation, its pixel in a 4096 file and its direction in X, Y, Z."></canvas>
+<p class="readout" id="azout"></p>
+<p class="math">
+<span>r = &radic;(x&sup2; + y&sup2;)</span>
+<span class="el">elevation = 90&deg; &middot; (1 &minus; r)</span>
+<span class="az">azimuth = atan2(x, y)</span>
+<span>X = cos(el) &middot; sin(az) &nbsp;&nbsp; Y = sin(el) &nbsp;&nbsp; Z = cos(el) &middot; cos(az)</span>
+</p>
+<figcaption><b>Figure 7.</b> Drag the probe, or tab to it and use the arrow keys. x and y are the
+file's own two values; X, Y and Z are the room's, with Z at the front, X to the right and Y at the
+zenith. Azimuth reads red and elevation green, in the drawing and in the readout.</figcaption>
+</figure>
+
+<details>
+<summary>deeper</summary>
+<p>Elevation, azimuth and a unit vector are three ways to say one direction. The radius carries
+the angle from the zenith, so equal steps out from the centre are equal steps down from the top,
+and 45&deg; sits at half the radius. Mappings that carry solid angle instead &mdash; equal area,
+stereographic, orthographic &mdash; trade the even spacing of angle for something else, and
+Paul Bourke's pages collect them at <a href="https://paulbourke.net/dome/">paulbourke.net/dome</a>.</p>
+<p>A 210&deg; dome reaches past the horizon, so its frame carries a margin below the rim: the
+Satosph&egrave;re's screen is 360&deg; &times; 210&deg; and its fisheye field of view matches.</p>
+</details>
+
+<h2>6 Glossary</h2>
 
 <div class="gloss">
-<p><b>BINAURAL.</b> A head-related transfer function mixdown, for headphones.</p>
-<p><b>channel order.</b> Which speaker each of the file's channels and each of the interface's
-outputs answers to.</p>
+<p><b>ambisonics.</b> A mix carried as spherical harmonics rather than a channel per speaker; the
+room decodes it to the speakers it has.</p>
+<p><b>azimuth.</b> The angle around the dome, 0&deg; at the front and 90&deg; to the right of a
+viewer at the centre.</p>
+<p><b>channel order.</b> Which speaker each of the file's channels, and each of the interface's
+outputs, answers to.</p>
 <p><b>ControlGRIS.</b> A plugin that sends source positions and trajectories to SpatGRIS over OSC,
 driven from a DAW.</p>
-<p><b>CUBE.</b> SpatGRIS's mode for rings, halls and theatres: matrix base amplitude panning.</p>
-<p><b>DOME.</b> SpatGRIS's mode for speaker domes. Vector base amplitude panning gives a source
-gains across the speakers nearest it.</p>
-<p><b>dome master.</b> A square file holding the hemisphere: the picture fills the circle inscribed
-in it, black fills the rest.</p>
+<p><b>CUBE.</b> SpatGRIS's panning for rings, halls and theatres: matrix base amplitude.</p>
+<p><b>cubemap.</b> Six square images, one per direction, that a 360 camera records and a renderer
+treats as a cube.</p>
+<p><b>DOME.</b> SpatGRIS's panning for speaker domes. Vector base amplitude gives a source gains
+across the speakers nearest it.</p>
+<p><b>domemaster.</b> The square file holding the hemisphere: the picture fills the circle
+inscribed in it, black fills the rest.</p>
 <p><b>edge blend.</b> Two projectors' patches overlap at their seam; the blend fades one into the
 other.</p>
-<p><b>equidistant azimuthal.</b> The master's projection. Distance from the centre is the angle
+<p><b>elevation.</b> The angle above the horizon, 0&deg; at the rim of the frame and 90&deg; at the
+zenith.</p>
+<p><b>equidistant azimuthal.</b> The domemaster's projection. Distance from the centre is the angle
 from the zenith, so the rings of latitude sit evenly spaced.</p>
+<p><b>fisheye.</b> A lens, or a projection that imitates one, holding a very wide view in a
+circle.</p>
 <p><b>HYBRID.</b> DOME's panning with CUBE's behaviour, for setups between the two.</p>
 <p><b>interface.</b> The box that turns the software's channels into analogue, MADI or Dante
 outputs, one per speaker.</p>
@@ -272,8 +474,8 @@ outputs, one per speaker.</p>
 network.</p>
 <p><b>SDI.</b> A broadcast coax cable carrying an uncompressed picture between machines.</p>
 <p><b>SpatGRIS.</b> Spatialisation software from GRIS and SAT. It reads source positions over OSC,
-decodes them onto the speaker setup you draw in it &mdash; circles, grids, polyhedrons &mdash; and
-writes one output channel per speaker, 256 in and 256 out.</p>
+decodes them onto the speaker setup you draw in it, and writes one output channel per speaker, 256
+in and 256 out.</p>
 <p><b>speaker ring.</b> The speakers at one elevation around the dome; a room adds further rings
 above it.</p>
 <p><b>STEREO.</b> A two-channel mixdown of the spatial mix.</p>
@@ -281,62 +483,309 @@ above it.</p>
 sees.</p>
 </div>
 
+<p class="src">Sources: SAT, <i>Cr&eacute;ation Fulldome &mdash; Fondamentaux Technique</i>, 2026
+&middot; <a href="https://sat.qc.ca/en/satosphere/">sat.qc.ca</a> &middot;
+<a href="https://nestimmersion.ca/domes.php">nestimmersion.ca</a> &middot;
+<a href="https://paulbourke.net/dome/">paulbourke.net/dome</a> &middot; IMERSA and AFDI,
+<i>Dome Master Specifications</i>, 2019 &middot;
+<a href="https://github.com/GRIS-UdeM/SpatGRIS">GRIS-UdeM/SpatGRIS</a>.</p>
+
 </main>
 
 <script>
-/* figure 1 — the master, dragged */
+/* figure 2 — the camera, the cubemap, the fisheye */
 (function () {
-  var cv = document.getElementById('mx'), rd = document.getElementById('mxout');
+  var cv = document.getElementById('cube');
+  if (!cv || !cv.getContext) return;
+  var W = 740, H = 250, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  var g = cv.getContext('2d'); g.scale(dpr, dpr);
+  var HAIR = '#c9c9c9', LINE = '#000';
+  /* up, down, front, right, back, left */
+  var FACE = ['#5b8db8', '#a9855f', '#b8452f', '#c08a2e', '#7a5ea8', '#3f7d59'];
+  /* the six faces: corners top-left, top-right, bottom-right, bottom-left as the cube unfolds,
+     and the cell each one sits in when it lies flat. y is up, z is front. */
+  var F = [
+    {c: [[-1, 1, -1], [1, 1, -1], [1, 1, 1], [-1, 1, 1]],       cell: [1, -1]},
+    {c: [[-1, -1, 1], [1, -1, 1], [1, -1, -1], [-1, -1, -1]],   cell: [1, 1]},
+    {c: [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]],       cell: [1, 0]},
+    {c: [[1, 1, 1], [1, 1, -1], [1, -1, -1], [1, -1, 1]],       cell: [2, 0]},
+    {c: [[1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]],   cell: [3, 0]},
+    {c: [[-1, 1, -1], [-1, 1, 1], [-1, -1, 1], [-1, -1, -1]],   cell: [0, 0]}
+  ];
+  var AY = 0.62, AX = 0.42, CA = Math.cos(AY), SA = Math.sin(AY), CX = Math.cos(AX), SX = Math.sin(AX);
+  function proj(p, o, s) {
+    var X = p[0] * CA + p[2] * SA, Z = -p[0] * SA + p[2] * CA;
+    return [o[0] + X * s, o[1] - (p[1] * CX - Z * SX) * s];
+  }
+  function dep(p) { return -p[0] * SA + p[2] * CA; }
+  var A = [112, 130], sA = 28;                     /* panel A: the camera */
+  var B = [352, 118], sB = 34;                     /* panel B: the cubemap, folding */
+  var C = [610, 122], RC = 62;                     /* panel C: the fisheye */
+  var HALF = Math.PI / 2;
+  function fisheye(d) {
+    var l = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    return {el: Math.asin(Math.max(-1, Math.min(1, d[1] / l))) / HALF * 90,
+            az: Math.atan2(d[0] / l, d[2] / l)};
+  }
+  function fxy(el, az, o, s) {
+    var r = s * (90 - el) / 90;
+    return [o[0] + r * Math.sin(az), o[1] + r * Math.cos(az)];
+  }
+  function quad(pts, fill, stroke) {
+    g.beginPath();
+    g.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+    g.closePath();
+    if (fill) { g.fillStyle = fill; g.fill(); }
+    if (stroke) { g.strokeStyle = stroke; g.lineWidth = 1; g.stroke(); }
+  }
+  function camera() {
+    var order = F.map(function (f, i) { return i; }).sort(function (a, b) {
+      return dep(F[a].c[0]) - dep(F[b].c[0]);
+    });
+    function lens(i) {
+      var c = F[i].c, cen = [0, 0, 0], k;
+      for (k = 0; k < 4; k++) { cen[0] += c[k][0] / 4; cen[1] += c[k][1] / 4; cen[2] += c[k][2] / 4; }
+      var n = cen, near = dep(n) > 0.05;
+      var t1 = Math.abs(n[1]) > 0.5 ? [0, 0, 1] : [0, 1, 0];
+      var t2 = Math.abs(n[1]) > 0.5 ? [1, 0, 0]
+             : [Math.abs(n[0]) > 0.5 ? 0 : 1, 0, Math.abs(n[0]) > 0.5 ? 1 : 0];
+      g.globalAlpha = near ? 1 : 0.28;
+      /* the square this lens captures, out beyond it */
+      var rect = [], su, sv;
+      for (su = -1; su <= 1; su += 2) for (sv = -1; sv <= 1; sv += 2) {
+        rect.push([n[0] * 2.15 + t1[0] * 0.58 * su + t2[0] * 0.58 * sv,
+                   n[1] * 2.15 + t1[1] * 0.58 * su + t2[1] * 0.58 * sv,
+                   n[2] * 2.15 + t1[2] * 0.58 * su + t2[2] * 0.58 * sv]);
+      }
+      quad([proj(rect[0], A, sA), proj(rect[1], A, sA), proj(rect[3], A, sA), proj(rect[2], A, sA)],
+           null, FACE[i]);
+      /* the lens barrel, from the surface of the ball out */
+      var p0 = proj(n, A, sA), p1 = proj([n[0] * 1.75, n[1] * 1.75, n[2] * 1.75], A, sA);
+      g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(p1[0], p1[1]);
+      g.strokeStyle = FACE[i]; g.lineWidth = 4; g.lineCap = 'round'; g.stroke();
+      g.lineCap = 'butt';
+      g.beginPath(); g.arc(p1[0], p1[1], 3.4, 0, 2 * Math.PI);
+      g.fillStyle = '#fff'; g.fill();
+      g.strokeStyle = FACE[i]; g.lineWidth = 1.6; g.stroke();
+      g.globalAlpha = 1; g.lineWidth = 1;
+    }
+    order.forEach(function (i) { if (dep(F[i].c[0]) <= 0.05) lens(i); });
+    g.beginPath(); g.arc(A[0], A[1], sA, 0, 2 * Math.PI);
+    g.fillStyle = '#fff'; g.fill();
+    g.strokeStyle = LINE; g.lineWidth = 1; g.stroke();
+    g.beginPath(); g.ellipse(A[0], A[1], sA, sA * Math.sin(AX), 0, 0, 2 * Math.PI);
+    g.strokeStyle = HAIR; g.stroke();
+    order.forEach(function (i) { if (dep(F[i].c[0]) > 0.05) lens(i); });
+  }
+  function fold(t) {
+    var order = F.map(function (f, i) { return i; }).sort(function (a, b) {
+      return dep(F[a].c[0]) - dep(F[b].c[0]);
+    });
+    order.forEach(function (i) {
+      var f = F[i], pts = [], k;
+      for (k = 0; k < 4; k++) {
+        var u = (k === 1 || k === 2) ? 1 : 0, v = k >= 2 ? 1 : 0;
+        var fl = [B[0] + (f.cell[0] + u - 2) * sB, B[1] + (f.cell[1] + v - 0.5) * sB];
+        var cu = proj(f.c[k], B, sB / 2);
+        pts.push([fl[0] + (cu[0] - fl[0]) * t, fl[1] + (cu[1] - fl[1]) * t]);
+      }
+      g.globalAlpha = 0.45;
+      quad(pts, FACE[i], FACE[i]);
+      g.globalAlpha = 1;
+    });
+  }
+  function fisheyePanel() {
+    g.beginPath(); g.arc(C[0], C[1], RC, 0, 2 * Math.PI);
+    g.strokeStyle = HAIR; g.lineWidth = 1; g.stroke();
+    F.forEach(function (f, fi) {
+      var c = f.c, N = 6, i, j, u, v;
+      for (i = 0; i < N; i++) for (j = 0; j < N; j++) {
+        var pts = [], bad = false, su, sv;
+        for (su = 0; su <= 1; su++) for (sv = 0; sv <= 1; sv++) {
+          u = su ? (i + 1) / N : i / N; v = sv ? (j + 1) / N : j / N;
+          var p = [0, 0, 0], k;
+          var w = [(1 - u) * (1 - v), u * (1 - v), u * v, (1 - u) * v];
+          for (k = 0; k < 4; k++) { p[0] += c[k][0] * w[k]; p[1] += c[k][1] * w[k]; p[2] += c[k][2] * w[k]; }
+          var d = fisheye(p);
+          if (d.el < 0) { bad = true; continue; }
+          pts.push(fxy(d.el, d.az, C, RC));
+        }
+        if (!bad && pts.length === 4) {
+          g.globalAlpha = 0.32;
+          quad([pts[0], pts[1], pts[3], pts[2]], FACE[fi], FACE[fi]);
+          g.globalAlpha = 1;
+        }
+      }
+    });
+  }
+  function label(x, y, s, bold) {
+    g.font = (bold ? '700 ' : '') + '12.5px Arial';
+    g.fillStyle = LINE; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText(s, x, y);
+  }
+  function draw() {
+    g.clearRect(0, 0, W, H);
+    camera();
+    fold(t);
+    fisheyePanel();
+    label(A[0], 232, 'the camera');
+    label(A[0], 246, 'six lenses, six squares');
+    label(B[0], 232, 'the cubemap');
+    label(B[0], 246, t < 0.5 ? 'click to fold' : 'click to open');
+    label(C[0], 232, 'the domemaster');
+    label(C[0], 246, 'from the cubemap');
+    g.font = '10px Arial'; g.fillStyle = LINE; g.textAlign = 'center';
+    g.fillText('front', C[0], C[1] + RC + 12);
+  }
+  var t = 0, target = 0, raf = 0;
+  var REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function anim() {
+    if (REDUCE) { t = target; draw(); return; }
+    if (raf) cancelAnimationFrame(raf);
+    var from = t, t0 = 0;
+    raf = requestAnimationFrame(function f(now) {
+      if (!t0) t0 = now;
+      var u = Math.min(1, (now - t0) / 450);
+      t = from + (target - from) * (u * u * (3 - 2 * u));
+      draw();
+      raf = u < 1 ? requestAnimationFrame(f) : 0;
+    });
+  }
+  function toggle() { target = target ? 0 : 1; anim(); }
+  cv.addEventListener('click', toggle);
+  cv.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
+  });
+  draw();
+})();
+
+/* figure 6 — the picture and the sound from the same values */
+(function () {
+  var cv = document.getElementById('mix'), rd = document.getElementById('mixout');
+  if (!cv || !cv.getContext) return;
+  var W = 560, H = 266, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr;
+  var g = cv.getContext('2d'); g.scale(dpr, dpr);
+  var CX0 = 280, CY0 = 126, R = 106, HAIR = '#c9c9c9', LINE = '#000', PIC = '#b8452f', SND = '#2a7f7a';
+  var REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var third = false, a = 40, e = 35, t0 = 0, on = false, raf = 0;
+  function at(az, el) {
+    var r = R * el / 90, q = az * Math.PI / 180;
+    return [CX0 + r * Math.sin(q), CY0 + r * Math.cos(q)];
+  }
+  function draw() {
+    var el = e, az = a, o = at(az, el);
+    var s = third ? at(az + 150, 60 - el * 0.5) : o;
+    g.clearRect(0, 0, W, H);
+    g.beginPath(); g.arc(CX0, CY0, R, 0, 2 * Math.PI);
+    g.strokeStyle = HAIR; g.lineWidth = 1; g.stroke();
+    g.beginPath(); g.arc(CX0, CY0, 3, 0, 2 * Math.PI); g.fillStyle = LINE; g.fill();
+    if (third) {
+      g.setLineDash([3, 3]); g.beginPath(); g.moveTo(o[0], o[1]); g.lineTo(s[0], s[1]);
+      g.strokeStyle = LINE; g.stroke(); g.setLineDash([]);
+    }
+    g.strokeStyle = PIC; g.lineWidth = 1.5;
+    g.strokeRect(o[0] - 4.5, o[1] - 4.5, 9, 9);
+    g.strokeStyle = SND;
+    g.beginPath(); g.arc(s[0], s[1], 6, 0, 2 * Math.PI); g.stroke();
+    g.lineWidth = 1; g.font = '11px Arial'; g.textAlign = 'center';
+    g.fillStyle = PIC; g.fillText('picture', o[0], o[1] - 12);
+    g.fillStyle = SND; g.fillText('sound', s[0], s[1] + 20);
+    g.font = '10px Arial'; g.fillStyle = LINE;
+    g.fillText('front', CX0, CY0 + R + 18);
+    g.fillText('the audience sits here', CX0, 16);
+    rd.innerHTML = 'picture az <b>' + Math.round(az) + '\u00B0</b> el <b>' + Math.round(el)
+      + '\u00B0</b> \u00B7 sound az <b>' + Math.round(third ? az + 150 : az) + '\u00B0</b> el <b>'
+      + Math.round(third ? 60 - el * 0.5 : el) + '\u00B0</b> \u00B7 '
+      + (third ? 'a third party places both' : 'one responds to the other');
+  }
+  function loop(now) {
+    if (!on) return;
+    if (!t0) t0 = now;
+    a = (40 + (now - t0) / 90) % 360;
+    e = 35 + 22 * Math.sin((now - t0) / 1400);
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+  cv.addEventListener('click', function () {
+    third = !third;
+    if (REDUCE) { draw(); return; }
+    if (!on) { on = true; t0 = 0; raf = requestAnimationFrame(loop); }
+    else draw();
+  });
+  if (REDUCE) { draw(); return; }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var was = on; on = e.isIntersecting;
+        if (on && !was) { t0 = 0; raf = requestAnimationFrame(loop); }
+        else if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
+      });
+    }, {rootMargin: '120px 0px'}).observe(cv);
+  } else { on = true; raf = requestAnimationFrame(loop); }
+  draw();
+})();
+
+/* figure 7 — azimuth and elevation, dragged */
+(function () {
+  var cv = document.getElementById('az'), rd = document.getElementById('azout');
   if (!cv || !cv.getContext || !rd) return;
-  var W = 420, SQ = 20, R = 190, CX = 210, CY = 210;
+  var W = 420, SQ = 20, R = 190, CX0 = 210, CY0 = 210;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = W * dpr; cv.height = W * dpr;
-  var g = cv.getContext('2d');
-  g.scale(dpr, dpr);
-  var S = {az: 330, el: 35}, MARK = '#000', HAIR = '#c9c9c9';
-
+  var g = cv.getContext('2d'); g.scale(dpr, dpr);
+  var S = {az: 330, el: 35}, MARK = '#000', HAIR = '#c9c9c9', AZC = '#b8452f', ELC = '#3f7d59';
   function place(x, y) {
-    var dx = x - CX, dy = y - CY, r = Math.min(Math.sqrt(dx * dx + dy * dy), R);
+    var dx = x - CX0, dy = y - CY0, r = Math.min(Math.sqrt(dx * dx + dy * dy), R);
     S.el = r / R * 90;
     S.az = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
   }
   function draw() {
     g.clearRect(0, 0, W, W);
-    g.fillStyle = MARK;                                   /* the frame outside the circle is black */
+    g.fillStyle = MARK;
     g.fillRect(SQ, SQ, W - 2 * SQ, W - 2 * SQ);
-    g.beginPath(); g.arc(CX, CY, R, 0, 2 * Math.PI);
+    g.beginPath(); g.arc(CX0, CY0, R, 0, 2 * Math.PI);
     g.fillStyle = '#fff'; g.fill();
     g.strokeStyle = HAIR; g.lineWidth = 1;
     [30, 60].forEach(function (d) {
-      g.beginPath(); g.arc(CX, CY, R * d / 90, 0, 2 * Math.PI); g.stroke();
+      g.beginPath(); g.arc(CX0, CY0, R * d / 90, 0, 2 * Math.PI); g.stroke();
     });
     g.beginPath();
-    g.moveTo(CX - R, CY); g.lineTo(CX + R, CY);
-    g.moveTo(CX, CY - R); g.lineTo(CX, CY + R);
+    g.moveTo(CX0 - R, CY0); g.lineTo(CX0 + R, CY0);
+    g.moveTo(CX0, CY0 - R); g.lineTo(CX0, CY0 + R);
     g.stroke();
     g.fillStyle = MARK; g.font = '11px Arial'; g.textBaseline = 'alphabetic';
     g.textAlign = 'center';
-    g.fillText('back', CX, 14);
-    g.fillText('front', CX, W - 6);
-    g.fillText('E', W - 10, CY + 4);
-    g.fillText('W', 10, CY + 4);
+    g.fillText('back', CX0, 14);
+    g.fillText('front', CX0, W - 6);
+    g.fillText('E', W - 10, CY0 + 4);
+    g.fillText('W', 10, CY0 + 4);
     g.textAlign = 'right';
-    g.fillText('30\u00B0', CX - 58.8, CY + 48.8);
-    g.fillText('60\u00B0', CX - 103.6, CY + 93.6);
-    g.fillText('horizon', CX + 128.4, CY + 142.4);
+    g.fillText('30\u00B0', CX0 - 58.8, CY0 + 48.8);
+    g.fillText('60\u00B0', CX0 - 103.6, CY0 + 93.6);
+    g.fillText('horizon', CX0 + 128.4, CY0 + 142.4);
     g.textAlign = 'left';
-    g.fillText('zenith', CX + 30, CY - 10);
+    g.fillText('zenith', CX0 + 30, CY0 - 10);
     var r = R * S.el / 90, a = S.az * Math.PI / 180;
-    var px = CX + r * Math.sin(a), py = CY + r * Math.cos(a);
-    g.strokeStyle = MARK;
-    g.beginPath(); g.moveTo(CX, CY); g.lineTo(px, py); g.stroke();
+    var px = CX0 + r * Math.sin(a), py = CY0 + r * Math.cos(a);
+    g.strokeStyle = ELC; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(CX0, CY0); g.lineTo(px, py); g.stroke();
+    g.strokeStyle = AZC;
+    g.beginPath(); g.arc(CX0, CY0, Math.max(24, r * 0.55), Math.PI / 2, Math.PI / 2 - a, true);
+    g.stroke();
+    g.lineWidth = 1;
     g.beginPath(); g.arc(px, py, 4, 0, 2 * Math.PI); g.fillStyle = MARK; g.fill();
   }
   function readout() {
-    var rp = S.el / 90 * 2048, a = S.az * Math.PI / 180;
-    var x = Math.round(2048 + rp * Math.sin(a)), y = Math.round(2048 + rp * Math.cos(a));
-    rd.innerHTML = 'azimuth <b>' + Math.round(S.az) + '\u00B0</b> \u00B7 elevation <b>'
-      + Math.round(S.el) + '\u00B0</b> \u00B7 4096 master px <b>' + x + ', ' + y + '</b>';
+    var a = S.az * Math.PI / 180, e = S.el * Math.PI / 180, rp = S.el / 90;
+    var x = Math.round(2048 + rp * 2048 * Math.sin(a)), y = Math.round(2048 + rp * 2048 * Math.cos(a));
+    var X = Math.cos(e) * Math.sin(a), Y = Math.sin(e), Z = Math.cos(e) * Math.cos(a);
+    var f = function (v) { return (v < 0 ? '\u2212' : '') + Math.abs(v).toFixed(2); };
+    rd.innerHTML = 'azimuth <b class="az">' + Math.round(S.az) + '\u00B0</b> \u00B7 elevation <b class="el">'
+      + Math.round(S.el) + '\u00B0</b> \u00B7 file x, y <b>' + x + ', ' + y + '</b> \u00B7 space X, Y, Z <b>'
+      + f(X) + ', ' + f(Y) + ', ' + f(Z) + '</b>';
   }
   function at(ev) {
     var b = cv.getBoundingClientRect();
@@ -367,7 +816,7 @@ sees.</p>
   draw(); readout();
 })();
 
-/* figures 2 and 3 — one dot per hop, and nothing runs while the section is off screen */
+/* figures 4 and 5 — one dot per hop, and nothing runs while the section is off screen */
 (function () {
   var dots = [].slice.call(document.querySelectorAll('circle.pulse')).map(function (d, i) {
     return {d: d, p: document.getElementById(d.getAttribute('data-route')), len: 0, i: i};
