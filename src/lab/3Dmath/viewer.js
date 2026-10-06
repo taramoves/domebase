@@ -666,11 +666,17 @@
   const MENU_FOV = 180;                     /* the frame the layer is locked to */
   /* where the dome puts the four corners of the layout box, in master pixels */
   function menuCorners() {
-    const R = Math.min(cv.width, cv.height) / 2;
+    /* in css pixels. The layer's transform is a css transform, so it must be built from the
+       stage's css box, never from the canvas's backing store: that store is devicePixelRatio
+       times the stage, and on a 2x screen a transform built from it lands twice as far out and
+       twice as large — at the bottom of the window, off the dome. */
+    const r = stage.getBoundingClientRect();
+    const w = Math.max(1, r.width), h = Math.max(1, r.height);
+    const R = Math.min(w, h) / 2;
     const k = R / (MENU_FOV * Math.PI / 360);
     const at = (az, alt) => {
       const rr = (Math.PI / 2 - alt) * k;
-      return [cv.width / 2 + rr * Math.cos(az), cv.height / 2 - rr * Math.sin(az)];
+      return [w / 2 + rr * Math.cos(az), h / 2 - rr * Math.sin(az)];
     };
     return [
       at(MENU.az - MENU.halfAz, MENU.alt + MENU.halfAlt),    /* the box's top left */
