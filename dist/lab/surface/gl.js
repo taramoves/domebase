@@ -39,6 +39,9 @@ window.surfaceGL = function (canvas) {
     var c = bgRGB(v);
     return (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) > 0.5 ? "black" : "white";
   }
+  /* the same reader for a card's own colour: `ink` was black or white and is now any colour */
+  var colHex = bgHex;
+  var colRGB = bgRGB;
 
   /* ---- fonts ---------------------------------------------------------------------------- */
   /* The fonts a dome deck can lean on, all of them on the machines this runs on. A text card's
@@ -107,28 +110,39 @@ window.surfaceGL = function (canvas) {
     return { p: p, u: u };
   }
   var UNIFORMS = ["uA", "uB", "uAdd", "uPx", "uCol", "uN", "uR", "uU", "uTan", "uScale", "uPan",
-                  "uFov", "uCR", "uCU", "uCF", "uTanHalf", "uAspect", "uTex", "uOpacity"];
+                  "uFov", "uCR", "uCU", "uCF", "uTanHalf", "uAspect", "uTex", "uOpacity",
+                  "uAR", "uAU", "uAF", "uEye", "uLens", "uInk", "uEyeH"];
 
   var FLAT_V = "attribute vec2 aP;uniform vec2 uA,uB;uniform float uAdd;uniform float uPx;" +
     "void main(){vec2 q = uAdd > .5 ? aP*uA+uB : (aP-uB)*uA;gl_Position=vec4(q,0.,1.);gl_PointSize=uPx;}";
   var FLAT_F = "precision mediump float;uniform vec4 uCol;void main(){gl_FragColor=uCol;}";
   var flat = prog(FLAT_V, FLAT_F);
 
-  /* The master's own frame: u runs west and v runs back, so the disc is the projector's plate
-     rather than a plan of the dome. dome.toMaster() is the same mapping on the CPU, and the two
-     have to agree or the selection chrome walks off its card. */
-  var CARD_V = "attribute vec2 aG;uniform vec3 uN,uR,uU;uniform vec2 uTan,uScale,uPan;uniform float uFov;" +
+  /* The disc projection: an equidistant map whose axis is a frame, seen from an eye. Every view of
+     the dome is this one shader with different numbers in it.
+       master    axis the zenith (0,1,0), image frame (-1,0,0)/(0,0,1), eye at the centre: the
+                 projector's plate. The image frame is what puts the front of the dome at the
+                 bottom of the disc and east on its left, and it is the sign that would mirror the
+                 plate if it were wrong.
+       simulate  axis the camera's forward, image frame the camera's own right and up, eye a seat
+                 height off the centre: a fisheye from a chair, where a card to the right of the
+                 camera lands on the right of the image.
+     A flat card's vertices are points at distance one from the centre, so the eye offset is a
+     subtraction and the master's eye is zero: the plate is unchanged to the last bit. */
+  var DISC_V = "attribute vec2 aG;uniform vec3 uN,uR,uU,uAR,uAU,uAF,uEye;uniform vec2 uTan,uScale,uPan;uniform float uFov;" +
     "varying vec2 vUv;" +
-    "void main(){vec3 d=normalize(uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y));" +
-    "float th=acos(clamp(d.y,-1.,1.));float r=th/(radians(uFov)*.5);" +
-    "vec2 m=vec2(-d.x,d.z);float l=length(m);m = l>1e-6 ? m/l : vec2(0.);" +
+    "void main(){vec3 p=uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y);vec3 d=normalize(p-uEye);" +
+    "float th=acos(clamp(dot(d,uAF),-1.,1.));float r=th/(radians(uFov)*.5);" +
+    "vec2 m=vec2(dot(d,uAR),dot(d,uAU));float l=length(m);m = l>1e-6 ? m/l : vec2(0.);" +
     "gl_Position=vec4((m*r-uPan)*uScale,0.,1.);vUv=aG*.5+.5;}";
-  var cardMaster = prog(CARD_V, cardFragment(""));
+  var discProg = prog(DISC_V, cardFragment(""));
 
-  var CENTRE_V = "attribute vec2 aG;uniform vec3 uN,uR,uU,uCR,uCU,uCF;uniform vec2 uTan;" +
+  var CENTRE_V = "attribute vec2 aG;uniform vec3 uN,uR,uU,uCR,uCU,uCF,uEye;uniform vec2 uTan;" +
     "uniform float uTanHalf,uAspect;varying vec2 vUv;" +
-    "void main(){vec3 d=normalize(uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y));" +
-    "vec3 v=vec3(dot(d,uCR),dot(d,uCU),dot(d,uCF));" +
+    "void main(){vec3 p=uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y);" +
+    "vec3 v0=vec3(dot(p,uCR),dot(p,uCU),dot(p,uCF));" +
+    "vec3 e0=vec3(dot(uEye,uCR),dot(uEye,uCU),dot(uEye,uCF));" +
+    "vec3 v=v0-e0;" +
     "float z=max(v.z,.002);" +
     "gl_Position=vec4(v.x/(z*uTanHalf*uAspect),v.y/(z*uTanHalf),0.,1.);" +
     "if(v.z<=0.) gl_Position=vec4(3.,3.,0.,1.);vUv=aG*.5+.5;}";
@@ -182,6 +196,53 @@ window.surfaceGL = function (canvas) {
       ringZ60 = buf(ring(2 / 3, 96)),      // el 30
       merBuf = buf(meridians(8));
   var chromeBuf = gl.createBuffer();
+
+  /* The floor the dome stands on. It is drawn in the simulate view only, and only from a seat: an
+     eye at the dome's exact centre sits *in* the floor's plane, where the plane is edge-on and has
+     no width at all. An eye a seat height up sees the floor as the band it is, meeting the dome's
+     footprint — which is the whole point of drawing it, since that band is where the screen ends.
+     Cards stand above the floor and the camera sits below them, so the floor is always the near
+     thing to draw first; no depth buffer is needed. */
+  /* The floor the dome stands on, as a plane rather than a mesh. With the eye a seat height above
+     it, a ray meets the floor exactly when it points below the dome's rim — the rim is where floor
+     and screen meet. In the lens that test is right per pixel, where a mesh of the plane cannot be:
+     its far side wraps around an image wider than 180 degrees, and any triangle spanning it paints
+     over the dome. So the floor is a screen quad that answers, per pixel, which direction it looks
+     along — the same maths as the cards, run backwards. */
+  var FLOOR_V = "attribute vec2 aP;varying vec2 vN;void main(){vN=aP;gl_Position=vec4(aP,0.,1.);}";
+  var FLOOR_F = "precision mediump float;varying vec2 vN;uniform vec3 uCR,uCU,uCF,uAR,uAU,uAF;" +
+    "uniform vec2 uScale;uniform float uTanHalf,uAspect,uFov,uLens,uEyeH;uniform vec4 uCol,uInk;" +
+    "void main(){vec3 d;" +
+    "if(uLens>.5){vec2 q=vN/uScale;float mr=length(q);float th=mr*radians(uFov)*.5;" +
+    "vec2 w=mr>1e-6?q/mr:vec2(0.);d=normalize(cos(th)*uAF+sin(th)*(w.x*uAR+w.y*uAU));" +
+    "if(mr>1.) discard;}" +
+    "else{vec3 c=vec3(vN.x*uAspect*uTanHalf,vN.y*uTanHalf,1.);" +
+    "d=normalize(uCR*c.x+uCU*c.y+uCF*c.z);}" +
+    "float e=asin(clamp(d.y,-1.,1.)),e0=-atan(uEyeH);" +
+    "if(e>e0) discard;" +
+    "float ring=1.-smoothstep(0.,radians(.5),abs(e-e0));" +
+    "gl_FragColor=vec4(mix(uCol.rgb,uInk.rgb,ring),1.);}";
+  var floorProg = prog(FLOOR_V, FLOOR_F);
+  var quadBuf = buf(new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]));
+  function lensFov() { var v = view.lensFov; v = v == null ? 180 : v; return v < 100 ? 100 : v > 180 ? 180 : v; }
+  function drawFloor(fish) {
+    var cam = centreCam();
+    gl.useProgram(floorProg.p);
+    attr(floorProg, "aP", quadBuf, 2);
+    gl.uniform3fv(floorProg.u.uCR, cam.r); gl.uniform3fv(floorProg.u.uCU, cam.u);
+    gl.uniform3fv(floorProg.u.uCF, cam.f);
+    gl.uniform3fv(floorProg.u.uAR, cam.r); gl.uniform3fv(floorProg.u.uAU, cam.u);
+    gl.uniform3fv(floorProg.u.uAF, cam.f);
+    gl.uniform2fv(floorProg.u.uScale, scaleXY());
+    gl.uniform1f(floorProg.u.uTanHalf, cam.tanHalf);
+    gl.uniform1f(floorProg.u.uAspect, V.w / V.h);
+    gl.uniform1f(floorProg.u.uFov, lensFov());
+    gl.uniform1f(floorProg.u.uLens, fish ? 1 : 0);
+    gl.uniform1f(floorProg.u.uEyeH, EYE);
+    gl.uniform4f(floorProg.u.uCol, 0.62, 0.62, 0.62, 1);
+    gl.uniform4f(floorProg.u.uInk, 0.42, 0.42, 0.42, 1);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
 
   function attr(prog2, name, b, size) {
     var loc = gl.getAttribLocation(prog2.p, name);
@@ -244,7 +305,7 @@ window.surfaceGL = function (canvas) {
     c.height = Math.max(4, Math.ceil(lines.length * px * LH) + PAD * 2);
     x = c.getContext("2d");
     x.font = face;
-    x.fillStyle = el.ink === "white" ? "#fff" : "#000";
+    x.fillStyle = colHex(el.ink);
     x.textBaseline = "middle";
     x.textAlign = el.align === "left" ? "left" : el.align === "right" ? "right" : "center";
     var tx = el.align === "left" ? PAD : el.align === "right" ? c.width - PAD : c.width / 2;
@@ -253,19 +314,56 @@ window.surfaceGL = function (canvas) {
     }
     return c;
   }
-  function rectCanvas(el) {
+  /* A shape is painted into its texture as a silhouette with alpha, so its mesh stays the plain
+     tangent rectangle every other card uses: the outline of a star is the texture's business, not
+     the geometry's. The card's box and the shape inside it need not agree — an ellipse drawn in a
+     4:3 box is an ellipse, not a circle. */
+  var SHAPES = ["rect", "ellipse", "triangle", "diamond", "pentagon", "hexagon", "star", "line"];
+  function polyPath(x, cx, cy, rx, ry, n, star) {
+    var pts = star ? n * 2 : n, i, t, k;
+    x.beginPath();
+    for (i = 0; i < pts; i++) {
+      t = i / pts * Math.PI * 2;
+      k = (star && (i % 2)) ? star : 1;
+      var px = cx + Math.sin(t) * rx * k, py = cy - Math.cos(t) * ry * k;
+      if (i) x.lineTo(px, py); else x.moveTo(px, py);
+    }
+    x.closePath();
+  }
+  function shapePath(x, w, h, shape) {
+    if (shape === "ellipse") { x.beginPath(); x.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2); x.closePath(); return; }
+    if (shape === "triangle") { x.beginPath(); x.moveTo(w / 2, 0); x.lineTo(w, h); x.lineTo(0, h); x.closePath(); return; }
+    if (shape === "diamond") { x.beginPath(); x.moveTo(w / 2, 0); x.lineTo(w, h / 2); x.lineTo(w / 2, h); x.lineTo(0, h / 2); x.closePath(); return; }
+    if (shape === "pentagon") { polyPath(x, w / 2, h / 2, w / 2, h / 2, 5, 0); return; }
+    if (shape === "hexagon") { polyPath(x, w / 2, h / 2, w / 2, h / 2, 6, 0); return; }
+    if (shape === "star") { polyPath(x, w / 2, h / 2, w / 2, h / 2, 5, 0.44); return; }
+    if (shape === "line") { x.beginPath(); x.moveTo(0, h / 2); x.lineTo(w, h / 2); return; }
+    x.beginPath(); x.rect(0, 0, w, h); x.closePath();
+  }
+  function shapeFill(el) {
+    if (el.fill === true) return "solid";
+    if (el.fill === false) return "outline";
+    return el.fill === "outline" || el.fill === "both" ? el.fill : "solid";
+  }
+  function shapeCanvas(el) {
+    var W = 256, H = 192, IN = 7;                        // a stroke needs the inset; a fill does not
     var c = document.createElement("canvas"), x;
-    c.width = 128; c.height = 96;
+    c.width = W; c.height = H;
     x = c.getContext("2d");
-    var col = el.ink === "white" ? "#fff" : "#000";
-    if (el.fill === false) { x.strokeStyle = col; x.lineWidth = 6; x.strokeRect(3, 3, c.width - 6, c.height - 6); }
-    else { x.fillStyle = col; x.fillRect(0, 0, c.width, c.height); }
+    var col = colHex(el.ink), fill = shapeFill(el), inset = fill === "solid" ? 0 : IN;
+    x.save();
+    x.translate(inset, inset);
+    shapePath(x, W - inset * 2, H - inset * 2, el.shape || "rect");
+    if (fill === "solid" || fill === "both") { x.fillStyle = col; x.fill(); }
+    if (fill === "outline" || fill === "both") { x.lineWidth = 7; x.lineJoin = "miter"; x.strokeStyle = col; x.stroke(); }
+    x.restore();
     return c;
   }
 
   function sig(el) {
     if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.font || "", el.wrap || 0].join("|");
-    if (el.kind === "rect") return ["r", el.ink, el.fill === false ? "hollow" : "solid"].join("|");
+    if (el.kind === "shape" || el.kind === "rect")
+      return ["s", el.shape || "rect", el.ink, shapeFill(el)].join("|");
     return "i|" + (el.src || "").slice(-64) + "|" + (el.src || "").length;
   }
   /* the texture a card draws with, and the pixel size its geometry is derived from. A picture that
@@ -291,8 +389,8 @@ window.surfaceGL = function (canvas) {
     if (el.kind === "text") {
       var c = textCanvas(el, el.wrap);
       rec.t = makeTexture(c, c.width, c.height); rec.w = c.width; rec.h = c.height;
-    } else if (el.kind === "rect") {
-      var r = rectCanvas(el);
+    } else if (el.kind === "shape" || el.kind === "rect") {
+      var r = shapeCanvas(el);
       rec.t = makeTexture(r, r.width, r.height); rec.w = r.width; rec.h = r.height;
     }
     return rec;
@@ -316,12 +414,20 @@ window.surfaceGL = function (canvas) {
   function masterToPx(u, v) { return [V.w / 2 + (u - view.pan[0]) * V.S, V.h / 2 - (v - view.pan[1]) * V.S]; }
   function pxToMaster(x, y) { return [(x - V.w / 2) / V.S + view.pan[0], -(y - V.h / 2) / V.S + view.pan[1]]; }
 
-  /* The audience's eye: a camera at the centre looking along (yaw, pitch), its up toward the
-     zenith. Its right is up x forward — the same handedness as a card's own right, so a card's
-     text reads the same here as it does from a seat under it. */
+  /* The seat view is from a chair, not from the exact centre: a real eye sits above the floor, and
+     from the centre a floor plane is edge-on and invisible. Eye height as a fraction of the dome's
+     radius — about a metre in a nine-metre dome. */
+  var EYE = 0.12;
+  /* The master's axis frame: the zenith, with the image frame that makes the disc the projector's
+     plate — u runs west, v runs back, so east lies on the plate's left and the front at its bottom. */
+  var MASTER_FRAME = { r: [-1, 0, 0], u: [0, 0, 1], f: [0, 1, 0] };
+
+  /* The audience's eye: a camera at a seat looking along (yaw, pitch), its up toward the zenith.
+     Its right is up x forward — the same handedness as a card's own right, so a card's text reads
+     the same here as it does from a seat under it. */
   function centreCam() {
     var f = dome.dir(view.yaw, view.pitch), up = dome.basis(view.yaw, view.pitch).up;
-    return { f: f, u: up, r: dome.cross(up, f),
+    return { f: f, u: up, r: dome.cross(up, f), eye: [0, EYE, 0],
              tanHalf: Math.tan(Math.max(20, Math.min(150, view.fov)) * D / 2) };
   }
 
@@ -333,10 +439,12 @@ window.surfaceGL = function (canvas) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    if (view.view === "centre") {
+    if (view.view === "simulate") {
       for (var i = 0; i < 3; i++) gl.clearColor(glass[i], glass[i], glass[i], 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      drawCards(elements, cardCentre, false);
+      var fish = view.lens !== "perspective";
+      drawFloor(fish);
+      drawCards(elements, fish ? "lens" : "seat");
       return;
     }
 
@@ -348,18 +456,39 @@ window.surfaceGL = function (canvas) {
     flatDraw(merBuf, gl.LINES, 16, HAIR.concat([1]), sc, pan, 0);
     flatDraw(ringZ30, gl.LINE_LOOP, 96, HAIR.concat([1]), sc, pan, 0);
     flatDraw(ringZ60, gl.LINE_LOOP, 96, HAIR.concat([1]), sc, pan, 0);
-    drawCards(elements, cardMaster, true);
+    drawCards(elements, "master");
     flatDraw(rimBuf, gl.LINE_LOOP, 160, [0.35, 0.35, 0.35, 1], sc, pan, 0);
     drawChrome();
   }
 
-  function drawCards(elements, p, masterPass, sc, pan) {
+  /* mode: "master" the projector's plate, "lens" the seat fisheye, "seat" the seat perspective.
+     The per-mode uniforms are set once; only the card's own frame changes inside the loop. */
+  function drawCards(elements, mode, sc, pan) {
     var cam = centreCam();
+    var p = mode === "seat" ? cardCentre : discProg;
     gl.useProgram(p.p);
     attr(p, "aG", gridBuf, 2);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gridIdx);
-    if (!sc) sc = scaleXY();
-    if (!pan) pan = view.pan;
+    var eye = [0, 0, 0];
+    if (mode === "master") {
+      if (!sc) sc = scaleXY();
+      if (!pan) pan = view.pan;
+      gl.uniform3fv(p.u.uAR, MASTER_FRAME.r); gl.uniform3fv(p.u.uAU, MASTER_FRAME.u);
+      gl.uniform3fv(p.u.uAF, MASTER_FRAME.f);
+      gl.uniform2fv(p.u.uScale, sc); gl.uniform2fv(p.u.uPan, pan);
+      gl.uniform1f(p.u.uFov, view.mfov || 180);
+    } else if (mode === "lens") {
+      eye = cam.eye;
+      gl.uniform3fv(p.u.uAR, cam.r); gl.uniform3fv(p.u.uAU, cam.u); gl.uniform3fv(p.u.uAF, cam.f);
+      gl.uniform2fv(p.u.uScale, scaleXY()); gl.uniform2fv(p.u.uPan, [0, 0]);
+      gl.uniform1f(p.u.uFov, lensFov());
+    } else {
+      eye = cam.eye;
+      gl.uniform3fv(p.u.uCR, cam.r); gl.uniform3fv(p.u.uCU, cam.u); gl.uniform3fv(p.u.uCF, cam.f);
+      gl.uniform1f(p.u.uTanHalf, cam.tanHalf);
+      gl.uniform1f(p.u.uAspect, V.w / V.h);
+    }
+    gl.uniform3fv(p.u.uEye, eye);
     var usedIds = {};
     for (var i = 0; i < elements.length; i++) {
       var el = elements[i];
@@ -372,14 +501,6 @@ window.surfaceGL = function (canvas) {
       gl.uniform1f(p.u.uOpacity, el.opacity == null ? 1 : el.opacity);
       gl.uniform3fv(p.u.uN, m.n); gl.uniform3fv(p.u.uR, m.right); gl.uniform3fv(p.u.uU, m.up);
       gl.uniform2f(p.u.uTan, m.tanW, m.tanH);
-      if (masterPass) {
-        gl.uniform2fv(p.u.uScale, sc); gl.uniform2fv(p.u.uPan, pan);
-        gl.uniform1f(p.u.uFov, view.mfov || 180);
-      } else {
-        gl.uniform3fv(p.u.uCR, cam.r); gl.uniform3fv(p.u.uCU, cam.u); gl.uniform3fv(p.u.uCF, cam.f);
-        gl.uniform1f(p.u.uTanHalf, cam.tanHalf);
-        gl.uniform1f(p.u.uAspect, V.w / V.h);
-      }
       gl.drawElements(gl.TRIANGLES, g.idx.length, gl.UNSIGNED_SHORT, 0);
     }
     /* release the textures of cards that are gone */
@@ -417,7 +538,7 @@ window.surfaceGL = function (canvas) {
     gl.clearColor(0, 0, 0, 1);                     // outside the rim the projector has nothing
     gl.clear(gl.COLOR_BUFFER_BIT);
     flatDraw(discBuf, gl.TRIANGLE_FAN, 130, glass, [1, 1], [0, 0], 0);
-    drawCards(elements, cardMaster, true, [1, 1], [0, 0]);
+    drawCards(elements, "master", [1, 1], [0, 0]);
     var px = new Uint8Array(inner * inner * 4);
     gl.readPixels(0, 0, inner, inner, gl.RGBA, gl.UNSIGNED_BYTE, px);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);

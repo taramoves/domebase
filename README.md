@@ -140,15 +140,20 @@ build. A deck is one JSON document; a slide is a background and a set of cards, 
 sphere at an azimuth and an elevation. The canvas is the master itself — centre the zenith, rim the
 horizon, az 0 at the bottom of the disc, az 180 at the top — so authoring happens in the dome's own
 image: the notes come out upside down at the back and content at az 90 reads on its side, which is
-geometry rather than a flip. A second view shows what the audience sees from the middle of the
-room. The background is a colour and the ink that reads on it follows its brightness; a text card
-carries its own font. Presenting fits the slide to the smaller side of the screen. One slide exports
-as the domemaster a projector takes: square, black beyond the rim, no grid and no chrome. Drag,
-resize and turn each solve their placement, because the tangent plane at a card's centre is not the
-plane the hand's offset was measured in. A deck's pictures are decoded when it opens, so a slide
-change is an upload rather than a fetch. The deck lives in the browser
-(`localStorage`) or in a `.dome.json` file — no server, no account, no sync. Its files are
-`src/lab/surface/{index.html,dome.js,gl.js,editor.js}`.
+geometry rather than a flip. A second view simulates the room: a seat a little above the floor, a
+lens on the gaze rather than a frame, and the floor drawn so where the screen ends is legible. The
+same equidistant maths runs the lens as runs the master, with the gaze for its axis instead of the
+zenith and an eye off the centre — so the simulate view and the plate are two readings of one
+sphere, not a picture and a projection of a picture. The floor is a plane, and a ray meets it
+exactly when it points below the rim: that test is per pixel, because past 180° a plane's far side
+wraps around the image and a mesh of it paints over the dome. The background is a colour and the ink
+that reads on it follows its brightness; a text card carries its own font. Presenting fits the slide
+to the smaller side of the screen. One slide exports as the domemaster a projector takes: square,
+black beyond the rim, no grid and no chrome. Drag, resize and turn each solve their placement,
+because the tangent plane at a card's centre is not the plane the hand's offset was measured in. A
+deck's pictures are decoded when it opens, so a slide change is an upload rather than a fetch. The
+deck lives in the browser (`localStorage`) or in a `.dome.json` file — no server, no account, no
+sync. Its files are `src/lab/surface/{index.html,dome.js,gl.js,editor.js}`.
 
 ```bash
 node work/lab/check_dome.cjs    # the geometry: round trips, the frame, the three placements

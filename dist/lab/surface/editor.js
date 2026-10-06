@@ -13,6 +13,7 @@
   var S = {
     project: null, i: 0, sel: null,
     view: "master", zoom: FIT, pan: [0, 0], yaw: 0, pitch: 16, fov: 100,
+    lens: "fisheye", lensFov: 180, viewWas: null,
     undo: [], redo: [], drag: null, panning: false, space: false, present: false,
     pt: [0, 0], over: false
   };
@@ -129,20 +130,22 @@
   }
 
   /* ---- drawing --------------------------------------------------------------------------- */
-  function fit() { G.setView({ zoom: S.zoom, pan: S.pan, yaw: S.yaw, pitch: S.pitch, fov: S.fov, mfov: S.project.fov || 180 }); G.fit(); }
+  function fit() { G.setView({ view: S.view, zoom: S.zoom, pan: S.pan, yaw: S.yaw, pitch: S.pitch, fov: S.fov, lens: S.lens, lensFov: S.lensFov, mfov: S.project.fov || 180 }); G.fit(); }
   function draw() {
     var slide = curSlide();
     var v = G.viewport();
     G.setSlide(slide);
     G.setView({ view: S.view, zoom: S.zoom, pan: S.pan, yaw: S.yaw, pitch: S.pitch, fov: S.fov,
-                mfov: S.project.fov || 180 });
+                lens: S.lens, lensFov: S.lensFov, mfov: S.project.fov || 180 });
     G.draw(cards(slide), S.sel);
     el("rSlide").textContent = (S.i + 1) + "/" + S.project.slides.length;
     el("rCards").textContent = slide.elements.length;
     el("rZoom").textContent = Math.round(S.zoom * 100) + "%";
-    if (S.view === "centre") {
+    if (S.view === "simulate") {
       el("rAz").textContent = S.yaw.toFixed(0); el("rEl").textContent = S.pitch.toFixed(0);
-      el("rZoom").textContent = Math.round(S.fov) + "°";
+      el("rZoom").textContent = S.lens === "perspective"
+        ? Math.round(S.fov) + "° perspective"
+        : Math.round(S.lensFov) + "° lens";
     }
     var s = sel();
     el("rSel").textContent = s ? (s.kind + " az " + s.az.toFixed(1) + " el " + s.el.toFixed(1) + " · " +
@@ -194,8 +197,11 @@
     return v;
   }
   function zoomAt(p, f) {
-    if (S.view === "centre") {
-      S.fov = clamp(S.fov / f, 20, 150); draw(); return;
+    if (S.view === "simulate") {
+      /* the wheel opens or closes the field of view: the perspective camera's, or the lens's */
+      if (S.lens === "perspective") S.fov = clamp(S.fov / f, 20, 150);
+      else S.lensFov = clamp(S.lensFov / f, 100, 180);
+      draw(); return;
     }
     var before = G.pxToMaster(p[0], p[1]);
     S.zoom = clamp(S.zoom * f, 0.15, 40);
@@ -209,7 +215,7 @@
     canvas.focus();
     var p = pt(e);
     if (S.present) { if (e.button === 0) go(1); return; }
-    if (S.view === "centre") {
+    if (S.view === "simulate") {
       S.drag = { mode: "look", p0: p, yaw0: S.yaw, pitch0: S.pitch, moved: false };
       try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
       return;
@@ -601,7 +607,7 @@
       if (e.key === "Escape") { setPresent(false); return; }
       if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(1); return; }
       if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(-1); return; }
-      if (e.key === "m" || e.key === "c") { setView(e.key === "m" ? "master" : "centre"); return; }
+      if (e.key === "m" || e.key === "c") { setView(e.key === "m" ? "master" : "simulate"); return; }
       if (e.key === "t") { curSlide().prompt = !curSlide().prompt; draw(); return; }
       return;
     }
@@ -617,7 +623,8 @@
     if (e.key === " ") { S.space = true; canvas.style.cursor = "grab"; e.preventDefault(); return; }
     if (e.key === "Escape") { S.sel = null; renderProps(); draw(); return; }
     if (e.key === "m") return setView("master");
-    if (e.key === "c") return setView("centre");
+    if (e.key === "c") return setView("simulate");
+    if (e.key === "v") return setLens(S.lens === "perspective" ? "fisheye" : "perspective");
     if (e.key === "p") return setPresent(!S.present);
     if (e.key === "t") { push(); curSlide().prompt = !curSlide().prompt; renderProps(); draw(); save(); return; }
     if (e.key === "0") { S.zoom = FIT; S.pan = [0, 0]; G.setView({ zoom: FIT, pan: S.pan }); draw(); return; }
@@ -668,8 +675,16 @@
   function setView(v) {
     S.view = v;
     el("btnMaster").setAttribute("aria-pressed", v === "master" ? "true" : "false");
-    el("btnCentre").setAttribute("aria-pressed", v === "centre" ? "true" : "false");
+    el("btnSimulate").setAttribute("aria-pressed", v === "simulate" ? "true" : "false");
+    el("btnFish").setAttribute("aria-pressed", S.lens !== "perspective" ? "true" : "false");
+    el("btnPersp").setAttribute("aria-pressed", S.lens === "perspective" ? "true" : "false");
     draw();
+  }
+  /* which projection the simulate view uses: the 180-degree-plus lens, or the perspective camera
+     for looking closely at one thing */
+  function setLens(l) {
+    S.lens = l === "perspective" ? "perspective" : "fisheye";
+    setView(S.view);
   }
   function setPresent(on) {
     S.present = on;
@@ -677,11 +692,14 @@
     el("btnPresent").setAttribute("aria-pressed", on ? "true" : "false");
     if (on) {
       /* presenting shows one thing, whole: whatever the editor was zoomed to, the slide arrives
-         fitted to the smaller side of the screen */
+         fitted to the smaller side of the screen. It is always the master — a projector takes the
+         plate, and the seat's lens is a way of looking, not a thing to throw on a dome. */
+      if (S.view !== "master") { S.viewWas = S.view; setView("master"); }
       S.zoom = 1; S.pan = [0, 0];
       if (stage.requestFullscreen) { try { stage.requestFullscreen(); } catch (er) {} }
     }
     else if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (er) {} }
+    if (!on && S.viewWas) { setView(S.viewWas); S.viewWas = null; }
     fit(); draw();
   }
   function download() {
@@ -781,7 +799,9 @@
       ev.target.value = "";
     };
     el("btnMaster").onclick = function () { setView("master"); };
-    el("btnCentre").onclick = function () { setView("centre"); };
+    el("btnSimulate").onclick = function () { setView("simulate"); };
+    el("btnFish").onclick = function () { setLens("fisheye"); };
+    el("btnPersp").onclick = function () { setLens("perspective"); };
     el("btnFit").onclick = function () { S.zoom = FIT; S.pan = [0, 0]; G.setView({ zoom: FIT, pan: S.pan }); draw(); };
     el("btnZoomIn").onclick = function () { var v = G.viewport(); zoomAt([v.w / 2, v.h / 2], 1.2); };
     el("btnZoomOut").onclick = function () { var v = G.viewport(); zoomAt([v.w / 2, v.h / 2], 1 / 1.2); };
@@ -868,6 +888,7 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { G.reset(); draw(); });
     window.SURFACE = { S: S, G: G, dome: dome, draw: draw, chrome: chrome, cards: cards, curSlide: curSlide,
                        sel: sel, renderAll: renderAll, renderProps: renderProps, setView: setView,
+                       setLens: setLens, fit: fit,
                        undo: undo, redo: redo, addEl: addEl, push: push, dirAt: dirAt, pt: pt,
                        zoomAt: zoomAt, open: open, save: save, download: download,
                        exportMaster: exportMaster, addFromPaste: addFromPaste,
