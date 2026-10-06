@@ -675,30 +675,39 @@
   }
 
   /* ---------------- the menu, on the dome, as a layer ----------------
-     The menu is not in the scene. It sits in the master's own coordinates — a band on the dome's
-     back wall, which is the top of the master — and is drawn over the canvas as a 2d layer, so
-     it holds still while the shape turns underneath it. Its up points at the zenith, which is
-     the way round it must be drawn to read on a dome; on the master that makes it upside down.
-     Only its placement comes from the geometry, so it stays crisp and stays clickable. */
-  const MENU = { alt0: 18 * Math.PI / 180, alt1: 72 * Math.PI / 180, halfAz: 62 * Math.PI / 180 };
-  const MENU_W = 488;                     /* the layer's own layout width, in css px */
+     The menu is not in the scene. It sits in the master's own coordinates — a panel low on the
+     dome's front left, the spot lab/pitch gives its phone (az 228 of the master's azimuth, 45
+     degrees above the horizon) — and is drawn over the canvas as a 2d layer, so it holds still
+     while the shape turns underneath it. Its up points at the zenith, which is the way round a
+     panel reads from inside a dome; on the master that leaves it tilted, exactly as the phone's
+     card is tilted. Only the placement comes from the geometry: the layer stays a DOM element,
+     so it stays crisp and stays clickable. */
+  const MENU = { az: 228 * Math.PI / 180, alt: 45 * Math.PI / 180,
+                 halfAlt: 27 * Math.PI / 180, halfAz: 62 * Math.PI / 180 };
+  const MENU_W = 488;                              /* the layer's own layout width, in css px */
   function placeMenu() {
     const el = document.getElementById('menu');
     if (!el) return;
     const R = Math.min(cv.width, cv.height) / 2;
     const dpr = cv.width / Math.max(1, window.innerWidth);
-    const k = R / (S.fov * Math.PI / 360);          /* master px per radian of altitude */
-    const altC = (MENU.alt0 + MENU.alt1) / 2;
-    const rC = altC * k;
-    const wPx = rC * 2 * MENU.halfAz;               /* the arc the band spans, at its centre */
-    const hPx = (MENU.alt1 - MENU.alt0) * k;
-    /* the back of the dome is the top of the master: straight up from the circle's centre, with
-       the layer's own up turned back down the screen, towards the zenith */
-    el.style.left = (cv.width / 2 / dpr) + 'px';
-    el.style.top = ((cv.height / 2 - rC) / dpr) + 'px';
+    const k = R / (S.fov * Math.PI / 360);         /* master px per radian of altitude */
+    let rC = (Math.PI / 2 - MENU.alt) * k;         /* the centre altitude, as a radius */
+    let hPx = 2 * MENU.halfAlt * k;                /* the panel's depth, radially */
+    let wPx = rC * 2 * MENU.halfAz;                /* and the arc it spans across */
+    /* whatever the fov, the panel stays inside the circle: pull it in, then shorten it */
+    const lim = 0.98 * R, qa = 1 + MENU.halfAz * MENU.halfAz;
+    const disc = hPx * hPx + 4 * qa * (lim * lim - hPx * hPx / 4);
+    const root = disc > 0 ? (-hPx + Math.sqrt(disc)) / (2 * qa) : 0;
+    if (rC > root) { rC = Math.max(0, root); wPx = rC * 2 * MENU.halfAz; }
+    const depth = 2 * Math.max(40, lim - rC);
+    if (hPx > depth) hPx = depth;
+    const ux = Math.cos(MENU.az), uy = -Math.sin(MENU.az);   /* the bearing, in screen axes */
+    const rot = Math.atan2(-ux, uy) * 180 / Math.PI;         /* the layer's up aims at the zenith */
+    el.style.left = ((cv.width / 2 + rC * ux) / dpr) + 'px';
+    el.style.top = ((cv.height / 2 + rC * uy) / dpr) + 'px';
     el.style.width = MENU_W + 'px';
-    el.style.height = Math.round(MENU_W * hPx / wPx) + 'px';
-    el.style.transform = 'translate(-50%, -50%) rotate(' + (S.dome ? 180 : 0) + 'deg) scale(' +
+    el.style.height = Math.max(24, Math.round(MENU_W * hPx / Math.max(1, wPx))) + 'px';
+    el.style.transform = 'translate(-50%, -50%) rotate(' + (S.dome ? rot.toFixed(2) : 0) + 'deg) scale(' +
       ((wPx / dpr) / MENU_W).toFixed(4) + ')';
   }
 

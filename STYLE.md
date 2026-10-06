@@ -186,14 +186,18 @@ colours map data, not light). The frame, the tables and every word stay black on
   does not budge. **Every path that changes the scene's orientation must mark the cube stale**
   (`S.cubeStale`): with the master fixed, yaw and pitch no longer re-render anything by themselves,
   so a drag that forgets it does nothing visible unless the spin happens to be re-rendering.
-- **The menu is a 2d layer placed in the master's coordinates, never in the scene.** It is a band on
-  the dome's back wall — altitudes 18°–72°, ±62° of azimuth — which is the top of the master, drawn
-  over the canvas so it stays crisp, stays clickable and holds still while the shape turns
-  underneath it. Its up points at the zenith, which is the way round it must be drawn to read on a
-  dome, so on the master it sits upside down. `placeMenu()` derives left, top, width and height from
-  `fov`, so the band keeps its place on the dome when `fov` changes. Verify it by measurement: the
-  layer's centre at the circle's centre-x and one radius above its centre-y, its corners inside `R`,
-  its transform a rotation and a scale only, and a drag on the canvas leaving its rect identical.
+- **The menu is a 2d layer placed in the master's coordinates, never in the scene.** It is a panel
+  low on the dome's front left — the spot `lab/pitch` gives its phone — centred 45° above the
+  horizon (azimuth 228° of the master) and spanning 18°–72° of altitude and ±62° across, drawn over
+  the canvas so it stays crisp, stays clickable and holds still while the shape turns underneath it.
+  Its up points at the zenith, which is the one orientation that reads from inside a dome, so on the
+  master it sits tilted by about 42°, exactly as the phone's card is tilted. `placeMenu()` derives
+  left, top, width and height from `fov` and pulls the panel in and shortens it if a small `fov`
+  would carry it past the rim. Verify the placement from the transformed quad, not the bounding
+  rectangle: the corners of the layout box pushed through the computed matrix (a `DOMMatrix` on
+  `getComputedStyle`'s transform), each inside `R` — a rotated block's bounding rectangle is much
+  larger than the block and reads as an error that is not there — and a drag on the canvas leaving
+  the layer's rect identical.
 - The block is four panes sharing every edge — shapes, parameters, view, measures — in a 2×2 grid at
   a nominal 488 css px and 10px type on a 12.5px line, scaled to the width the dome geometry gives
   it, which shows ten rows a pane: the parameters and the measures fit whole, the 29 shapes scroll. One function (`specRows()`)
