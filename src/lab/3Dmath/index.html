@@ -20,19 +20,18 @@
 /* the menu: 330 x 190 css px of layout, warped onto the dome patch by placeMenu(). transform-origin
    is the box's own top left, so the matrix maps straight onto page coordinates. */
 #menu{position:fixed;left:0;top:0;transform-origin:0 0;z-index:3;
-  display:grid;grid-template-columns:1fr 0.72fr;grid-template-rows:1fr 1fr 1fr;
+  display:grid;grid-template-columns:1fr 0.72fr;grid-template-rows:1fr 1fr;
   width:300px;height:150px;background:rgba(255,255,255,.95);border:1.5px solid var(--line);
   font-size:8px;line-height:1.15}
 #menu > .pane{overflow:auto;min-width:0;min-height:0}
-#pane-shapes{grid-column:1;grid-row:1 / 4;border-right:1px solid var(--line)}
+#pane-shapes{grid-column:1;grid-row:1 / 3;border-right:1px solid var(--line)}
 #pane-params{grid-column:2;grid-row:1;border-bottom:1px solid var(--line)}
-#pane-view{grid-column:2;grid-row:2;border-bottom:1px solid var(--line)}
-#pane-measures{grid-column:2;grid-row:3}
+#pane-view{grid-column:2;grid-row:2}
 .pane .ph{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);
   padding:0 3px;font-weight:700;font-size:8px}
 table{width:100%;table-layout:fixed}
-#index th,#params th,#spec th{cursor:default}
-#index td,#index th,#params td,#params th,#spec td,#spec th{padding:0 3px;font-size:8px;
+#index th,#params th{cursor:default}
+#index td,#index th,#params td,#params th{padding:0 3px;font-size:8px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.n,th.n{text-align:right}
 tr.row.on td{background:var(--head);font-weight:700}
@@ -50,11 +49,6 @@ tr.row.on td{background:var(--head);font-weight:700}
 #params input.p{width:20px;border-color:var(--hair);font-size:7px}
 #params select{width:100%;max-width:44px;padding:0;font-size:7px}
 td.k{white-space:nowrap}
-/* measures: the measure column as it reads, the value column a quarter, cutting off as needed */
-#spec th:nth-child(1),#spec td:nth-child(1){width:75%}
-#spec th:nth-child(2),#spec td:nth-child(2){width:25%}
-#spec td.v{text-align:right}
-#spec a{text-decoration:none;border-bottom:1px solid var(--hair)}
 #viewbody{padding:1px 2px;display:flex;flex-wrap:wrap;gap:0 3px;align-items:center;line-height:1.1}
 #viewbody input[type=number]{width:24px;padding:0;text-align:right;font-size:8px}
 #viewbody select{font-size:8px;max-width:40px;padding:0}
@@ -100,15 +94,6 @@ td.k{white-space:nowrap}
       <span class="count" id="count"></span>
     </div>
   </div>
-
-  <div class="pane" id="pane-measures">
-    <div class="ph">measures</div>
-    <table id="spec">
-      <thead><tr><th>measure</th><th class="n">value</th></tr></thead>
-      <tbody id="specbody"></tbody>
-    </table>
-  </div>
-</div>
 
 <script src="geom.js"></script>
 <script>/* the registry every family file pushes its shapes into */

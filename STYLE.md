@@ -203,17 +203,15 @@ colours map data, not light). The frame, the tables and every word stay black on
   canvas's default 300×150 aperture and leaves it there. H hides and shows the layer.
 - **The panel's size and columns are the levers on what fits.** 300×150 against the old 488×271 is
   0.61 of the linear size and 0.34 of the area. The shapes pane takes the full height with its name
-  column half the pane; parameters, view and measures take a third each of the right column, which is
-  0.72 of the shapes pane's width; the measures' value column is a quarter and the parameters'
-  columns are fractions of their own pane, all cutting off rather than spilling. That leaves the
-  shapes pane at fourteen rows of twenty-nine with the parameters and measures panes scrolling,
-  which is the price of a smaller panel.
-- The block is four panes sharing every edge — shapes, parameters, view, measures — in a 2×2 grid at
-  a nominal 488 css px and 10px type on a 12.5px line, scaled to the width the dome geometry gives
-  it, which shows ten rows a pane: the parameters and the measures fit whole, the 29 shapes scroll. One function (`specRows()`)
-  feeds the measures, so the layer and any copy of it cannot report different numbers.
-- `dome` off is the flat perspective view — the same shape, the same maths, for reference.
-- Drag turns the shape, the wheel sets `fov` in the dome (it zooms in the flat view), and `front`
+  column half the pane; parameters and view take half the height each of the right column, which is
+  0.72 of the shapes pane's width; the parameters' columns are fractions of their own pane, all
+  cutting off rather than spilling. That leaves the shapes pane at fourteen rows of twenty-nine and
+  the parameters at seven of ten, both scrolling a little, which is the price of a smaller panel.
+  **The measures pane is deliberately absent.** It was dropped so the parameters and the view could
+  have its height; the figures it carried — counts, the build time, the frame rate — are not on the
+  page, and neither is the source link it held, which was the page's citation to Knill. Bring the
+  citation back somewhere before this page is treated as finished.
+- Drag turns the shape, the wheel sets `fov` of the dome, and `front`
   returns to the default view. The frame never moves.
 
 ```

@@ -251,7 +251,6 @@
     S.stats = out.stats || {};
     upload(out);
     S.dirty = false;
-    paintSpec();
     paintCount();
     rememberRow(S.def, out.stats);
   }
@@ -598,41 +597,6 @@
     }
   }
 
-  /* the measures, and the source link, as rows — the menu's table and the dome's copy of it are
-     the same rows, so the dome cannot show a different number */
-  function specRows() {
-    const rows = [];
-    const src = S.def.src || '';
-    const m = /^knill\s+(.+)$/.exec(src);
-    const plain = m ? m[1] : src;
-    rows.push(['source', plain, m
-      ? '<a href="https://people.math.harvard.edu/~knill/3dprinter/' + m[1].replace(/^3dprinter\//, '').replace(/\.html$/, '.html') + '" target="_blank" rel="noopener">' + m[1] + '</a>'
-      : src]);
-    const order = ['vertices', 'edges', 'faces', 'cells', 'spheres', 'segments', 'triangles', 'steps', 'points', 'fibres', 'struts', 'links', 'level', 'cubes', 'trees', 'branches'];
-    for (const k of order) {
-      if (S.stats[k] === undefined || S.stats[k] === null) continue;
-      rows.push([k, Number(S.stats[k]).toLocaleString()]);
-    }
-    for (const k of Object.keys(S.stats)) {
-      if (order.indexOf(k) >= 0 || S.stats[k] === null) continue;
-      rows.push([k, typeof S.stats[k] === 'number' ? Number(S.stats[k]).toLocaleString() : String(S.stats[k])]);
-    }
-    rows.push(['ink', S.geo.hasTone ? 'fourth coordinate' : 'lit + depth']);
-    rows.push(['build', S.buildMs.toFixed(0) + ' ms']);
-    rows.push(['frame', S.fps.toFixed(0) + ' /s']);
-    return rows;
-  }
-
-  function paintSpec() {
-    const body = $('#specbody');
-    body.innerHTML = '';
-    for (const r of specRows()) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = '<td class="k">' + r[0] + '</td><td class="v">' + (r[2] || r[1]) + '</td>';
-      body.appendChild(tr);
-    }
-  }
-
   function paintCount() {
     const s = S.stats;
     const bits = [];
@@ -789,7 +753,6 @@
     if (now - S.fpsAt > 500) {
       S.fps = S.frames * 1000 / (now - S.fpsAt);
       S.frames = 0; S.fpsAt = now;
-      paintSpec();
     }
     requestAnimationFrame(frame);
   }
