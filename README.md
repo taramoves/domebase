@@ -14,10 +14,11 @@ src/                    what the site is — hand-written pages and assets, noth
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   lab/pitch/            the domemaster pitch: the lecture as dome masters, one per slide
+  lab/surface/          the slide editor: the deck, the domemaster, the audience's view
   archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
-work/lab/               the lab's shape checks: CONTRACT.md and the two node checks
+work/lab/               the lab's contracts and checks: CONTRACT.md, SURFACE.md, the node checks
 build/build_site.py     the site build
 dist/                   the deploy root — generated; the only thing that is ever served
 IDEA.md  STYLE.md  README.md  DEPLOY.md
@@ -110,6 +111,26 @@ outline's own widget: every rule it uses is scoped to `#w6`, it needs `--guide` 
 (the sheet does not define them), and an `IntersectionObserver` starts and stops its frame loop
 as it scrolls in and out, so the page is idle when the demo is off screen. Its source is
 `src/lab/instrument/index.html`, and it is edited by hand.
+
+`dist/lab/surface/index.html` is a slide editor for the dome, hand-written and copied in by the
+build. A deck is one JSON document; a slide is a ground and a set of cards, each tangent to the
+sphere at an azimuth and an elevation. The canvas is the master itself — centre the zenith, rim the
+horizon, az 0 at the bottom of the disc, az 180 at the top — so authoring happens in the dome's own
+image: the notes come out upside down at the back and content at az 90 reads on its side, which is
+geometry rather than a flip. A second view shows what the audience sees from the middle of the
+room. One slide exports as the domemaster a projector takes: square, black beyond the rim, no grid
+and no chrome. Drag, resize and turn each solve their placement, because the tangent plane at a
+card's centre is not the plane the hand's offset was measured in. The deck lives in the browser
+(`localStorage`) or in a `.dome.json` file — no server, no account, no sync. Its files are
+`src/lab/surface/{index.html,dome.js,gl.js,editor.js}`.
+
+```bash
+node work/lab/check_dome.cjs    # the geometry: round trips, the frame, the three placements
+```
+
+The check runs the page's own `dome.js`, the way the 3Dmath checks run `geom.js`: the mapping
+round-trips, the horizon lands on the rim and the zenith on the centre, az 180 on the top of the
+disc, a card's up vector points at the zenith, and a grab keeps the point the hand took hold of.
 
 `dist/lab/pitch/index.html` is the domemaster pitch: the lecture as dome masters, one per slide —
 title, concept, the schedule as a ring of bubbles, five demo slides, thank you. Three.js renders the

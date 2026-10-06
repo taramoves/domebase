@@ -221,6 +221,19 @@ sheet's `.chip`, `th` and `td` rules are global. Its diagrams are
 inline SVG in the same greys and black hairlines, and a shape that is active is filled where a
 resting one is hollow, since the sheet carries no second colour.
 
+`dist/lab/surface/index.html` is the dome slide editor, hand-written and copied in by the build. It
+links `../../assets/css/site.css` and it is a tool rather than a sheet: a full-height column of
+header, side panels and status bar around the canvas. Black on white holds — the canvas takes the
+slide's own ground, white or black, and the ink flips with it, and nothing carries colour. Two
+sheet rules have to be reset by the page itself: every `aside` is given the fixed, slid-out
+detail-panel treatment, so the tool's two columns set `position:static`, and `th`/`td` are global,
+which is why the panels are built from divs. What it edits is a domemaster, so the page's own
+conventions are the dome's: the centre of the circle is the zenith, the rim is the horizon, and a
+card sits at an azimuth and an elevation with its up pointing at the zenith — which is why the
+presenter's notes read upside down at the back of the dome and why content at azimuth ±90 reads
+sideways. Authoring in the master removes the inverse problem: the pointer's position on the canvas
+*is* the coordinate.
+
 ## Not taramoves
 
 `C:\Users\taram\OneDrive\Desktop\taramoves` (the `/dome/` pages on taramoves.com) is a
