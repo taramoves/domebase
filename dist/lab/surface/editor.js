@@ -39,7 +39,8 @@
 
   function blank() {
     return { version: 1, name: "untitled deck", fov: 180, png: 2048,
-             slides: [{ id: uid("s"), ground: "#ffffff", notes: "", prompt: true, promptSize: 3.2, elements: [] }] };
+             slides: [{ id: uid("s"), ground: "#ffffff", notes: "", prompt: true, promptSize: 3.2,
+                        promptEl: 34, elements: [] }] };
   }
   function starter() {
     var p = blank();
@@ -74,11 +75,18 @@
     json.slides.forEach(function (s) {
       s.id = s.id || uid("s"); s.ground = G.bgHex(s.ground);
       s.notes = s.notes || ""; s.promptSize = num(s.promptSize, 3.2);
+      s.promptEl = clamp(num(s.promptEl, 34), 0, 60);
       s.elements = Array.isArray(s.elements) ? s.elements : [];
       s.elements.forEach(function (e) {
         e.id = e.id || uid("e"); e.rot = num(e.rot, 0); e.locked = !!e.locked;
-        e.ink = e.ink === "white" ? "white" : "black";
+        e.ink = G.bgHex(e.ink);                    // a colour survives a round trip, a name becomes one
         if (e.kind === "text") e.font = G.FONTS[e.font] ? e.font : "Arial";
+        if (e.kind === "text") e.size = Math.max(0.2, num(e.size, 4));
+        else { e.w = Math.max(0.5, num(e.w, e.kind === "image" ? 20 : 30)); }
+        if (e.kind === "rect" || e.kind === "shape") {
+          e.shape = G.SHAPES.indexOf(e.shape) >= 0 ? e.shape : "rect";
+          e.h = Math.max(0.5, num(e.h, 16));
+        }
       });
     });
     S.project = json; S.i = 0; S.sel = null; S.undo.length = 0; S.redo.length = 0;
@@ -104,7 +112,10 @@
      so the master shows it upside down: the geometry, not a flip. */
   function promptCard(slide) {
     if (!slide.prompt || !String(slide.notes || "").trim()) return null;
-    return { id: "prompt", kind: "text", az: 180, el: 34, rot: 0, size: num(slide.promptSize, 3.2),
+    /* the notes stand on the back of the dome, and only they decide how high: the equidistant map
+       squashes what sits near the rim, so a low note is legible and a note at the rim is not */
+    return { id: "prompt", kind: "text", az: 180, el: clamp(num(slide.promptEl, 34), 0, 60), rot: 0,
+             size: num(slide.promptSize, 3.2),
              text: slide.notes, weight: "regular", align: "left",
              ink: inkFor(slide), locked: true, wrap: 1400, prompt: true };
   }
@@ -424,7 +435,7 @@
   function addSlide() {
     push();
     var s = { id: uid("s"), ground: curSlide().ground, notes: "", prompt: curSlide().prompt,
-              promptSize: curSlide().promptSize, elements: [] };
+              promptSize: curSlide().promptSize, promptEl: curSlide().promptEl, elements: [] };
     S.project.slides.splice(S.i + 1, 0, s);
     S.i = S.i + 1; S.sel = null;
     renderAll(); draw(); save();
@@ -545,7 +556,7 @@
     el("btnBlack").setAttribute("aria-pressed", bg === "#000000" ? "true" : "false");
     if (document.activeElement !== el("sBg")) el("sBg").value = bg;
     el("btnPrompt").setAttribute("aria-pressed", s.prompt ? "true" : "false");
-    el("sPromptWhere").value = s.prompt ? "back, el 34°" : "off";
+    if (document.activeElement !== el("sPromptEl")) el("sPromptEl").value = num(s.promptEl, 34).toFixed(0);
     if (document.activeElement !== el("projFov")) el("projFov").value = num(S.project.fov, 180).toFixed(0);
     var ps = String(num(S.project.png, 2048));
     el("pngSize").value = PNG_SIZES.indexOf(ps) >= 0 ? ps : "2048";
@@ -902,6 +913,10 @@
     el("sPromptSize").addEventListener("focus", function () { push(); });
     el("sPromptSize").addEventListener("input", function () {
       curSlide().promptSize = Math.max(0.5, num(el("sPromptSize").value, 3.2)); draw(); save();
+    });
+    el("sPromptEl").addEventListener("focus", function () { push(); });
+    el("sPromptEl").addEventListener("input", function () {
+      curSlide().promptEl = clamp(num(el("sPromptEl").value, 34), 0, 60); draw(); save();
     });
     el("eWeight").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.weight = el("eWeight").value; G.reset(); draw(); save(); });
     el("eFont").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.font = G.FONTS[el("eFont").value] ? el("eFont").value : "Arial"; G.reset(); draw(); save(); });
