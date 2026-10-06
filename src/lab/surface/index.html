@@ -26,6 +26,9 @@ header#top .sp{flex:1 1 auto}
 .b[aria-pressed="true"]{background:#000;color:#fff}
 .b.wide{width:100%}
 #wrap{flex:1 1 auto;display:flex;min-height:0}
+/* site.css gives every aside the sheet's detail-panel treatment — fixed, off the right edge,
+   slid out of view. These two are the tool's own columns and have to sit in the flow. */
+aside#slides,aside#props{position:static;inset:auto;transform:none;width:auto;height:auto;padding:0;z-index:auto}
 aside#slides{flex:0 0 186px;border-right:1px solid #000;overflow:auto;background:#fff}
 aside#props{flex:0 0 244px;border-left:1px solid #000;overflow:auto;background:#fff}
 .hd{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #000;
