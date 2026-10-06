@@ -21,6 +21,18 @@
   /* ---- the document --------------------------------------------------------------------- */
   function uid(p) { return (p || "e") + (++n) + "-" + Math.floor(Math.random() * 46656).toString(36); }
   function inkFor(slide) { return G.bgInk(slide && slide.ground); }
+  /* the ink is a colour like a background is: the quick buttons are shortcuts to the two common
+     ones, and the swatch carries anything else */
+  function setInk(v) {
+    var hex = G.bgHex(v);
+    el("eInkCol").value = hex;
+    el("btnInkBlack").setAttribute("aria-pressed", hex === "#000000" ? "true" : "false");
+    el("btnInkWhite").setAttribute("aria-pressed", hex === "#ffffff" ? "true" : "false");
+  }
+  function setInkTo(v) {
+    var e = sel(); if (!e) return;
+    push(); e.ink = G.bgHex(v); setInk(e.ink); G.reset(); draw(); save();
+  }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function wrapAz(a) { a = a % 360; return a < 0 ? a + 360 : a; }
   function num(v, d) { var x = parseFloat(v); return isNaN(x) ? (d || 0) : x; }
@@ -430,7 +442,8 @@
       return t || "(empty)";
     }
     if (e.kind === "image") return "image";
-    return "box " + Math.round(num(e.w, 0)) + "×" + Math.round(num(e.h, 0)) + "°";
+    var sides = Math.round(num(e.w, 0)) + "×" + Math.round(num(e.h, 0)) + "°";
+    return (G.SHAPES.indexOf(e.shape) >= 0 ? e.shape : "rect") + " " + sides;
   }
   function layerRow(e, i, notes) {
     var row = document.createElement("div");
@@ -487,7 +500,7 @@
     el("eWhere").value = dome.azName(e.az) + (e.kind === "text" && Math.abs(Math.abs(((e.az % 360) + 360) % 360 - 180)) - 90 < 32 ? " · sideways" : "");
     if (e.kind === "text") setIf("eSize", num(e.size, 4).toFixed(2));
     if (e.kind !== "text") setIf("eW", num(e.w, 20).toFixed(1));
-    if (e.kind === "rect") setIf("eH", num(e.h, 10).toFixed(1));
+    if (e.kind === "rect" || e.kind === "shape") setIf("eH", num(e.h, 10).toFixed(1));
     if (e.kind === "text") setIf("eText", e.text);
     if (e.kind === "image") el("eImgLabel").textContent = e.src ? (/^data:/.test(e.src) ? "file, " + Math.round(e.src.length / 1024) + " KB" : e.src.slice(0, 40)) : "none";
     el("btnLock").textContent = e.locked ? "locked" : "lock";
@@ -499,19 +512,26 @@
     el("pSel").style.display = e ? "" : "none";
     el("pSlide").style.display = e ? "none" : "";
     if (e) {
+      var isShape = e.kind === "shape";
       el("pTitle").textContent = e.kind + " card";
-      el("pKind").textContent = e.kind === "text" ? "text" : e.kind === "image" ? "image" : "box";
+      el("pKind").textContent = e.kind === "text" ? "text" : e.kind === "image" ? "image"
+        : (G.SHAPES.indexOf(e.shape) >= 0 ? e.shape : "rect");
       el("eSizeRow").style.display = e.kind === "text" ? "" : "none";
       el("eBoxRow").style.display = e.kind === "text" ? "none" : "";
-      el("eHRow").style.display = e.kind === "rect" ? "" : "none";
+      var hasSides = e.kind === "rect" || isShape;
+      el("eHRow").style.display = hasSides ? "" : "none";
+      el("eShapeRow").style.display = isShape ? "" : "none";
       el("eTextRow").style.display = e.kind === "text" ? "" : "none";
       el("eImgRow").style.display = e.kind === "image" ? "" : "none";
-      el("eFillRow").style.display = e.kind === "rect" ? "" : "none";
+      el("eFillRow").style.display = hasSides && e.shape !== "line" ? "" : "none";   // a line is a stroke
+      el("eInkRow").style.display = e.kind === "image" ? "none" : "";
       el("eWeight").value = e.weight === "bold" ? "bold" : "regular";
       el("eFont").value = G.FONTS[e.font] ? e.font : "Arial";
       el("eAlign").value = e.align || "center";
-      el("eInk").value = e.ink === "white" ? "white" : "black";
-      el("eFill").value = e.fill === false ? "hollow" : "solid";
+      el("eShape").value = G.SHAPES.indexOf(e.shape) >= 0 ? e.shape : "rect";
+      setInk(e.ink);
+      el("eFill").value = e.fill === false || e.fill === "outline" ? "outline"
+                        : e.fill === "both" ? "both" : "solid";
       syncProps();
       return;
     }
@@ -547,6 +567,11 @@
     e.az = wrapAz(Math.round(ae[0] * 2) / 2); e.el = clamp(Math.round(ae[1] * 2) / 2, 0, 90);
     if (e.kind === "text") { e.size = 6; e.text = e.text || "text"; e.align = "center";
                              e.weight = "regular"; e.font = G.FONTS[e.font] ? e.font : "Arial"; }
+    if (e.kind === "shape" || e.kind === "rect") {
+      e.shape = G.SHAPES.indexOf(e.shape) >= 0 ? e.shape : "rect";
+      e.w = num(e.w, 30); e.h = num(e.h, 16);
+      if (e.fill == null) e.fill = "solid";
+    }
     e.ink = inkFor(s); e.rot = 0; e.locked = false;
     s.elements.push(e);
     S.sel = e.id;
@@ -762,7 +787,7 @@
     };
     el("btnDelSlide").onclick = function () { delSlide(S.i); };
     el("btnAddText").onclick = function () { addEl({ id: uid("e"), kind: "text" }); };
-    el("btnAddBox").onclick = function () { addEl({ id: uid("e"), kind: "rect", w: 30, h: 16, fill: true }); };
+    el("btnAddShape").onclick = function () { addEl({ id: uid("e"), kind: "shape", shape: "rect", w: 30, h: 16, fill: "solid" }); };
     el("btnAddImage").onclick = function () {
       el("fileImg").dataset.mode = "new"; el("fileImg").click();
     };
@@ -828,6 +853,27 @@
     el("sBg").addEventListener("change", function () { bgLive = false; renderProps(); save(); });
     el("btnPrompt").onclick = function () { push(); curSlide().prompt = !curSlide().prompt; renderProps(); draw(); save(); };
 
+    /* the element colour and the shape's fill, on the same rule as the background: a gesture is one
+       undo step, and the deck is written when the choice settles */
+    var inkLive = false;
+    el("eInkCol").addEventListener("input", function () {
+      var e = sel(); if (!e) return;
+      if (!inkLive) { inkLive = true; push(); }
+      e.ink = G.bgHex(this.value); setInk(e.ink); G.reset(); draw();
+    });
+    el("eInkCol").addEventListener("change", function () { inkLive = false; save(); });
+    el("btnInkBlack").onclick = function () { setInkTo("#000000"); };
+    el("btnInkWhite").onclick = function () { setInkTo("#ffffff"); };
+    el("eShape").addEventListener("change", function () {
+      var e = sel(); if (!e) return;
+      push(); e.shape = G.SHAPES.indexOf(this.value) >= 0 ? this.value : "rect";
+      G.reset(); renderProps(); draw(); save();
+    });
+    el("eFill").addEventListener("change", function () {
+      var e = sel(); if (!e) return;
+      push(); e.fill = this.value; G.reset(); draw(); save();
+    });
+
     var fields = ["eAz", "eEl", "eRot", "eSize", "eW", "eH"];
     fields.forEach(function (id) {
       var f = el(id);
@@ -860,8 +906,6 @@
     el("eWeight").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.weight = el("eWeight").value; G.reset(); draw(); save(); });
     el("eFont").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.font = G.FONTS[el("eFont").value] ? el("eFont").value : "Arial"; G.reset(); draw(); save(); });
     el("eAlign").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.align = el("eAlign").value; G.reset(); draw(); save(); });
-    el("eInk").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.ink = el("eInk").value; G.reset(); draw(); save(); });
-    el("eFill").addEventListener("change", function () { var e = sel(); if (!e) return; push(); e.fill = el("eFill").value !== "hollow"; G.reset(); draw(); save(); });
   }
   function zOrderMany(e, step) {
     var a = curSlide().elements, i = a.indexOf(e), j = clamp(i + step * 999, 0, a.length - 1);

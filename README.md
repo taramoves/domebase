@@ -147,8 +147,12 @@ zenith and an eye off the centre — so the simulate view and the plate are two 
 sphere, not a picture and a projection of a picture. The floor is a plane, and a ray meets it
 exactly when it points below the rim: that test is per pixel, because past 180° a plane's far side
 wraps around the image and a mesh of it paints over the dome. The background is a colour and the ink
-that reads on it follows its brightness; a text card carries its own font. Presenting fits the slide
-to the smaller side of the screen. One slide exports as the domemaster a projector takes: square,
+that reads on it follows its brightness, until an element is given a colour of its own; a text card
+carries its own font and a line's height; a rect and a shape carry their own sides. A shape —
+ellipse, triangle, diamond, pentagon, hexagon, star or line — is a silhouette painted into the same
+texture a rect uses and can be solid, outlined or both, and a turned shape is the same card with
+`rot` set. Presenting fits the slide to the smaller side of the screen. One slide exports as the
+domemaster a projector takes: square,
 black beyond the rim, no grid and no chrome. Drag, resize and turn each solve their placement,
 because the tangent plane at a card's centre is not the plane the hand's offset was measured in. A
 deck's pictures are decoded when it opens, so a slide change is an upload rather than a fetch. The

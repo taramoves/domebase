@@ -113,7 +113,7 @@
 
   /* the card's size in degrees. Text and images carry their aspect; a rect is told both sides. */
   function sizeOf(el, tex) {
-    if (el.kind === "rect") return { w: el.w, h: el.h };
+    if (el.kind === "rect" || el.kind === "shape") return { w: el.w, h: el.h };
     if (!tex || !tex.w || !tex.h) return { w: el.w || 10, h: el.h || 10 };
     var a = tex.w / tex.h;
     if (el.kind === "text") { var h = el.size * tex.h / FONT; return { w: h * a, h: h }; }

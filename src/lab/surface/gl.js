@@ -350,18 +350,22 @@ window.surfaceGL = function (canvas) {
     var c = document.createElement("canvas"), x;
     c.width = W; c.height = H;
     x = c.getContext("2d");
-    var col = colHex(el.ink), fill = shapeFill(el), inset = fill === "solid" ? 0 : IN;
+    var col = colHex(el.ink), fill = shapeFill(el), line = el.shape === "line";
+    var inset = (line || fill !== "solid") ? IN : 0;      // the inset keeps a stroke inside its card
     x.save();
     x.translate(inset, inset);
     shapePath(x, W - inset * 2, H - inset * 2, el.shape || "rect");
-    if (fill === "solid" || fill === "both") { x.fillStyle = col; x.fill(); }
-    if (fill === "outline" || fill === "both") { x.lineWidth = 7; x.lineJoin = "miter"; x.strokeStyle = col; x.stroke(); }
+    if (line) { x.lineWidth = 7; x.lineCap = "round"; x.strokeStyle = col; x.stroke(); }
+    else {
+      if (fill === "solid" || fill === "both") { x.fillStyle = col; x.fill(); }
+      if (fill === "outline" || fill === "both") { x.lineWidth = 7; x.lineJoin = "miter"; x.strokeStyle = col; x.stroke(); }
+    }
     x.restore();
     return c;
   }
 
   function sig(el) {
-    if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.font || "", el.wrap || 0].join("|");
+    if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.font || "", el.wrap || 0, el.size].join("|");
     if (el.kind === "shape" || el.kind === "rect")
       return ["s", el.shape || "rect", el.ink, shapeFill(el)].join("|");
     return "i|" + (el.src || "").slice(-64) + "|" + (el.src || "").length;
@@ -598,6 +602,7 @@ window.surfaceGL = function (canvas) {
   return {
     draw: draw, fit: fit, texture: texture, texSize: texSize,
     bgHex: bgHex, bgRGB: bgRGB, bgInk: bgInk, fontStack: fontStack, FONTS: FONTS, preload: preload,
+    SHAPES: SHAPES, shapeFill: shapeFill,
     background: function () { return bgRGB(slide && slide.ground); },
     setView: function (v) { for (var k in v) view[k] = v[k]; },
     getView: function () { return view; },

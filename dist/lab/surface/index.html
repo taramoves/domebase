@@ -112,7 +112,7 @@ body.present #stage{background:#000}
   <div class="grp" style="margin-left:8px">
     <button class="b" id="btnAddText">+ text</button>
     <button class="b" id="btnAddImage">+ image</button>
-    <button class="b" id="btnAddBox">+ box</button>
+    <button class="b" id="btnAddShape">+ shape</button>
   </div>
   <span class="sp"></span>
   <div class="grp">
@@ -231,6 +231,19 @@ body.present #stage{background:#000}
           <div id="eHRow"><label class="lb" for="eH">height °</label><input type="number" id="eH" step="1"></div>
         </div>
       </div>
+      <div class="f" id="eShapeRow">
+        <label class="lb" for="eShape">shape</label>
+        <select id="eShape">
+          <option value="rect">rect</option>
+          <option value="ellipse">ellipse</option>
+          <option value="triangle">triangle</option>
+          <option value="diamond">diamond</option>
+          <option value="pentagon">pentagon</option>
+          <option value="hexagon">hexagon</option>
+          <option value="star">star</option>
+          <option value="line">line</option>
+        </select>
+      </div>
       <div class="f" id="eTextRow">
         <label class="lb" for="eText">text</label>
         <textarea id="eText" rows="4"></textarea>
@@ -259,16 +272,24 @@ body.present #stage{background:#000}
         <label class="lb" id="eImgLabel">image</label>
         <button class="b wide" id="btnReplace">replace image</button>
       </div>
-      <div class="f">
+      <div class="f" id="eInkRow">
         <div class="pair">
           <div>
-            <label class="lb" for="eInk">ink</label>
-            <select id="eInk"><option value="black">black</option><option value="white">white</option></select>
+            <label class="lb" for="eInkCol">colour</label>
+            <input class="sw" type="color" id="eInkCol">
           </div>
           <div id="eFillRow">
-            <label class="lb" for="eFill">box</label>
-            <select id="eFill"><option value="solid">solid</option><option value="hollow">hollow</option></select>
+            <label class="lb" for="eFill">shape</label>
+            <select id="eFill">
+              <option value="solid">solid</option>
+              <option value="outline">outline</option>
+              <option value="both">both</option>
+            </select>
           </div>
+        </div>
+        <div class="pair" style="margin-top:6px">
+          <div><button class="b wide" id="btnInkBlack">black</button></div>
+          <div><button class="b wide" id="btnInkWhite">white</button></div>
         </div>
       </div>
       <div class="f">
