@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>surface — domebase/lab</title>
+<link rel="stylesheet" href="../../assets/css/site.css">
+<style>
+/* the tool's own shell. The sheet's rules for th/td are global, so panels here are divs, never
+   tables; the dome canvas is the only place the slide's own ground decides the colour. */
+html,body{margin:0;height:100%}
+body.tool{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#fff;color:#000;
+  font:12px/1.45 Arial,Helvetica,sans-serif}
+header#top{flex:0 0 auto;display:flex;align-items:center;border-bottom:1px solid #000;height:38px}
+header#top h1{margin:0;padding:0 12px 0 10px;font:400 11px/38px Arial,Helvetica,sans-serif;
+  text-transform:uppercase;letter-spacing:.08em;border-right:1px solid #c9c9c9;white-space:nowrap}
+header#top h1 a{color:#000;text-decoration:none}
+header#top h1 a:hover{background:#000;color:#fff}
+header#top .sp{flex:1 1 auto}
+.grp{display:flex}
+.grp .b{border:1px solid #000;border-left:0}
+.grp .b:first-child{border-left:1px solid #000}
+.b{font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.07em;
+  padding:7px 9px;background:#fff;color:#000;border:1px solid #000;border-radius:0;cursor:pointer}
+.b:hover{background:#000;color:#fff}
+.b[aria-pressed="true"]{background:#000;color:#fff}
+.b.wide{width:100%}
+#wrap{flex:1 1 auto;display:flex;min-height:0}
+aside#slides{flex:0 0 186px;border-right:1px solid #000;overflow:auto;background:#fff}
+aside#props{flex:0 0 244px;border-left:1px solid #000;overflow:auto;background:#fff}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #000;
+  font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.srow{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid #c9c9c9;border-left:4px solid #fff;
+  cursor:pointer}
+.srow:hover{background:#efefef}
+.srow.on{border-left-color:#000;font-weight:700}
+.srow .n{font:400 10px/1 Arial,Helvetica,sans-serif;letter-spacing:.06em;min-width:14px}
+.srow .t{flex:1 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.srow .g{width:9px;height:9px;border:1px solid #000}
+.srow .g.black{background:#000}
+.srow .k{border:0;background:none;font:400 11px/1 Arial;cursor:pointer;padding:2px 3px;color:#000}
+.srow .k:hover{background:#000;color:#fff}
+#stage{flex:1 1 auto;position:relative;min-width:0;background:#efefef}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#readout{position:absolute;left:0;bottom:0;display:flex;background:#fff;border-top:1px solid #000;
+  border-right:1px solid #000}
+#readout div{padding:5px 8px;border-right:1px solid #c9c9c9;
+  font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+#readout b{font-weight:400}
+#keys{position:absolute;left:0;top:0;background:#fff;border-right:1px solid #000;border-bottom:1px solid #000;
+  padding:8px 10px;display:none;max-width:280px}
+#keys.on{display:block}
+#keys p{margin:0 0 4px;font:400 10px/1.5 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.05em}
+#keys kbd{font:400 10px/1.5 Arial;border:1px solid #c9c9c9;padding:0 3px}
+.f{padding:7px 9px;border-bottom:1px solid #c9c9c9}
+.lb{display:block;font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:4px}
+input[type=number],input[type=text],textarea,select{width:100%;box-sizing:border-box;border:1px solid #000;
+  border-radius:0;background:#fff;color:#000;padding:4px 5px;font:11px/1.4 Arial,Helvetica,sans-serif}
+textarea{resize:vertical}
+select{padding:3px 4px}
+input:focus,textarea:focus,select:focus{outline:1px solid #000;outline-offset:-1px}
+.pair{display:flex;gap:6px}
+.pair>*{flex:1 1 0;min-width:0}
+.row{display:flex;gap:4px;flex-wrap:wrap}
+.row .b{flex:1 1 auto}
+#bar{flex:0 0 auto;display:flex;align-items:center;gap:0;border-top:1px solid #000;height:32px;background:#fff}
+#bar .b{border:0;border-right:1px solid #c9c9c9;height:32px;padding:0 10px}
+#bar .b:hover{background:#000;color:#fff}
+#bar .sp{flex:1 1 auto}
+#bar .note{padding:0 10px;font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+#file,#fileImg{display:none}
+body.present #top,body.present #slides,body.present #props,body.present #bar{display:none}
+body.present #stage{background:#000}
+</style>
+</head>
+<body class="tool">
+
+<header id="top">
+  <h1><a href="../">domebase</a>/lab/surface</h1>
+  <div class="grp" style="margin-left:10px">
+    <button class="b" id="btnNew">new</button>
+    <button class="b" id="btnOpen">open</button>
+    <button class="b" id="btnSave">save</button>
+  </div>
+  <div class="grp" style="margin-left:8px">
+    <button class="b" id="btnAddText">+ text</button>
+    <button class="b" id="btnAddImage">+ image</button>
+    <button class="b" id="btnAddBox">+ box</button>
+  </div>
+  <span class="sp"></span>
+  <div class="grp">
+    <button class="b" id="btnMaster" aria-pressed="true">master</button>
+    <button class="b" id="btnCentre" aria-pressed="false">from centre</button>
+  </div>
+  <div class="grp" style="margin-left:8px">
+    <button class="b" id="btnFit">fit</button>
+    <button class="b" id="btnZoomOut">–</button>
+    <button class="b" id="btnZoomIn">+</button>
+  </div>
+  <div class="grp" style="margin-left:8px">
+    <button class="b" id="btnExport">master png</button>
+  </div>
+  <button class="b" id="btnPresent" style="margin:0 10px">present</button>
+  <input type="text" id="name" style="width:150px;margin-right:10px" aria-label="deck name">
+</header>
+
+<div id="wrap">
+  <aside id="slides">
+    <div class="hd"><span>slides</span><span id="slideCount">0</span></div>
+    <div id="slideList"></div>
+    <div class="f" style="border-bottom:0"><button class="b wide" id="btnAddSlide">+ slide</button></div>
+  </aside>
+
+  <main id="stage">
+    <canvas id="gl" tabindex="0"></canvas>
+    <div id="keys">
+      <p><kbd>←↑↓→</kbd> nudge 0.5° · <kbd>shift</kbd> 5° · <kbd>alt</kbd> 0.1°</p>
+      <p><kbd>z</kbd> <kbd>shift+z</kbd> undo redo · <kbd>d</kbd> duplicate</p>
+      <p><kbd>cmd/ctrl</kbd>+<kbd>v</kbd> paste an image · drop an image on the dome</p>
+      <p><kbd>[</kbd> <kbd>]</kbd> depth · <kbd>l</kbd> lock · <kbd>del</kbd> delete</p>
+      <p><kbd>space</kbd> drag to pan · wheel to zoom · <kbd>0</kbd> fit</p>
+      <p><kbd>m</kbd> master · <kbd>c</kbd> from centre · <kbd>t</kbd> notes · <kbd>p</kbd> present · <kbd>esc</kbd> leave</p>
+      <p>drag a corner to scale, the handle above to turn · double-click text to edit</p>
+    </div>
+    <div id="readout">
+      <div>slide <b id="rSlide">1/1</b></div>
+      <div>cards <b id="rCards">0</b></div>
+      <div>zoom <b id="rZoom">100%</b></div>
+      <div>cursor az <b id="rAz">–</b> el <b id="rEl">–</b></div>
+      <div>selected <b id="rSel">none</b></div>
+    </div>
+  </main>
+
+  <aside id="props">
+    <div class="hd"><span id="pTitle">nothing selected</span><span id="pKind"></span></div>
+
+    <div id="pSlide">
+      <div class="f">
+        <label class="lb">ground</label>
+        <div class="grp">
+          <button class="b" id="btnPaper" aria-pressed="true">paper</button>
+          <button class="b" id="btnBlack" aria-pressed="false">black</button>
+        </div>
+      </div>
+      <div class="f">
+        <label class="lb" for="sNotes">notes</label>
+        <textarea id="sNotes" rows="7"></textarea>
+      </div>
+      <div class="f">
+        <div class="row">
+          <button class="b" id="btnPrompt" aria-pressed="true">notes on dome</button>
+        </div>
+        <div class="pair" style="margin-top:6px">
+          <div><label class="lb" for="sPromptSize">note size °</label><input type="number" id="sPromptSize" step="0.1"></div>
+          <div><label class="lb">where</label><input type="text" id="sPromptWhere" disabled></div>
+        </div>
+      </div>
+      <div class="hd" style="border-top:1px solid #000"><span>dome</span><span></span></div>
+      <div class="f">
+        <div class="pair">
+          <div><label class="lb" for="projFov">master °</label><input type="number" id="projFov" step="1" min="60" max="220"></div>
+          <div><label class="lb" for="pngSize">png px</label>
+            <select id="pngSize"><option>1024</option><option>2048</option><option>4096</option></select></div>
+        </div>
+      </div>
+      <div class="f">
+        <div class="row">
+          <button class="b" id="btnDupSlide">duplicate slide</button>
+          <button class="b" id="btnDelSlide">delete slide</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pSel" style="display:none">
+      <div class="f">
+        <div class="pair">
+          <div><label class="lb" for="eAz">azimuth °</label><input type="number" id="eAz" step="1"></div>
+          <div><label class="lb" for="eEl">elevation °</label><input type="number" id="eEl" step="1"></div>
+        </div>
+        <div class="pair" style="margin-top:6px">
+          <div><label class="lb">on the dome</label><input type="text" id="eWhere" disabled></div>
+          <div><label class="lb" for="eRot">turn °</label><input type="number" id="eRot" step="1"></div>
+        </div>
+      </div>
+      <div class="f" id="eSizeRow">
+        <label class="lb" for="eSize">size ° reading height</label>
+        <input type="number" id="eSize" step="0.1">
+      </div>
+      <div class="f" id="eBoxRow">
+        <div class="pair">
+          <div><label class="lb" for="eW">width °</label><input type="number" id="eW" step="1"></div>
+          <div id="eHRow"><label class="lb" for="eH">height °</label><input type="number" id="eH" step="1"></div>
+        </div>
+      </div>
+      <div class="f" id="eTextRow">
+        <label class="lb" for="eText">text</label>
+        <textarea id="eText" rows="4"></textarea>
+        <div class="pair" style="margin-top:6px">
+          <div>
+            <label class="lb" for="eWeight">weight</label>
+            <select id="eWeight"><option value="regular">regular</option><option value="bold">bold</option></select>
+          </div>
+          <div>
+            <label class="lb" for="eAlign">align</label>
+            <select id="eAlign"><option value="left">left</option><option value="center">centre</option><option value="right">right</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="f" id="eImgRow">
+        <label class="lb" id="eImgLabel">image</label>
+        <button class="b wide" id="btnReplace">replace image</button>
+      </div>
+      <div class="f">
+        <div class="pair">
+          <div>
+            <label class="lb" for="eInk">ink</label>
+            <select id="eInk"><option value="black">black</option><option value="white">white</option></select>
+          </div>
+          <div id="eFillRow">
+            <label class="lb" for="eFill">box</label>
+            <select id="eFill"><option value="solid">solid</option><option value="hollow">hollow</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="f">
+        <label class="lb">depth and lock</label>
+        <div class="row">
+          <button class="b" id="btnBack">send back</button>
+          <button class="b" id="btnFront">bring front</button>
+        </div>
+        <div class="row" style="margin-top:4px">
+          <button class="b" id="btnLock">lock</button>
+          <button class="b" id="btnDup">duplicate</button>
+          <button class="b" id="btnDel">delete</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer id="bar">
+  <button class="b" id="btnTKeys">keys</button>
+  <button class="b" id="btnUndo">undo</button>
+  <button class="b" id="btnRedo">redo</button>
+  <span class="sp"></span>
+  <span class="note" id="note">saved locally</span>
+  <span class="note" id="noteDeck"></span>
+</footer>
+
+<input type="file" id="file" accept=".json,application/json">
+<input type="file" id="fileImg" accept="image/*">
+
+<script src="dome.js"></script>
+<script src="gl.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+/* gl.js — the three passes.
+
+   ground   the disc: paper or black, the horizon rim, an elevation ring at 30 and 60, eight
+            meridians. Everything in master coordinates, so it takes the same zoom and pan.
+   master   every card, its vertices projected sphere -> disc. The card's frame arrives as
+            uniforms over one shared unit-grid buffer, so a card is one draw call.
+   centre   the same cards through a camera at the dome's centre: what the audience sees.
+   chrome   selection outline and handles, in screen pixels, drawn from the projected corners.
+
+   No library, in the shape lab/3Dmath established. */
+window.surfaceGL = function (canvas) {
+  var gl = canvas.getContext("webgl", { antialias: true, alpha: false, premultipliedAlpha: false });
+  if (!gl) throw new Error("no webgl");
+  var D = dome.D, FONT = dome.FONT;
+  var WASH = [0.937, 0.937, 0.937];          // outside the rim: the sheet's fill tone
+  var HAIR = [0.79, 0.79, 0.79];             // the grid
+  var view = { view: "master", zoom: 1, pan: [0, 0], yaw: 0, pitch: 16, fov: 100, mfov: 180 };
+  var slide = null, chrome = null, onChange = null;
+  var tex = {};
+
+  /* ---- shaders ------------------------------------------------------------------------- */
+  function sh(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + "\n" + src);
+    return s;
+  }
+  function prog(vs, fs) {
+    var p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (var i = 0; i < n; i++) { var nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+    /* every uniform any pass may set exists as a key: an inactive one is null, which WebGL ignores */
+    UNIFORMS.forEach(function (k) { if (!(k in u)) u[k] = null; });
+    return { p: p, u: u };
+  }
+  var UNIFORMS = ["uA", "uB", "uAdd", "uPx", "uCol", "uN", "uR", "uU", "uTan", "uScale", "uPan",
+                  "uFov", "uCR", "uCU", "uCF", "uTanHalf", "uAspect", "uTex", "uOpacity"];
+
+  var FLAT_V = "attribute vec2 aP;uniform vec2 uA,uB;uniform float uAdd;uniform float uPx;" +
+    "void main(){vec2 q = uAdd > .5 ? aP*uA+uB : (aP-uB)*uA;gl_Position=vec4(q,0.,1.);gl_PointSize=uPx;}";
+  var FLAT_F = "precision mediump float;uniform vec4 uCol;void main(){gl_FragColor=uCol;}";
+  var flat = prog(FLAT_V, FLAT_F);
+
+  var CARD_V = "attribute vec2 aG;uniform vec3 uN,uR,uU;uniform vec2 uTan,uScale,uPan;uniform float uFov;" +
+    "varying vec2 vUv;" +
+    "void main(){vec3 d=normalize(uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y));" +
+    "float th=acos(clamp(d.y,-1.,1.));float r=th/(radians(uFov)*.5);" +
+    "vec2 m=vec2(d.x,d.z);float l=length(m);m = l>1e-6 ? m/l : vec2(0.);" +
+    "gl_Position=vec4((m*r-uPan)*uScale,0.,1.);vUv=aG*.5+.5;}";
+  var cardMaster = prog(CARD_V, cardFragment(""));
+
+  var CENTRE_V = "attribute vec2 aG;uniform vec3 uN,uR,uU,uCR,uCU,uCF;uniform vec2 uTan;" +
+    "uniform float uTanHalf,uAspect;varying vec2 vUv;" +
+    "void main(){vec3 d=normalize(uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y));" +
+    "vec3 v=vec3(dot(d,uCR),dot(d,uCU),dot(d,uCF));" +
+    "float z=max(v.z,.002);" +
+    "gl_Position=vec4(v.x/(z*uTanHalf*uAspect),v.y/(z*uTanHalf),0.,1.);" +
+    "if(v.z<=0.) gl_Position=vec4(3.,3.,0.,1.);vUv=aG*.5+.5;}";
+  var cardCentre = prog(CENTRE_V, cardFragment(""));
+
+  function cardFragment(extra) {
+    return "precision mediump float;uniform sampler2D uTex;uniform float uOpacity;" +
+      "varying vec2 vUv;void main(){vec4 c=texture2D(uTex,vUv);" + (extra || "") +
+      "if(c.a<.004) discard;gl_FragColor=vec4(c.rgb,c.a*uOpacity);}";
+  }
+
+  /* ---- buffers ------------------------------------------------------------------------- */
+  function buf(data, kind) {
+    var b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    return b;
+  }
+  var g = dome.grid(dome.SUB);
+  var gridBuf = buf(g.verts), gridIdx = (function () {
+    var b = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g.idx, gl.STATIC_DRAW); return b;
+  })();
+
+  function ring(r, segs) {
+    var a = [];
+    for (var i = 0; i < segs; i++) {
+      var t = i / segs * Math.PI * 2;
+      a.push(Math.cos(t) * r, Math.sin(t) * r);
+    }
+    return new Float32Array(a);
+  }
+  function fan(r, segs) {
+    var a = [0, 0];
+    for (var i = 0; i <= segs; i++) {
+      var t = i / segs * Math.PI * 2;
+      a.push(Math.cos(t) * r, Math.sin(t) * r);
+    }
+    return new Float32Array(a);
+  }
+  function meridians(n) {
+    var a = [];
+    for (var i = 0; i < n; i++) {
+      var t = i / n * Math.PI * 2;
+      a.push(0, 0, Math.cos(t), Math.sin(t));
+    }
+    return new Float32Array(a);
+  }
+  var discBuf = buf(fan(1, 128)), rimBuf = buf(ring(1, 160)),
+      ringZ30 = buf(ring(1 / 3, 96)),      // 30 degrees from the zenith, so el 60
+      ringZ60 = buf(ring(2 / 3, 96)),      // el 30
+      merBuf = buf(meridians(8));
+  var chromeBuf = gl.createBuffer();
+
+  function attr(prog2, name, b, size) {
+    var loc = gl.getAttribLocation(prog2.p, name);
+    if (loc < 0) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+  }
+  function flatDraw(b, mode, count, col, a, bv, add) {
+    gl.useProgram(flat.p);
+    attr(flat, "aP", b, 2);
+    gl.uniform2fv(flat.u.uA, a); gl.uniform2fv(flat.u.uB, bv); gl.uniform1f(flat.u.uAdd, add);
+    gl.uniform4f(flat.u.uCol, col[0], col[1], col[2], col.length > 3 ? col[3] : 1);
+    gl.drawArrays(mode, 0, count);
+  }
+
+  /* ---- textures ------------------------------------------------------------------------ */
+  function makeTexture(src, w, h, fromImage) {
+    var t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return t;
+  }
+  function blank() {
+    var t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 0]));
+    return t;
+  }
+
+  /* text -> a canvas measured to its own words. The card's angular size comes off this canvas:
+     px per em is fixed, so a longer line makes a wider card, never a squeezed one. */
+  var WRAP = 1100, PAD = 24, LH = 1.25;
+  function textCanvas(el, wrapPx) {
+    var px = FONT, weight = el.weight === "bold" ? "700" : "400";
+    var c = document.createElement("canvas"), x = c.getContext("2d");
+    x.font = weight + " " + px + "px Arial, Helvetica, sans-serif";
+    var lines = [], para = String(el.text == null ? "" : el.text).split("\n");
+    var limit = wrapPx || WRAP;
+    for (var p = 0; p < para.length; p++) {
+      var words = para[p].split(/\s+/).filter(Boolean), line = "";
+      if (!words.length) { lines.push(""); continue; }
+      for (var i = 0; i < words.length; i++) {
+        var tryLine = line ? line + " " + words[i] : words[i];
+        if (x.measureText(tryLine).width > limit && line) { lines.push(line); line = words[i]; }
+        else line = tryLine;
+      }
+      lines.push(line);
+    }
+    var widest = 0;
+    for (var k = 0; k < lines.length; k++) widest = Math.max(widest, x.measureText(lines[k]).width);
+    c.width = Math.max(4, Math.ceil(widest) + PAD * 2);
+    c.height = Math.max(4, Math.ceil(lines.length * px * LH) + PAD * 2);
+    x = c.getContext("2d");
+    x.font = weight + " " + px + "px Arial, Helvetica, sans-serif";
+    x.fillStyle = el.ink === "white" ? "#fff" : "#000";
+    x.textBaseline = "middle";
+    x.textAlign = el.align === "left" ? "left" : el.align === "right" ? "right" : "center";
+    var tx = el.align === "left" ? PAD : el.align === "right" ? c.width - PAD : c.width / 2;
+    for (var j = 0; j < lines.length; j++) {
+      x.fillText(lines[j], tx, PAD + px * LH * (j + 0.5));
+    }
+    return c;
+  }
+  function rectCanvas(el) {
+    var c = document.createElement("canvas"), x;
+    c.width = 128; c.height = 96;
+    x = c.getContext("2d");
+    var col = el.ink === "white" ? "#fff" : "#000";
+    if (el.fill === false) { x.strokeStyle = col; x.lineWidth = 6; x.strokeRect(3, 3, c.width - 6, c.height - 6); }
+    else { x.fillStyle = col; x.fillRect(0, 0, c.width, c.height); }
+    return c;
+  }
+
+  function sig(el) {
+    if (el.kind === "text") return ["t", el.text, el.weight, el.align, el.ink, el.wrap || 0].join("|");
+    if (el.kind === "rect") return ["r", el.ink, el.fill === false ? "hollow" : "solid"].join("|");
+    return "i|" + (el.src || "").slice(-64) + "|" + (el.src || "").length;
+  }
+  /* the texture a card draws with, and the pixel size its geometry is derived from */
+  function texture(el) {
+    var s = sig(el), rec = tex[el.id];
+    if (rec && rec.sig === s) return rec;
+    if (rec && rec.t) gl.deleteTexture(rec.t);
+    rec = tex[el.id] = { sig: s, t: blank(), w: 4, h: 4 };
+    if (el.kind === "text") {
+      var c = textCanvas(el, el.wrap);
+      rec.t = makeTexture(c, c.width, c.height); rec.w = c.width; rec.h = c.height;
+    } else if (el.kind === "rect") {
+      var r = rectCanvas(el);
+      rec.t = makeTexture(r, r.width, r.height); rec.w = r.width; rec.h = r.height;
+    } else if (el.kind === "image") {
+      var img = new Image();
+      if (/^https?:/i.test(el.src || "")) img.crossOrigin = "anonymous";
+      img.onload = function () {
+        var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+        var k = Math.min(1, 2048 / Math.max(w, h));
+        var cc = document.createElement("canvas");
+        cc.width = Math.round(w * k); cc.height = Math.round(h * k);
+        cc.getContext("2d").drawImage(img, 0, 0, cc.width, cc.height);
+        rec.t = makeTexture(cc, cc.width, cc.height);
+        rec.w = cc.width; rec.h = cc.height;
+        if (onChange) onChange();
+      };
+      img.onerror = function () { rec.failed = true; };
+      img.src = el.src;
+    }
+    return rec;
+  }
+  /* the editor derives a card's angular box from the texture's pixel size */
+  function texSize(el) { var r = texture(el); return { w: r.w, h: r.h }; }
+
+  /* ---- the view ------------------------------------------------------------------------ */
+  var V = { w: 1, h: 1, dpr: 1, S: 1 };
+  function fit() {
+    var r = canvas.getBoundingClientRect();
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    V.w = Math.max(1, r.width); V.h = Math.max(1, r.height); V.dpr = dpr;
+    var dw = Math.round(V.w * dpr), dh = Math.round(V.h * dpr);
+    if (canvas.width !== dw || canvas.height !== dh) { canvas.width = dw; canvas.height = dh; }
+    V.S = view.zoom * Math.min(V.w, V.h) / 2;
+    return V;
+  }
+  function scaleXY() { return [view.zoom * Math.min(V.w, V.h) / V.w, view.zoom * Math.min(V.w, V.h) / V.h]; }
+
+  function masterToPx(u, v) { return [V.w / 2 + (u - view.pan[0]) * V.S, V.h / 2 - (v - view.pan[1]) * V.S]; }
+  function pxToMaster(x, y) { return [(x - V.w / 2) / V.S + view.pan[0], -(y - V.h / 2) / V.S + view.pan[1]]; }
+
+  function centreCam() {
+    var f = dome.dir(view.yaw, view.pitch), up = dome.basis(view.yaw, view.pitch).up;
+    return { f: f, u: up, r: dome.cross(f, up),
+             tanHalf: Math.tan(Math.max(20, Math.min(150, view.fov)) * D / 2) };
+  }
+
+  function draw(elements, selectedId) {
+    fit();
+    var glass = slide && slide.ground === "black" ? [0, 0, 0] : [1, 1, 1];
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    if (view.view === "centre") {
+      for (var i = 0; i < 3; i++) gl.clearColor(glass[i], glass[i], glass[i], 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      drawCards(elements, cardCentre, false);
+      return;
+    }
+
+    gl.clearColor(WASH[0], WASH[1], WASH[2], 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    var sc = scaleXY(), pan = view.pan;
+    flatDraw(discBuf, gl.TRIANGLE_FAN, 130, glass, sc, pan, 0);
+    flatDraw(merBuf, gl.LINES, 16, HAIR.concat([1]), sc, pan, 0);
+    flatDraw(ringZ30, gl.LINE_LOOP, 96, HAIR.concat([1]), sc, pan, 0);
+    flatDraw(ringZ60, gl.LINE_LOOP, 96, HAIR.concat([1]), sc, pan, 0);
+    drawCards(elements, cardMaster, true);
+    flatDraw(rimBuf, gl.LINE_LOOP, 160, [0.35, 0.35, 0.35, 1], sc, pan, 0);
+    drawChrome();
+  }
+
+  function drawCards(elements, p, masterPass, sc, pan) {
+    var cam = centreCam();
+    gl.useProgram(p.p);
+    attr(p, "aG", gridBuf, 2);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gridIdx);
+    if (!sc) sc = scaleXY();
+    if (!pan) pan = view.pan;
+    var usedIds = {};
+    for (var i = 0; i < elements.length; i++) {
+      var el = elements[i];
+      usedIds[el.id] = 1;
+      var r = texture(el);
+      var m = dome.matrix(el, r);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, r.t);
+      gl.uniform1i(p.u.uTex, 0);
+      gl.uniform1f(p.u.uOpacity, el.opacity == null ? 1 : el.opacity);
+      gl.uniform3fv(p.u.uN, m.n); gl.uniform3fv(p.u.uR, m.right); gl.uniform3fv(p.u.uU, m.up);
+      gl.uniform2f(p.u.uTan, m.tanW, m.tanH);
+      if (masterPass) {
+        gl.uniform2fv(p.u.uScale, sc); gl.uniform2fv(p.u.uPan, pan);
+        gl.uniform1f(p.u.uFov, view.mfov || 180);
+      } else {
+        gl.uniform3fv(p.u.uCR, cam.r); gl.uniform3fv(p.u.uCU, cam.u); gl.uniform3fv(p.u.uCF, cam.f);
+        gl.uniform1f(p.u.uTanHalf, cam.tanHalf);
+        gl.uniform1f(p.u.uAspect, V.w / V.h);
+      }
+      gl.drawElements(gl.TRIANGLES, g.idx.length, gl.UNSIGNED_SHORT, 0);
+    }
+    /* release the textures of cards that are gone */
+    for (var id in tex) {
+      if (usedIds[id]) continue;
+      if (tex[id].t) gl.deleteTexture(tex[id].t);
+      delete tex[id];
+    }
+  }
+
+  /* The domemaster that goes to the projector: a square whose rim is the horizon, black beyond it,
+     no grid and no chrome — the slide alone. It renders twice the size into a framebuffer and
+     scales down, because a framebuffer has no antialiasing and a master's edges show it. */
+  function domemaster(size, elements, ss) {
+    ss = ss || 2;
+    var inner = size * ss;
+    var fb = gl.createFramebuffer(), txt = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, txt);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, inner, inner, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, txt, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.deleteFramebuffer(fb); gl.deleteTexture(txt);
+      return null;
+    }
+    gl.viewport(0, 0, inner, inner);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    var glass = slide && slide.ground === "black" ? [0, 0, 0] : [1, 1, 1];
+    gl.clearColor(0, 0, 0, 1);                     // outside the rim the projector has nothing
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    flatDraw(discBuf, gl.TRIANGLE_FAN, 130, glass, [1, 1], [0, 0], 0);
+    drawCards(elements, cardMaster, true, [1, 1], [0, 0]);
+    var px = new Uint8Array(inner * inner * 4);
+    gl.readPixels(0, 0, inner, inner, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fb); gl.deleteTexture(txt);
+
+    var big = document.createElement("canvas"), bx, img, y, src, dst, i;
+    big.width = big.height = inner;
+    bx = big.getContext("2d");
+    img = bx.createImageData(inner, inner);
+    for (y = 0; y < inner; y++) {                  // GL reads bottom-up
+      src = (inner - 1 - y) * inner * 4; dst = y * inner * 4;
+      for (i = 0; i < inner * 4; i++) img.data[dst + i] = px[src + i];
+    }
+    bx.putImageData(img, 0, 0);
+    var out = document.createElement("canvas"), ox;
+    out.width = out.height = size;
+    ox = out.getContext("2d");
+    ox.imageSmoothingEnabled = true;
+    if (ox.imageSmoothingQuality) ox.imageSmoothingQuality = "high";
+    ox.drawImage(big, 0, 0, size, size);
+    return out;
+  }
+
+  /* ---- chrome, in screen pixels --------------------------------------------------------- */
+  function drawChrome() {
+    if (!chrome) return;
+    var dark = !(slide && slide.ground === "black");
+    var ink = dark ? [0, 0, 0, 0.85] : [1, 1, 1, 0.9];        // the mark the ground can carry
+    var lift = dark ? [1, 1, 1, 1] : [0, 0, 0, 1];            // and what separates it from the card
+    var a = [2 / V.w, -2 / V.h], b = [-1, 1];
+    function poly(pts, col, mode) {
+      if (pts.length < 2) return;
+      var f = new Float32Array(pts.length * 2);
+      for (var i = 0; i < pts.length; i++) { f[i * 2] = pts[i][0]; f[i * 2 + 1] = pts[i][1]; }
+      gl.bindBuffer(gl.ARRAY_BUFFER, chromeBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, f, gl.DYNAMIC_DRAW);
+      flatDraw(chromeBuf, mode, pts.length, col, a, b, 1);
+    }
+    function box(p, size, col, fill) {
+      var h = size / 2, pts = [[p[0] - h, p[1] - h], [p[0] + h, p[1] - h], [p[0] + h, p[1] + h], [p[0] - h, p[1] + h]];
+      if (fill) poly(pts.concat([pts[0]]), col, gl.TRIANGLE_FAN);
+      poly(pts.concat([pts[0]]), col, gl.LINE_LOOP);
+    }
+    function handle(p, size) {
+      box(p, size, lift, true);
+      box(p, size, ink, true);
+      box(p, size + 1, lift, false);
+    }
+    poly(chrome.outline, ink, gl.LINE_STRIP);
+    if (chrome.rotate) {
+      poly([chrome.rotate.from, chrome.rotate.to], ink, gl.LINES);
+      handle(chrome.rotate.to, 8);
+    }
+    for (var i = 0; i < chrome.handles.length; i++) handle(chrome.handles[i].p, i < 4 ? 9 : 7);
+  }
+
+  return {
+    draw: draw, fit: fit, texture: texture, texSize: texSize,
+    setView: function (v) { for (var k in v) view[k] = v[k]; },
+    getView: function () { return view; },
+    viewport: function () { return V; },
+    scale: function () { fit(); return V.S; },
+    masterToPx: masterToPx, pxToMaster: pxToMaster, centreCam: centreCam,
+    setSlide: function (s) { slide = s; },
+    domemaster: domemaster,
+    setChrome: function (c) { chrome = c; },
+    setOnChange: function (f) { onChange = f; },
+    reset: function () { for (var id in tex) { if (tex[id].t) gl.deleteTexture(tex[id].t); } tex = {}; }
+  };
+};
