@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domebase/learn</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+<style>/* learn — this page only */
+.doc{padding:34px 24px 96px;max-width:760px}
+h2{font-size:14px;margin:36px 0 9px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+h2:first-of-type{margin-top:24px}
+p{margin:0 0 11px;max-width:72ch}
+figure{margin:18px 0}
+figcaption{font-size:11.5px;margin-top:6px;max-width:72ch}
+svg{display:block;max-width:100%;height:auto}
+.pulse{fill:#000}
+.gloss{margin:2px 0 0}
+.gloss p{margin:0;padding:6px 0;border-top:1px solid var(--hair);max-width:72ch}
+.gloss p:first-child{border-top:0;padding-top:2px}
+.src{font-size:11.5px;margin:6px 0 0;max-width:72ch}
+canvas.master{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
+canvas.master:focus-visible{outline:1px solid var(--line);outline-offset:2px}
+.readout{font-size:12.5px;margin:8px 0 0;padding-top:6px;border-top:1px solid var(--hair);
+  max-width:72ch}
+.hint{font-size:11.5px;margin:4px 0 0}
+@media (prefers-reduced-motion:reduce){.pulse{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><a href="../">domebase</a>/learn</h1>
+  <a class="bmc" href="https://buymeacoffee.com/taramoves" target="_blank" rel="noopener">buy me a coffee</a>
+  <div class="menu"><a href="../database/">database</a><span>archive</span><a href="../library/">library</a><a href="../lab/">lab</a><span class="on">learn</span></div>
+</header>
+
+<main class="doc">
+
+<p>The dome as a delivery format: the master, the projectors, the loudspeakers.</p>
+
+<h2>1 The Master</h2>
+
+<p>A dome master holds a hemisphere in a square frame, 720, 1024, 1536, 2048, 3200, 3600 or 4096 px
+a side. The picture fills the circle inscribed in the square and black fills the corners, carrying
+the show name, the timecode and the copyright. Frames travel as numbered PNG or TARGA with RLE, or
+as JPEG at the highest quality, 8, 10 or 12 bits a colour, at 30 or 60 fps; 24, 25, 29.97, 48 and
+59.94 turn up too.</p>
+
+<p>The projection is equidistant azimuthal: distance from the centre of the circle is the angle
+from the zenith, so the rings of latitude sit evenly spaced. In a 4096 master the rim is 2048 px
+from the centre and 45&deg; sits at 1024 px. The frame reaches 180&deg; from the zenith to the
+horizon and covers all 360&deg; of azimuth. The front of the dome lands at the bottom of the
+frame, the back at the top, and the right of the frame answers to the right of a viewer at the
+centre of the room. Action reads from where it sits: IMERSA puts the safe area within
+&plusmn;50&deg; of longitude around the front and 10&ndash;60&deg; of altitude, on a camera tilted
+15&deg;.</p>
+
+<figure>
+  <canvas class="master" id="mx" width="420" height="420" tabindex="0" role="img"
+    aria-label="A dome master: a square frame, the image circle inscribed in it, the zenith at the centre of the circle and the horizon at the rim. A probe marks a point by azimuth and elevation."></canvas>
+  <p class="readout" id="mxout"></p>
+  <figcaption><b>Figure 1.</b> The master. Drag the probe, or tab to it and use the arrow keys: the
+  readout gives the azimuth, the elevation and the pixel it lands on in a 4096 master.
+  <span class="hint">Azimuth runs 0&deg; at the front, 90&deg; to the right of a viewer at the
+  centre; elevation runs 0&deg; at the rim to 90&deg; at the zenith.</span></figcaption>
+</figure>
+
+<p class="src">Source: IMERSA and AFDI, <i>Dome Master Specifications</i>, 2019 &mdash;
+<a href="https://imersa.org/guidelines">imersa.org/guidelines</a>.</p>
+
+<h2>2 Picture, Master to Dome</h2>
+
+<p>A player reads the master and puts it on the dome. A file plays the numbered frames or the
+movie; a live render sends each frame out as NDI over the network, or as SDI and HDMI on a
+cable.</p>
+
+<p>No projector covers a hemisphere on its own, so the show machine splits the master into one
+patch per projector, warps each patch onto the part of the dome its projector sees, and blends the
+band where two patches overlap. The room decides the split and the warp: where the projectors
+stand, the radius of the dome and the throw of each lens go into a mesh the GPU applies to every
+frame.</p>
+
+<figure>
+<svg viewBox="0 0 772 220" role="img" aria-label="A dome master into the show computer, which takes a file or a live stream, into the mapping stage that splits the master into one patch per projector and blends the seams, into the projectors, onto the dome.">
+  <g fill="none" stroke="#000" stroke-width="1">
+    <defs><marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+    <rect x="12" y="58" width="88" height="88"/>
+    <circle cx="56" cy="102" r="44"/>
+    <rect x="140" y="70" width="160" height="64"/>
+    <rect x="336" y="48" width="196" height="108"/>
+    <circle cx="386" cy="118" r="30"/>
+    <rect x="568" y="80" width="76" height="44"/>
+    <path d="M 656 178 A 50 50 0 0 1 756 178"/>
+    <line x1="646" y1="178" x2="766" y2="178"/>
+  </g>
+  <g fill="none" stroke="#c9c9c9" stroke-width="1">
+    <circle cx="56" cy="102" r="14.7"/><circle cx="56" cy="102" r="29.3"/>
+    <line x1="378" y1="89" x2="378" y2="147"/>
+    <line x1="394" y1="89" x2="394" y2="147"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1" marker-end="url(#ap)">
+    <line id="a1" x1="104" y1="102" x2="136" y2="102"/>
+    <line id="a2" x1="300" y1="102" x2="332" y2="102"/>
+    <line id="a3" x1="532" y1="102" x2="564" y2="102"/>
+    <line id="a4" x1="644" y1="102" x2="684" y2="130"/>
+    <line x1="386" y1="88" x2="386" y2="148"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11" text-anchor="middle">
+    <text x="220" y="106">file &middot; PNG or movie</text>
+    <text x="220" y="120">live &middot; NDI or SDI</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="12.5" text-anchor="middle">
+    <text x="56" y="168" font-weight="700">master</text>
+    <text x="56" y="182" font-size="11.5">4096 &times; 4096</text>
+    <text x="220" y="90" font-weight="700">computer</text>
+    <text x="606" y="98" font-weight="700" font-size="11.5">projector</text>
+    <text x="606" y="114" font-size="11.5">&times; N</text>
+    <text x="706" y="196" font-weight="700">dome</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11" text-anchor="start">
+    <text x="344" y="68" font-weight="700" font-size="12.5">mapping</text>
+    <text x="428" y="96">warp each patch</text>
+    <text x="428" y="112">blend the seams</text>
+    <text x="428" y="128">one patch per</text>
+    <text x="428" y="144">projector</text>
+  </g>
+  <g aria-hidden="true">
+    <circle class="pulse" r="2.6" data-route="a1" cx="104" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="a2" cx="300" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="a3" cx="532" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="a4" cx="644" cy="102" opacity="0"/>
+  </g>
+</svg>
+<figcaption><b>Figure 2.</b> The master into the show computer, through the mapping stage that
+slices it into one patch per projector and blends the seams, to the projectors and the
+dome.</figcaption>
+</figure>
+
+<h2>3 Sound, File to Loudspeakers</h2>
+
+<p>A spatial mix carries one channel per loudspeaker: eight, sixteen, or the room's own count. The
+room decodes those channels onto its speaker positions, or the sources carry positions and the
+software decodes them live.</p>
+
+<p>SpatGRIS takes positions over OSC from ControlGRIS, places each source on the speaker setup
+drawn in the software, and writes one gain per speaker: a source becomes gains across the speakers
+nearest it, so the sound travels as the position moves. DOME pans that way for speaker domes; CUBE
+pans by matrix base amplitude for rings, halls and theatres; HYBRID sits between the two; BINAURAL
+and STEREO fold the mix down to headphones or two channels.</p>
+
+<p>The output leaves through the audio interface, so its channel count sets how many loudspeakers
+the room can drive: one output per speaker, through amplifiers, into the rings at the dome's
+elevations. A festival takes the mix as stereo, 5.1 or 7.1.</p>
+
+<figure>
+<svg viewBox="0 0 772 220" role="img" aria-label="An eight channel audio file into SpatGRIS, which takes positions over OSC and writes one gain per speaker, into the audio interface with one output per speaker, through amplifiers, to the eight speakers of the dome's ring. One colour marks each channel from the file to the ring.">
+  <defs><marker id="bp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+  <g>
+    <rect x="34" y="59.5" width="64" height="8" fill="#b32020"/>
+    <rect x="34" y="70.5" width="64" height="8" fill="#b37320"/>
+    <rect x="34" y="81.5" width="64" height="8" fill="#94b320"/>
+    <rect x="34" y="92.5" width="64" height="8" fill="#20b345"/>
+    <rect x="34" y="103.5" width="64" height="8" fill="#20b3b3"/>
+    <rect x="34" y="114.5" width="64" height="8" fill="#2060b3"/>
+    <rect x="34" y="125.5" width="64" height="8" fill="#7320b3"/>
+    <rect x="34" y="136.5" width="64" height="8" fill="#b32073"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <rect x="134" y="48" width="212" height="108"/>
+    <circle cx="186" cy="116" r="30"/>
+    <rect x="382" y="66" width="160" height="72"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="10" text-anchor="end">
+    <text x="28" y="67">1</text><text x="28" y="78">2</text><text x="28" y="89">3</text>
+    <text x="28" y="100">4</text><text x="28" y="111">5</text><text x="28" y="122">6</text>
+    <text x="28" y="133">7</text><text x="28" y="144">8</text>
+  </g>
+  <g>
+    <rect x="182.5" y="142.5" width="7" height="7" fill="#b32020"/>
+    <rect x="203.7" y="133.7" width="7" height="7" fill="#b37320"/>
+    <rect x="212.5" y="112.5" width="7" height="7" fill="#94b320"/>
+    <rect x="203.7" y="91.3" width="7" height="7" fill="#20b345"/>
+    <rect x="182.5" y="82.5" width="7" height="7" fill="#20b3b3"/>
+    <rect x="161.3" y="91.3" width="7" height="7" fill="#2060b3"/>
+    <rect x="152.5" y="112.5" width="7" height="7" fill="#7320b3"/>
+    <rect x="161.3" y="133.7" width="7" height="7" fill="#b32073"/>
+    <circle cx="176" cy="120" r="3"/>
+  </g>
+  <g fill="none" stroke-width="1" stroke-dasharray="3 2">
+    <line x1="176" y1="120" x2="156" y2="116" stroke="#7320b3"/>
+    <line x1="176" y1="120" x2="164.8" y2="137.2" stroke="#b32073"/>
+  </g>
+  <g>
+    <rect x="398" y="96" width="7" height="7" fill="#b32020"/>
+    <rect x="415" y="96" width="7" height="7" fill="#b37320"/>
+    <rect x="432" y="96" width="7" height="7" fill="#94b320"/>
+    <rect x="449" y="96" width="7" height="7" fill="#20b345"/>
+    <rect x="466" y="96" width="7" height="7" fill="#20b3b3"/>
+    <rect x="483" y="96" width="7" height="7" fill="#2060b3"/>
+    <rect x="500" y="96" width="7" height="7" fill="#7320b3"/>
+    <rect x="517" y="96" width="7" height="7" fill="#b32073"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1">
+    <circle cx="698" cy="120" r="48"/>
+  </g>
+  <g>
+    <rect x="694.5" y="164.5" width="7" height="7" fill="#b32020"/>
+    <rect x="728.4" y="150.4" width="7" height="7" fill="#b37320"/>
+    <rect x="742.5" y="116.5" width="7" height="7" fill="#94b320"/>
+    <rect x="728.4" y="82.6" width="7" height="7" fill="#20b345"/>
+    <rect x="694.5" y="68.5" width="7" height="7" fill="#20b3b3"/>
+    <rect x="660.6" y="82.6" width="7" height="7" fill="#2060b3"/>
+    <rect x="646.5" y="116.5" width="7" height="7" fill="#7320b3"/>
+    <rect x="660.6" y="150.4" width="7" height="7" fill="#b32073"/>
+    <circle cx="698" cy="120" r="2.5"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="1" marker-end="url(#bp)">
+    <line id="b1" x1="98" y1="102" x2="130" y2="102"/>
+    <line id="b2" x1="346" y1="102" x2="378" y2="102"/>
+    <line id="b3" x1="542" y1="102" x2="600" y2="102"/>
+    <line id="b4" x1="604" y1="102" x2="644" y2="116"/>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="11" text-anchor="start">
+    <text x="222" y="82">OSC in</text>
+    <text x="222" y="100">gains out</text>
+  </g>
+  <g fill="#000" font-family="Arial" font-size="12.5" text-anchor="middle">
+    <text x="66" y="168" font-weight="700">multichannel</text>
+    <text x="66" y="182" font-size="11.5">audio file</text>
+    <text x="142" y="68" text-anchor="start" font-weight="700">SpatGRIS</text>
+    <text x="462" y="86" font-weight="700">audio interface</text>
+    <text x="462" y="118" font-size="11">one output per speaker</text>
+    <text x="462" y="132" font-size="10.5">MADI &middot; Dante &middot; USB</text>
+    <text x="571" y="94" font-size="10.5" font-style="italic">amplifiers</text>
+    <text x="698" y="182" font-size="10">front</text>
+    <text x="698" y="198" font-weight="700">dome</text>
+    <text x="698" y="212" font-size="10.5">eight-speaker ring</text>
+  </g>
+  <g aria-hidden="true">
+    <circle class="pulse" r="2.6" data-route="b1" cx="98" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="b2" cx="346" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="b3" cx="542" cy="102" opacity="0"/>
+    <circle class="pulse" r="2.6" data-route="b4" cx="604" cy="102" opacity="0"/>
+  </g>
+</svg>
+<figcaption><b>Figure 3.</b> Eight channels in the file, eight gains out of SpatGRIS, eight
+outputs on the interface, eight speakers round the dome's ring: one colour marks a channel the
+whole way. The dashed lines are the two channels nearest the source.</figcaption>
+</figure>
+
+<p class="src">Source: GRIS, Universit&eacute; de Montr&eacute;al and SAT &mdash;
+<a href="https://github.com/GRIS-UdeM/SpatGRIS">github.com/GRIS-UdeM/SpatGRIS</a>.</p>
+
+<h2>4 Glossary</h2>
+
+<div class="gloss">
+<p><b>BINAURAL.</b> A head-related transfer function mixdown, for headphones.</p>
+<p><b>channel order.</b> Which speaker each of the file's channels and each of the interface's
+outputs answers to.</p>
+<p><b>ControlGRIS.</b> A plugin that sends source positions and trajectories to SpatGRIS over OSC,
+driven from a DAW.</p>
+<p><b>CUBE.</b> SpatGRIS's mode for rings, halls and theatres: matrix base amplitude panning.</p>
+<p><b>DOME.</b> SpatGRIS's mode for speaker domes. Vector base amplitude panning gives a source
+gains across the speakers nearest it.</p>
+<p><b>dome master.</b> A square file holding the hemisphere: the picture fills the circle inscribed
+in it, black fills the rest.</p>
+<p><b>edge blend.</b> Two projectors' patches overlap at their seam; the blend fades one into the
+other.</p>
+<p><b>equidistant azimuthal.</b> The master's projection. Distance from the centre is the angle
+from the zenith, so the rings of latitude sit evenly spaced.</p>
+<p><b>HYBRID.</b> DOME's panning with CUBE's behaviour, for setups between the two.</p>
+<p><b>interface.</b> The box that turns the software's channels into analogue, MADI or Dante
+outputs, one per speaker.</p>
+<p><b>NDI.</b> Picture over the network as a stream, rather than a file on disk.</p>
+<p><b>OSC.</b> Open Sound Control: positions, trajectories and cues sent as messages over the
+network.</p>
+<p><b>SDI.</b> A broadcast coax cable carrying an uncompressed picture between machines.</p>
+<p><b>SpatGRIS.</b> Spatialisation software from GRIS and SAT. It reads source positions over OSC,
+decodes them onto the speaker setup you draw in it &mdash; circles, grids, polyhedrons &mdash; and
+writes one output channel per speaker, 256 in and 256 out.</p>
+<p><b>speaker ring.</b> The speakers at one elevation around the dome; a room adds further rings
+above it.</p>
+<p><b>STEREO.</b> A two-channel mixdown of the spatial mix.</p>
+<p><b>warp.</b> The mesh that bends each projector's patch onto the part of the dome its projector
+sees.</p>
+</div>
+
+</main>
+
+<script>
+/* figure 1 — the master, dragged */
+(function () {
+  var cv = document.getElementById('mx'), rd = document.getElementById('mxout');
+  if (!cv || !cv.getContext || !rd) return;
+  var W = 420, SQ = 20, R = 190, CX = 210, CY = 210;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = W * dpr;
+  var g = cv.getContext('2d');
+  g.scale(dpr, dpr);
+  var S = {az: 330, el: 35}, MARK = '#000', HAIR = '#c9c9c9';
+
+  function place(x, y) {
+    var dx = x - CX, dy = y - CY, r = Math.min(Math.sqrt(dx * dx + dy * dy), R);
+    S.el = r / R * 90;
+    S.az = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+  }
+  function draw() {
+    g.clearRect(0, 0, W, W);
+    g.fillStyle = MARK;                                   /* the frame outside the circle is black */
+    g.fillRect(SQ, SQ, W - 2 * SQ, W - 2 * SQ);
+    g.beginPath(); g.arc(CX, CY, R, 0, 2 * Math.PI);
+    g.fillStyle = '#fff'; g.fill();
+    g.strokeStyle = HAIR; g.lineWidth = 1;
+    [30, 60].forEach(function (d) {
+      g.beginPath(); g.arc(CX, CY, R * d / 90, 0, 2 * Math.PI); g.stroke();
+    });
+    g.beginPath();
+    g.moveTo(CX - R, CY); g.lineTo(CX + R, CY);
+    g.moveTo(CX, CY - R); g.lineTo(CX, CY + R);
+    g.stroke();
+    g.fillStyle = MARK; g.font = '11px Arial'; g.textBaseline = 'alphabetic';
+    g.textAlign = 'center';
+    g.fillText('back', CX, 14);
+    g.fillText('front', CX, W - 6);
+    g.fillText('E', W - 10, CY + 4);
+    g.fillText('W', 10, CY + 4);
+    g.textAlign = 'right';
+    g.fillText('30\u00B0', CX - 58.8, CY + 48.8);
+    g.fillText('60\u00B0', CX - 103.6, CY + 93.6);
+    g.fillText('horizon', CX + 128.4, CY + 142.4);
+    g.textAlign = 'left';
+    g.fillText('zenith', CX + 30, CY - 10);
+    var r = R * S.el / 90, a = S.az * Math.PI / 180;
+    var px = CX + r * Math.sin(a), py = CY + r * Math.cos(a);
+    g.strokeStyle = MARK;
+    g.beginPath(); g.moveTo(CX, CY); g.lineTo(px, py); g.stroke();
+    g.beginPath(); g.arc(px, py, 4, 0, 2 * Math.PI); g.fillStyle = MARK; g.fill();
+  }
+  function readout() {
+    var rp = S.el / 90 * 2048, a = S.az * Math.PI / 180;
+    var x = Math.round(2048 + rp * Math.sin(a)), y = Math.round(2048 + rp * Math.cos(a));
+    rd.innerHTML = 'azimuth <b>' + Math.round(S.az) + '\u00B0</b> \u00B7 elevation <b>'
+      + Math.round(S.el) + '\u00B0</b> \u00B7 4096 master px <b>' + x + ', ' + y + '</b>';
+  }
+  function at(ev) {
+    var b = cv.getBoundingClientRect();
+    return [(ev.clientX - b.left) * (W / b.width), (ev.clientY - b.top) * (W / b.height)];
+  }
+  var drag = false;
+  cv.addEventListener('pointerdown', function (ev) {
+    drag = true;
+    try { cv.setPointerCapture(ev.pointerId); } catch (e) {}
+    var p = at(ev); place(p[0], p[1]); draw(); readout(); ev.preventDefault();
+  });
+  cv.addEventListener('pointermove', function (ev) {
+    if (!drag) return;
+    var p = at(ev); place(p[0], p[1]); draw(); readout(); ev.preventDefault();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (n) {
+    cv.addEventListener(n, function () { drag = false; });
+  });
+  cv.addEventListener('keydown', function (ev) {
+    var step = ev.shiftKey ? 15 : 5, k = ev.key;
+    if (k === 'ArrowLeft') S.az = (S.az - step + 360) % 360;
+    else if (k === 'ArrowRight') S.az = (S.az + step) % 360;
+    else if (k === 'ArrowDown') S.el = Math.max(0, S.el - step);
+    else if (k === 'ArrowUp') S.el = Math.min(90, S.el + step);
+    else return;
+    ev.preventDefault(); draw(); readout();
+  });
+  draw(); readout();
+})();
+
+/* figures 2 and 3 — one dot per hop, and nothing runs while the section is off screen */
+(function () {
+  var dots = [].slice.call(document.querySelectorAll('circle.pulse')).map(function (d, i) {
+    return {d: d, p: document.getElementById(d.getAttribute('data-route')), len: 0, i: i};
+  }).filter(function (o) { return o.p && o.p.getTotalLength; });
+  if (!dots.length) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    dots.forEach(function (o) { o.d.parentNode.removeChild(o.d); });
+    return;
+  }
+  dots.forEach(function (o) { o.len = o.p.getTotalLength(); });
+  var on = false, t0 = 0, RATE = 0.9;
+  function frame(now) {
+    if (!on) return;
+    if (!t0) t0 = now;
+    var t = (now - t0) / 1000;
+    dots.forEach(function (o) {
+      var u = ((t * RATE + o.i * 0.34) % 1 + 1) % 1;
+      var q = o.p.getPointAtLength(u * o.len);
+      o.d.setAttribute('cx', q.x); o.d.setAttribute('cy', q.y);
+      o.d.setAttribute('opacity', (0.12 + 0.78 * Math.sin(Math.PI * u)).toFixed(3));
+    });
+    requestAnimationFrame(frame);
+  }
+  var main = document.querySelector('main');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var was = on; on = e.isIntersecting;
+        if (on && !was) { t0 = 0; requestAnimationFrame(frame); }
+      });
+    }, {rootMargin: '120px 0px'}).observe(main);
+  } else { on = true; requestAnimationFrame(frame); }
+})();
+</script>
+
+</body>
+</html>

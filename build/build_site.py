@@ -11,6 +11,7 @@ Layout this script maintains:
     work/db/             the fulldome festival database: CSV + SQLite sources, parsers, page build
     work/library/        the library section: the shelf (sources.csv, tags.csv) and its build
     build/build_site.py  this script
+    build/nav.py         the site's navigation: one header, injected into every page that asks
     dist/                the deploy root — the only place a server ever serves from
 
 The database page is a generated artifact: markup, script and data all come out of work/db, so
@@ -20,6 +21,8 @@ dist/, so the programme text dumps, the SQLite file and the build scripts stay p
 import argparse, gzip, pathlib, shutil, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent      # domebase/
+sys.path.insert(0, str(ROOT / "build"))
+import nav                                                 # the site's navigation: build/nav.py
 SRC = ROOT / "src"                                         # hand-written site
 DB = ROOT / "work" / "db"                                  # the data pipeline
 LIB = ROOT / "work" / "library"                            # the library section's pipeline
@@ -90,6 +93,11 @@ def main():
             shutil.copytree(item, target, dirs_exist_ok=True)
         else:
             shutil.copy(item, target)
+
+    # the navigation: one header, injected now that every page — generated and hand-written — is in
+    # place. A page asks for it with <!--nav domebase/section/page-->; a page that hides the
+    # navigation carries no marker. It runs after the copies above so no page can miss it.
+    print(f"navigation -> {nav.inject(DIST)} pages")
 
     files = [f for f in DIST.rglob("*") if f.is_file()]
     crlf = [f for f in files if f.suffix.lower() not in BINARY

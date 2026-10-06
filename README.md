@@ -4,7 +4,7 @@ A fulldome resource site, built and deployed as plain static files.
 
 ```
 src/                    what the site is — hand-written pages and assets, nothing generated
-  index.html            the home page: the site name and the five section names, no links
+  index.html            the home page: the header alone — the name and the five section names
   assets/css/site.css   the one stylesheet
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
@@ -19,6 +19,7 @@ src/                    what the site is — hand-written pages and assets, noth
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
 work/lab/               the lab's contracts and checks: CONTRACT.md, SURFACE.md, the node checks
+build/nav.py            the site's navigation: the header, built once and injected into every page
 build/build_site.py     the site build
 dist/                   the deploy root — generated; the only thing that is ever served
 IDEA.md  STYLE.md  README.md  DEPLOY.md
@@ -56,6 +57,27 @@ section's page is `src/database/app.html` plus `src/database/app.js`, its data c
 `src/library/notes`. Both stylesheets are the one `src/assets/css/site.css`. The build writes
 the pages to `dist/database/index.html` and `dist/library/index.html` and nowhere else, so
 there is no built file anyone can edit by mistake.
+
+## Navigation
+
+One header for the whole site, written by `build/nav.py` and injected by the build once every
+page — the generated ones and the hand-written ones — is in place. A page asks for it where its
+header belongs:
+
+```
+<!--nav domebase/lab/instrument-->
+```
+
+The trail is what the header prints: each part above the page is a link, the page itself is text,
+and the part's href is the folder at that depth, so no page hand-writes `../`. A trail that does
+not match the page's own depth stops the build. Under the path sit the five sections, hard left,
+with the current one bold and a section that has no page yet left as a name; at the right, `buy me
+a coffee`. The home page is that header alone.
+
+A page that hides the navigation carries no marker and draws its own corner: `lab/3Dmath`,
+`lab/dome-diagram` and `lab/surface` keep their own path in their own styling. The coffee link
+rides with the header, so it appears on the pages that carry the site's navigation and nowhere
+else.
 
 ## The data
 

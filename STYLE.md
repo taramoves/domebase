@@ -14,17 +14,26 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   underlined until hover.
 - Dead names are fine in this project; dead links are not. The home page names the five
   sections and links the ones that have pages.
-- **Every page carries the site path in its header** — `domebase / section / page` — with each
-  part a link except the page itself, so no page is more than two clicks from the home page.
-  A section index is a document page in the home page's idiom: the path back, then one line per
-  page in that section.
+- **The header is one built block: the path, the site's menu, the coffee link.** `build/nav.py`
+  writes it into every page that asks for it — a page carries `<!--nav domebase/section/page-->`
+  where its header belongs — so the navigation exists once and cannot drift page by page. Each
+  part of the path is a link except the page itself, so no page is more than two clicks from the
+  home page. Under the path sit the five sections, hard left, the current one bold; a section with
+  no page yet stays a name. At the right, `buy me a coffee` — a text link, in the same voice as
+  the menu, on the pages that carry the site's navigation and nowhere else.
+- **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
+  dome pages (`lab/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
+  styling.
+- The home page is the header alone: the name, the five sections, the coffee link — top left.
+- A section index is the header, then one line per page in that section.
 - Ship the smallest artifact that works.
 
 ## Files
 
 ```
 src/                    hand-written pages and assets — what the site is
-  index.html            home: the name and the five section names, linked where a page exists
+  index.html            home: the header alone — the name and the five section names, linked
+                        where a page exists
   assets/css/site.css   the one stylesheet: document pages link it, the database page inlines it
   assets/fonts/         cmu-serif-roman.woff, OFL.txt (kept, unused since Arial)
   database/             app.html + app.js — the database section's own page source
@@ -33,6 +42,7 @@ src/                    hand-written pages and assets — what the site is
   archive/ learn/       a folder per section, as they are built
 work/db/                the database pipeline: sources, parsers, page build
 work/library/           the library pipeline: the shelf (data/) and its build
+build/nav.py            the site's navigation: the header, built once and injected into every page
 build/build_site.py     builds the library page and the database page, then dist/
 dist/                   the deploy root — generated, and the only thing ever served
 IDEA.md STYLE.md README.md DEPLOY.md
