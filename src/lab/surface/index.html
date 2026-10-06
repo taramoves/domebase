@@ -42,6 +42,23 @@ aside#props{flex:0 0 244px;border-left:1px solid #000;overflow:auto;background:#
 .srow .th{width:34px;height:34px;border:1px solid #000;flex:0 0 auto;display:block;background:#000}
 .srow .k{border:0;background:none;font:400 11px/1 Arial;cursor:pointer;padding:2px 3px;color:#000}
 .srow .k:hover{background:#000;color:#fff}
+/* the layer list: the same index as the slide list, without a picture per row. The order is the
+   slide's own, so it belongs with the slide list and stays at the foot of that column while the
+   slides scroll past it — the place a layer list keeps in any editor. */
+.layers{position:sticky;bottom:0;background:#fff;border-top:1px solid #000}
+#layerList{border-bottom:1px solid #000;max-height:38vh;overflow:auto}
+.lrow{display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid #efefef;
+  border-left:4px solid #fff;font:11px/1.3 Arial,Helvetica,sans-serif;cursor:pointer}
+.lrow:hover{background:#efefef}
+.lrow.on{border-left-color:#000;font-weight:700}
+.lrow.off .t{color:#8a8a8a;text-decoration:line-through}
+.lrow.drop{background:#000;color:#fff}
+.lrow .g{flex:0 0 auto;border:1px solid #c9c9c9;padding:2px 3px;min-width:11px;text-align:center;
+  font:400 9px/1 Arial,Helvetica,sans-serif}
+.lrow .t{flex:1 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.lrow .k{border:0;background:none;cursor:pointer;padding:2px 3px;color:#000;
+  font:400 9px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.lrow .k:hover{background:#000;color:#fff}
 #stage{flex:1 1 auto;position:relative;min-width:0;background:#efefef}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #readout{position:absolute;left:0;bottom:0;display:flex;background:#fff;border-top:1px solid #000;
@@ -112,6 +129,10 @@ body.present #stage{background:#000}
     <div class="hd"><span>slides</span><span id="slideCount">0</span></div>
     <div id="slideList"></div>
     <div class="f" style="border-bottom:0"><button class="b wide" id="btnAddSlide">+ slide</button></div>
+    <div class="layers">
+      <div class="hd"><span>layers</span><span id="layerCount">0</span></div>
+      <div id="layerList"></div>
+    </div>
   </aside>
 
   <main id="stage">
@@ -121,7 +142,8 @@ body.present #stage{background:#000}
       <p><kbd>z</kbd> <kbd>shift+z</kbd> undo redo · <kbd>d</kbd> duplicate</p>
       <p><kbd>tab</kbd> next card · <kbd>shift+tab</kbd> the one before</p>
       <p><kbd>cmd/ctrl</kbd>+<kbd>v</kbd> paste an image · drop an image on the dome</p>
-      <p><kbd>[</kbd> <kbd>]</kbd> depth · <kbd>l</kbd> lock · <kbd>del</kbd> delete</p>
+      <p><kbd>[</kbd> <kbd>]</kbd> depth · <kbd>l</kbd> lock · <kbd>del</kbd> delete · the layer list drags to reorder</p>
+      <p>the master is the projector's plate: east lies on its left, the front at its bottom</p>
       <p><kbd>space</kbd> drag to pan · wheel to zoom · <kbd>0</kbd> fit</p>
       <p><kbd>m</kbd> master · <kbd>c</kbd> from centre · <kbd>t</kbd> notes · <kbd>p</kbd> present · <kbd>esc</kbd> leave</p>
       <p>drag a corner to scale, the handle above to turn · double-click text to edit</p>

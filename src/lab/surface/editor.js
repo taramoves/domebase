@@ -162,7 +162,22 @@
 
   /* ---- the pointer ----------------------------------------------------------------------- */
   function pt(e) { var r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
-  function dirAt(p) { var m = G.pxToMaster(p[0], p[1]); return dome.fromMaster(m[0], m[1]); }
+  /* The direction under the pointer. A drag asks for the disc to hold it: past the rim the point
+     comes back to the horizon along its own azimuth, so a card dragged off the dome keeps following
+     the rim instead of freezing while the pointer is outside. */
+  function dirAt(p, onDisc) {
+    var m = G.pxToMaster(p[0], p[1]);
+    if (onDisc) m = dome.disc(m[0], m[1]);
+    return dome.fromMaster(m[0], m[1]);
+  }
+  /* how far the grabbed point sits from the hand, in tangent units squared. Infinity when the
+     pointer has gone behind the card, which is as far from under the hand as a point can get. */
+  function grabErr(d, dir, az, el) {
+    var g = dome.grab(dir, az, el, d.rot);
+    if (!g) return Infinity;
+    var dx = g.x - d.x0, dy = g.y - d.y0;
+    return dx * dx + dy * dy;
+  }
   function snap(v, e) {
     if (e && e.shiftKey) return Math.round(v / 5) * 5;
     if (e && e.altKey) return Math.round(v * 10) / 10;
@@ -207,10 +222,11 @@
       if (S.sel !== hit.id) { S.sel = hit.id; renderProps(); }
       push();
       if (hit.locked) { S.drag = { mode: "locked" }; draw(); return; }
-      var f = dome.basis(hit.az, hit.el), d0 = dirAt(p), t = dome.dot(d0, f.n);
+      /* the frame the hand grabbed in is the frame the card is drawn with, turn included */
+      var f = dome.matrix(hit, texOf(hit)), d0 = dirAt(p), t = dome.dot(d0, f.n);
       var q = t > 0.002 ? { x: dome.dot(d0, f.right) / t, y: dome.dot(d0, f.up) / t } : { x: 0, y: 0 };
-      S.drag = { mode: "move", el: hit, n: f.n, right: f.right, up: f.up, x0: q.x, y0: q.y,
-                 az0: hit.az, el0: hit.el, moved: false };
+      S.drag = { mode: "move", el: hit, rot: num(hit.rot, 0), x0: q.x, y0: q.y,
+                 az0: hit.az, el0: hit.el, last: d0, moved: false };
       try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
       draw();
       return;
@@ -253,16 +269,27 @@
     }
     if (d.mode === "locked") return;
     if (d.mode === "move") {
-      var dd = dirAt(p);
-      if (dome.dot(dd, d.n) <= 0.002) return;
-      var ae = dome.follow(d.x0, d.y0, dd, d.az0, d.el0);
+      /* The pointer's own direction is the card's centre to within the grab offset, so the solve
+         starts from there: same hand position, same answer, nothing carried between events. Two
+         solves get refused. One that does not bring the grabbed point nearer than it already is.
+         And one that swings the card much further than the hand swung, which is what a hand over the
+         middle of the disc asks for — the master's azimuth covers no distance at radius zero, so
+         nothing there can be placed by hand. A card follows the hand or it stands still. */
+      var mp = dome.disc.apply(null, G.pxToMaster(p[0], p[1]));
+      var dd = dome.fromMaster(mp[0], mp[1]), seed = dome.azEl(dd);
+      var ae = dome.follow(d.x0, d.y0, dd, seed[0], seed[1], d.rot);
+      if (grabErr(d, dd, ae[0], ae[1]) > grabErr(d, dd, d.el.az, d.el.el)) return;
+      var swing = Math.acos(clamp(dome.dot(dd, d.last), -1, 1)) / D;
+      var move = Math.acos(clamp(dome.dot(dome.dir(ae[0], ae[1]), dome.dir(d.el.az, d.el.el)), -1, 1)) / D;
+      if (move > Math.max(3, swing * 3)) return;
+      d.last = dd;
       d.el.el = clamp(snap(ae[1], e), 0, 90);
       d.el.az = wrapAz(snap(ae[0], e));
       d.moved = true;
       syncProps(); draw(); return;
     }
     if (d.mode === "scale") {
-      var dir = dirAt(p), q = dome.locate(d.m0, dir);
+      var dir = dirAt(p, true), q = dome.locate(d.m0, dir);
       if (!q) return;
       var gx = d.gx, gy = d.gy, k = 1;
       var X1 = gx ? Math.abs(q.x) : d.tanW0, Y1 = gy ? Math.abs(q.y) : d.tanH0;
@@ -375,6 +402,67 @@
     renderAll(); draw(); save();
   }
 
+  /* ---- the layers of this slide ----------------------------------------------------------- */
+  /* A drawing app's layer list: the cards in the order they are drawn, so the top of the list is the
+     top of the dome, with the slide's notes above them because the prompt draws last. Rows select
+     with a click, drag to reorder, and carry the lock. Reordering the list is the same operation as
+     `[` and `]`, on the same array. */
+  var dragFrom = -1;
+  function layerName(e) {
+    if (e.kind === "text") {
+      var t = String(e.text == null ? "" : e.text).split("\n")[0].trim();
+      return t || "(empty)";
+    }
+    if (e.kind === "image") return "image";
+    return "box " + Math.round(num(e.w, 0)) + "×" + Math.round(num(e.h, 0)) + "°";
+  }
+  function layerRow(e, i, notes) {
+    var row = document.createElement("div");
+    row.className = "lrow" + (e.id === S.sel ? " on" : "") + (e.locked ? " off" : "");
+    row.innerHTML = '<span class="g"></span><span class="t"></span>' +
+                    (notes ? '<span class="k">on top</span>' : '<button class="k">lock</button>');
+    row.querySelector(".g").textContent = e.kind === "text" ? "T" : e.kind === "image" ? "▣" : "▭";
+    row.querySelector(".t").textContent = layerName(e);
+    row.querySelector(".k").title = notes ? "the notes are drawn last, over every card" : "lock";
+    if (notes) return row;
+    row.draggable = true;
+    row.addEventListener("click", function (ev) {
+      if (ev.target.className === "k") { push(); e.locked = !e.locked; renderProps(); save(); return; }
+      S.sel = e.id; renderProps(); draw();
+    });
+    row.addEventListener("dragstart", function (ev) {
+      dragFrom = i;
+      if (ev.dataTransfer) { ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", String(i)); }
+    });
+    row.addEventListener("dragover", function (ev) { ev.preventDefault(); row.classList.add("drop"); });
+    row.addEventListener("dragleave", function () { row.classList.remove("drop"); });
+    row.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      var from = dragFrom;
+      if (ev.dataTransfer && ev.dataTransfer.getData("text/plain")) from = parseInt(ev.dataTransfer.getData("text/plain"), 10);
+      row.classList.remove("drop");
+      moveCard(from, i);
+    });
+    return row;
+  }
+  function moveCard(from, to) {
+    var a = curSlide().elements;
+    if (isNaN(from) || from < 0 || from >= a.length || from === to) return;
+    push();
+    a.splice(to, 0, a.splice(from, 1)[0]);
+    renderProps(); draw(); save();
+  }
+  function renderLayers() {
+    var list = el("layerList");
+    if (!list) return;
+    var slide = curSlide();
+    list.innerHTML = "";
+    var p = promptCard(slide);
+    if (p) list.appendChild(layerRow(p, -1, true));
+    for (var i = slide.elements.length - 1; i >= 0; i--) list.appendChild(layerRow(slide.elements[i], i, false));
+    el("layerCount").textContent = slide.elements.length;
+  }
+
   function syncProps() {
     var e = sel();
     if (!e) return;
@@ -391,6 +479,7 @@
   }
   function renderProps() {
     var e = sel();
+    renderLayers();                     // the list belongs to the slide, not to the selection
     el("pSel").style.display = e ? "" : "none";
     el("pSlide").style.display = e ? "none" : "";
     if (e) {
@@ -745,7 +834,8 @@
                        undo: undo, redo: redo, addEl: addEl, push: push, dirAt: dirAt, pt: pt,
                        zoomAt: zoomAt, open: open, save: save, download: download,
                        exportMaster: exportMaster, addFromPaste: addFromPaste,
-                       thumbs: thumbs, thumbOf: thumbOf, renderSlides: renderSlides };
+                       thumbs: thumbs, thumbOf: thumbOf, renderSlides: renderSlides,
+                       renderLayers: renderLayers, moveCard: moveCard, layerName: layerName };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

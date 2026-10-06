@@ -44,11 +44,14 @@ window.surfaceGL = function (canvas) {
   var FLAT_F = "precision mediump float;uniform vec4 uCol;void main(){gl_FragColor=uCol;}";
   var flat = prog(FLAT_V, FLAT_F);
 
+  /* The master's own frame: u runs west and v runs back, so the disc is the projector's plate
+     rather than a plan of the dome. dome.toMaster() is the same mapping on the CPU, and the two
+     have to agree or the selection chrome walks off its card. */
   var CARD_V = "attribute vec2 aG;uniform vec3 uN,uR,uU;uniform vec2 uTan,uScale,uPan;uniform float uFov;" +
     "varying vec2 vUv;" +
     "void main(){vec3 d=normalize(uN+uR*(aG.x*uTan.x)+uU*(aG.y*uTan.y));" +
     "float th=acos(clamp(d.y,-1.,1.));float r=th/(radians(uFov)*.5);" +
-    "vec2 m=vec2(d.x,d.z);float l=length(m);m = l>1e-6 ? m/l : vec2(0.);" +
+    "vec2 m=vec2(-d.x,d.z);float l=length(m);m = l>1e-6 ? m/l : vec2(0.);" +
     "gl_Position=vec4((m*r-uPan)*uScale,0.,1.);vUv=aG*.5+.5;}";
   var cardMaster = prog(CARD_V, cardFragment(""));
 
@@ -243,9 +246,12 @@ window.surfaceGL = function (canvas) {
   function masterToPx(u, v) { return [V.w / 2 + (u - view.pan[0]) * V.S, V.h / 2 - (v - view.pan[1]) * V.S]; }
   function pxToMaster(x, y) { return [(x - V.w / 2) / V.S + view.pan[0], -(y - V.h / 2) / V.S + view.pan[1]]; }
 
+  /* The audience's eye: a camera at the centre looking along (yaw, pitch), its up toward the
+     zenith. Its right is up x forward — the same handedness as a card's own right, so a card's
+     text reads the same here as it does from a seat under it. */
   function centreCam() {
     var f = dome.dir(view.yaw, view.pitch), up = dome.basis(view.yaw, view.pitch).up;
-    return { f: f, u: up, r: dome.cross(f, up),
+    return { f: f, u: up, r: dome.cross(up, f),
              tanHalf: Math.tan(Math.max(20, Math.min(150, view.fov)) * D / 2) };
   }
 

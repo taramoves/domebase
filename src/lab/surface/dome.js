@@ -1,12 +1,19 @@
 /* dome.js — the dome's geometry.
 
    A domemaster is the projector's own image: a disc whose centre is the zenith and whose rim is
-   the horizon, radius linear in the angle from the zenith. Master coordinates are therefore
-   (u, v) in the unit disc, right = east (az 90), up = back (az 180).
+   the horizon, radius linear in the angle from the zenith.
+
+   It is not a map of the dome seen from above. A projector at the centre throws its plate outward,
+   so the master is the dome as a viewer lying at the centre sees it with their head toward the top
+   of the disc: the back (az 180) at the top, the front (az 0) at the bottom, and east — the head
+   being to the back — on the reader's left. Master coordinates are (u, v) in the unit disc,
+   right = west (az 270), up = back (az 180). Drawn the other way round the master still looks
+   right and the dome comes out mirrored, which is why every frame in here is named and checked.
 
    An element is a flat card tangent to the sphere at (az, el): the dome shows a head-on view of
    it, so its edges stay straight on the dome and its text reads as text. The card's up points at
-   the zenith, which a viewer standing at the centre reads as upright.
+   the zenith, and its right is up x n — the right hand of the viewer standing at the centre
+   reading it. That is the handedness the texture is drawn in.
 
    Loaded as `dome` in the browser and `require()`d by work/lab/check_dome.cjs, so the check runs
    the code the page runs. */
@@ -33,29 +40,38 @@
   }
   function mixv(a, b, t) { return [a[0] + b[0] * t, a[1] + b[1] * t, a[2] + b[2] * t]; }
 
-  /* master <-> direction */
+  /* master <-> direction. u runs west and v runs back: the disc is the projector's plate, and the
+     plate is the mirror of a plan of the dome. */
   function toMaster(d, fov) {
     var th = Math.acos(Math.max(-1, Math.min(1, d[1])));
     var r = th / ((fov || FOV) * D / 2);
     var m = Math.sqrt(d[0] * d[0] + d[2] * d[2]);
     if (m < 1e-9) return [0, 0];
-    return [r * d[0] / m, r * d[2] / m];
+    return [-r * d[0] / m, r * d[2] / m];
   }
   function fromMaster(u, v, fov) {
     var r = Math.sqrt(u * u + v * v), th = r * (fov || FOV) * D / 2;
     if (r < 1e-9) return [0, 1, 0];
     var s = Math.sin(th);
-    return [s * u / r, Math.cos(th), s * v / r];
+    return [-s * u / r, Math.cos(th), s * v / r];
+  }
+  /* A point outside the master's circle comes back to the rim along its own azimuth, so a drag
+     that leaves the dome keeps tracking the horizon instead of stopping dead at the edge. */
+  function disc(u, v) {
+    var r = Math.sqrt(u * u + v * v);
+    return r > 1 ? [u / r, v / r] : [u, v];
   }
 
-  /* a card's frame at (az, el): normal to the sphere, up toward the zenith, right = n x up */
+  /* A card's frame at (az, el): normal to the sphere, up toward the zenith, and right = up x n —
+     the right hand of the viewer standing at the centre facing the card. The texture is drawn
+     along that right, so this sign is what decides whether the dome reads a card or mirrors it. */
   function basis(az, el) { return basisOf(dir(az, el)); }
   function basisOf(d, rot) {
     var n = norm(d);
     var up = [ZEN[0] - n[0] * n[1], ZEN[1] - n[1] * n[1], ZEN[2] - n[2] * n[1]];
     if (len(up) < 1e-6) up = [0, 0, 1];            // at the zenith the zenith is no direction
     up = norm(up);
-    var right = norm(cross(n, up));
+    var right = norm(cross(up, n));
     if (rot) {                                     // turned in its own plane
       var a = rot * D, c = Math.cos(a), s = Math.sin(a);
       var r2 = [right[0] * c + up[0] * s, right[1] * c + up[1] * s, right[2] * c + up[2] * s];
@@ -104,13 +120,15 @@
     return { w: el.w, h: el.w / a };
   }
 
+  /* the frame a card is drawn with: the basis at (az, el), turned in its own plane by rot. Every
+     user of a card frame comes through here — the shader, the handles, the hit test and the drag —
+     so a turned card cannot be operated on in the frame it would have had unturned. */
+  function frameOf(az, el, rot) { return basisOf(dir(az, el), rot); }
+
   /* what the shader takes: the frame plus the tangent-plane half extents */
   function matrix(el, tex) {
-    var f = sizeOf(el, tex), b = basis(el.az, el.el);
-    var rot = (el.rot || 0) * D, c = Math.cos(rot), s = Math.sin(rot);
-    var rt = [b.right[0] * c + b.up[0] * s, b.right[1] * c + b.up[1] * s, b.right[2] * c + b.up[2] * s];
-    var up = [-b.right[0] * s + b.up[0] * c, -b.right[1] * s + b.up[1] * c, -b.right[2] * s + b.up[2] * c];
-    return { n: b.n, right: norm(rt), up: norm(up),
+    var f = sizeOf(el, tex), b = frameOf(el.az, el.el, el.rot);
+    return { n: b.n, right: b.right, up: b.up,
              tanW: Math.tan(f.w * D / 2), tanH: Math.tan(f.h * D / 2), w: f.w, h: f.h };
   }
 
@@ -152,27 +170,61 @@
     return null;
   }
 
+  /* Where the direction d sits on a card standing at (az, el) with its turn in: the card-local
+     coordinates in tangent units, or null when d is behind the card. The drag solve minimises the
+     distance from this to the point the hand grabbed, and the editor uses it to tell whether a
+     solve has improved on where the card already stands. */
+  function grab(d, az, el, rot) {
+    var f = frameOf(az, el, rot), t = dot(d, f.n);
+    if (t <= 1e-4) return null;
+    return { x: dot(d, f.right) / t, y: dot(d, f.up) / t };
+  }
+
   /* The centre a card needs so the direction d sits at the card-local (x0, y0): the point the
      hand grabbed stays under the pointer while the card is dragged. Solved, because the tangent
-     plane at the new centre is not the one the offset was measured in. */
-  function follow(x0, y0, d, az, el) {
+     plane at the new centre is not the one the offset was measured in.
+
+     Damped Newton, and the best iterate is what comes back. A plain Newton step overshoots when
+     the hand moves a long way in one event; with four fixed iterations and no test on the result,
+     the overshoot was itself the answer — a card thrown to the far side of the dome, which is what
+     a fast drag near the rim looked like on screen. Here the step is halved until the residual
+     falls, the loop ends when it converges, and a solve that cannot improve on the seed leaves the
+     seed standing. `rot` is the card's own turn: the frame the hand grabbed in is the frame the
+     card is drawn with.
+
+     A seed near the middle of the disc is a hard place to solve from, and not because of the code:
+     the master's azimuth at radius zero covers no distance, so a hand there asks for an unbounded
+     turn about the zenith. The seed's elevation is held a degree off the pole, and the answer is
+     approximate there — a card above el 84 is placed by its numbers, not by the hand. */
+  function follow(x0, y0, d, az, el, rot) {
+    el = Math.max(-88, Math.min(88, el));
     function err(a, e2) {
-      var f = basis(a, e2), t = dot(d, f.n);
-      if (t <= 1e-6) return [1e3, 1e3];
-      return [dot(d, f.right) / t - x0, dot(d, f.up) / t - y0];
+      var g = grab(d, a, e2, rot);
+      return g ? [g.x - x0, g.y - y0] : null;
     }
-    for (var k = 0; k < 4; k++) {
+    function res(a, e2) { var e0 = err(a, e2); return e0 ? e0[0] * e0[0] + e0[1] * e0[1] : Infinity; }
+    var r0 = res(az, el), best = [az, el], bestR = r0;
+    for (var k = 0; k < 24 && r0 > 1e-20; k++) {
       var e0 = err(az, el);
-      if (Math.abs(e0[0]) + Math.abs(e0[1]) < 1e-12) break;
-      var h = 1e-6, ea = err(az + h, el), eb = err(az, el + h);
-      var J = [[(ea[0] - e0[0]) / h, (eb[0] - e0[0]) / h], [(ea[1] - e0[1]) / h, (eb[1] - e0[1]) / h]];
-      var det = J[0][0] * J[1][1] - J[0][1] * J[1][0];
+      if (!e0) break;
+      var h = 1e-4, ea = err(az + h, el), eb = err(az, el + h);
+      if (!ea || !eb) break;
+      var j00 = (ea[0] - e0[0]) / h, j10 = (ea[1] - e0[1]) / h,
+          j01 = (eb[0] - e0[0]) / h, j11 = (eb[1] - e0[1]) / h;
+      var det = j00 * j11 - j01 * j10;
       if (Math.abs(det) < 1e-12) break;
-      az -= (e0[0] * J[1][1] - e0[1] * J[0][1]) / det;
-      el -= (-e0[0] * J[1][0] + e0[1] * J[0][0]) / det;
-      el = Math.max(-89, Math.min(89, el));
+      var da = -(e0[0] * j11 - e0[1] * j01) / det, de = -(-e0[0] * j10 + e0[1] * j00) / det;
+      var step = 1, took = false;
+      for (var s = 0; s < 16; s++) {
+        var na = az + da * step, ne = Math.max(-89, Math.min(89, el + de * step));
+        var rn = res(na, ne);
+        if (rn < r0) { az = na; el = ne; r0 = rn; took = true; break; }
+        step *= 0.5;                                 // this step climbs: try a shorter one
+      }
+      if (!took) break;                              // no shorter step climbs either: stop here
+      if (r0 < bestR) { bestR = r0; best = [az, el]; }
     }
-    return [az, el];
+    return best;
   }
 
   /* Which way a positive turn about the card's own axis reads on the master: +1 when it turns the
@@ -209,19 +261,21 @@
     return [Math.atan2(d[0], -d[2]) / D, el];
   }
 
-  /* which part of the dome a card stands on, in words. At az +-90 the same text reads sideways,
-     because there the zenith is to the reader's left or right. */
+  /* which part of the dome a card stands on, in words, by compass rather than by where it lands on
+     the master — east is the dome's right side and the master's left. At az +-90 the same text
+     reads sideways, because there the zenith is to the reader's left or right. */
   function azName(az) {
     var a = ((az % 360) + 360) % 360;
     if (a < 45 || a >= 315) return "front";
-    if (a < 135) return "right side";
+    if (a < 135) return "east side";
     if (a < 225) return "back";
-    return "left side";
+    return "west side";
   }
 
   return { D: D, FOV: FOV, FONT: FONT, SUB: SUB,
            dir: dir, norm: norm, dot: dot, cross: cross, len: len, mixv: mixv,
-           toMaster: toMaster, fromMaster: fromMaster, basis: basis, basisOf: basisOf, anchored: anchored,
+           toMaster: toMaster, fromMaster: fromMaster, disc: disc, grab: grab,
+           basis: basis, basisOf: basisOf, frameOf: frameOf, anchored: anchored,
            sizeOf: sizeOf,
            matrix: matrix, point: point, outline: outline, locate: locate, inside: inside,
            pick: pick, grid: grid, azName: azName, azEl: azEl,
