@@ -162,7 +162,8 @@ Columns, tabs and the workflow: `work/library/README.md`.
 ## Lab
 
 `dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page — a
-fullscreen domemaster whose menu is a 2d layer on the dome's back wall — and it links `../../assets/css/site.css`
+fullscreen domemaster whose menu is a layer warped onto the dome's own surface, low on its front
+left — and it links `../../assets/css/site.css`
 from a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
 `#c9c9c9`) with black hairlines. The canvas is the one exception to the sheet's black and
 white, in two modes: the greys of a lit form, or — with `colour` set to `data` or `normal` —
@@ -186,18 +187,27 @@ colours map data, not light). The frame, the tables and every word stay black on
   does not budge. **Every path that changes the scene's orientation must mark the cube stale**
   (`S.cubeStale`): with the master fixed, yaw and pitch no longer re-render anything by themselves,
   so a drag that forgets it does nothing visible unless the spin happens to be re-rendering.
-- **The menu is a 2d layer placed in the master's coordinates, never in the scene.** It is a panel
-  low on the dome's front left — the spot `lab/pitch` gives its phone — centred 45° above the
-  horizon (azimuth 228° of the master) and spanning 18°–72° of altitude and ±62° across, drawn over
-  the canvas so it stays crisp, stays clickable and holds still while the shape turns underneath it.
-  Its up points at the zenith, which is the one orientation that reads from inside a dome, so on the
-  master it sits tilted by about 42°, exactly as the phone's card is tilted. `placeMenu()` derives
-  left, top, width and height from `fov` and pulls the panel in and shortens it if a small `fov`
-  would carry it past the rim. Verify the placement from the transformed quad, not the bounding
-  rectangle: the corners of the layout box pushed through the computed matrix (a `DOMMatrix` on
-  `getComputedStyle`'s transform), each inside `R` — a rotated block's bounding rectangle is much
-  larger than the block and reads as an error that is not there — and a drag on the canvas leaving
-  the layer's rect identical.
+- **The menu is a layer warped onto the dome, never in the scene.** It is a patch of the dome's own
+  surface low on the front left — the spot `lab/pitch` gives its phone — centred at azimuth 228° of
+  the master and 42° above the horizon, spanning ±39° across and ±15° of altitude. Its layout box is
+  300×150 css px, and `placeMenu()` asks where the dome puts that box's four corners, then carries
+  the box onto that quad with a projective map (`matrix3d`): the layer foreshortens as a panel on
+  the dome does — the near edge wider than the far, the rows evenly spaced, the text compressed
+  toward the rim. An element sends straight lines to straight lines only, so the fisheye's own bend
+  across the patch is the one part a single editable element cannot carry. Corners, clicks and
+  inputs all follow the warp, because hit-testing follows the transform exactly.
+- **The layer's place is locked.** It is computed from a fixed 180°, once and on resize only — never
+  in the frame loop, never from `fov` — so no interaction moves it; only the aperture does.
+  `resize()` sizes the canvas and then places the layer, and the interaction block calls `resize()`
+  on a window resize and once on the first frame: placing the layer at init alone puts it on the
+  canvas's default 300×150 aperture and leaves it there. H hides and shows the layer.
+- **The panel's size and columns are the levers on what fits.** 300×150 against the old 488×271 is
+  0.61 of the linear size and 0.34 of the area. The shapes pane takes the full height with its name
+  column half the pane; parameters, view and measures take a third each of the right column, which is
+  0.72 of the shapes pane's width; the measures' value column is a quarter and the parameters'
+  columns are fractions of their own pane, all cutting off rather than spilling. That leaves the
+  shapes pane at fourteen rows of twenty-nine with the parameters and measures panes scrolling,
+  which is the price of a smaller panel.
 - The block is four panes sharing every edge — shapes, parameters, view, measures — in a 2×2 grid at
   a nominal 488 css px and 10px type on a 12.5px line, scaled to the width the dome geometry gives
   it, which shows ten rows a pane: the parameters and the measures fit whole, the 29 shapes scroll. One function (`specRows()`)

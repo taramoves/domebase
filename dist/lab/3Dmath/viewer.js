@@ -184,7 +184,7 @@
     def: null, P: {}, out: null, geo: { triN: 0, lineN: 0, hasTone: false },
     dirty: true, buildMs: 0, lastBuild: 0, stats: {},
     yaw: -0.62, pitch: 0.30, dist: 4.4,
-    dome: true, fov: 180, guides: true, spinAng: 0, faceDist: 1.45, cubeStale: true,
+    fov: 180, guides: true, spinAng: 0, faceDist: 1.45, cubeStale: true,
     spin: true, sweep: false, depth: true, edges: true, faces: true, colour: 2,
     sweepOn: {}, period: {}, fps: 60, frames: 0, fpsAt: 0
   };
@@ -264,6 +264,7 @@
     const bw = Math.round(w * dpr), bh = Math.round(h * dpr);
     if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
     gl.viewport(0, 0, cv.width, cv.height);
+    placeMenu();                            /* the layer's place is a function of the aperture */
     return w / h;
   }
 
@@ -294,7 +295,6 @@
   ];
   const modelM = new Float32Array(16), tmpM = new Float32Array(16);
   const modA = new Float32Array(16), modB = new Float32Array(16);
-  const FLAT_DIR = [0.5187, 0.3863, 0.7616];   /* a fixed three-quarter view for the flat look */
 
   /* the shape's orientation: dragging turns the shape about the vertical, spin adds to it, and
      pitching tips it. The master never moves — a fixed frame is what a master is. */
@@ -426,26 +426,6 @@
     }
   }
 
-  function drawFlat() {
-    gl.useProgram(prog);
-    gl.enable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-    M.lookAt(view, [FLAT_DIR[0] * S.dist, FLAT_DIR[1] * S.dist, FLAT_DIR[2] * S.dist], [0, 0, 0], [0, 1, 0]);
-    M.perspective(proj, 32 * Math.PI / 180, cv.width / cv.height, 0.02, 60);
-    modelMatrix(modelM);
-    M.mul(tmpM, proj, view);
-    M.mul(mvp, tmpM, modelM);
-    gl.uniformMatrix4fv(U.mvp, false, mvp);
-    gl.uniformMatrix4fv(U.view, false, view);
-    gl.uniform3f(U.light, 0.40, 0.52, 0.75);
-    gl.uniform4f(U.levels, 0.58, 0.30, 0.14, 0.05);
-    gl.uniform1f(U.colour, S.colour);
-    gl.uniform1f(U.hasTone, S.geo.hasTone ? 1 : 0);
-    gl.uniform1f(U.near, Math.max(0.01, S.dist - 1.02));
-    gl.uniform1f(U.far, Math.max(0.02, S.dist + 1.02));
-    drawPrims();
-  }
-
   function drawDome() {
     if (S.cubeStale) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, cubeFbo);
@@ -479,8 +459,6 @@
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     if (!S.out) return;
-    if (!S.dome) { drawFlat(aspect); return; }
-    placeMenu();
     drawDome();
   }
 
@@ -666,7 +644,7 @@
   }
 
   function front() {
-    if (S.dome) S.fov = 180;
+    S.fov = 180;
     S.yaw = 0; S.pitch = 0; S.spinAng = 0; S.dist = 4.4;
     S.cubeStale = true;
     const f = document.getElementById('fov');
@@ -675,46 +653,68 @@
   }
 
   /* ---------------- the menu, on the dome, as a layer ----------------
-     The menu is not in the scene. It sits in the master's own coordinates — a panel low on the
-     dome's front left, the spot lab/pitch gives its phone (az 228 of the master's azimuth, 45
-     degrees above the horizon) — and is drawn over the canvas as a 2d layer, so it holds still
-     while the shape turns underneath it. Its up points at the zenith, which is the way round a
-     panel reads from inside a dome; on the master that leaves it tilted, exactly as the phone's
-     card is tilted. Only the placement comes from the geometry: the layer stays a DOM element,
-     so it stays crisp and stays clickable. */
-  const MENU = { az: 228 * Math.PI / 180, alt: 45 * Math.PI / 180,
-                 halfAlt: 27 * Math.PI / 180, halfAz: 62 * Math.PI / 180 };
-  const MENU_W = 488;                              /* the layer's own layout width, in css px */
+     The menu is not in the scene. It is a patch of the dome itself — low on the front left, the
+     spot lab/pitch gives its phone — and is drawn over the canvas as a 2d layer warped onto that
+     patch: the four corners of its layout box are placed where the dome puts them and a projective
+     map (a CSS matrix3d) carries the box onto that quad, so the layer foreshortens the way a panel
+     on the dome does. An element can only send straight lines to straight lines; the fisheye bends
+     the patch's own edges a little, and that residue is what one editable element cannot carry.
+     Nothing moves it: the placement is computed from a fixed 180 degrees, once, and only again on
+     resize — fov, spin and the drag all leave it alone. H hides and shows it. */
+  const MENU = { az: 228 * Math.PI / 180, alt: 42 * Math.PI / 180,
+                 halfAz: 39 * Math.PI / 180, halfAlt: 15 * Math.PI / 180 };
+  const MENU_FOV = 180;                     /* the frame the layer is locked to */
+  /* where the dome puts the four corners of the layout box, in master pixels */
+  function menuCorners() {
+    const R = Math.min(cv.width, cv.height) / 2;
+    const k = R / (MENU_FOV * Math.PI / 360);
+    const at = (az, alt) => {
+      const rr = (Math.PI / 2 - alt) * k;
+      return [cv.width / 2 + rr * Math.cos(az), cv.height / 2 - rr * Math.sin(az)];
+    };
+    return [
+      at(MENU.az - MENU.halfAz, MENU.alt + MENU.halfAlt),    /* the box's top left */
+      at(MENU.az + MENU.halfAz, MENU.alt + MENU.halfAlt),
+      at(MENU.az + MENU.halfAz, MENU.alt - MENU.halfAlt),
+      at(MENU.az - MENU.halfAz, MENU.alt - MENU.halfAlt)];
+  }
+  /* a box of w by h onto that quad, as matrix3d — the standard unit-square homography, scaled */
+  function quadMatrix(w, h, q) {
+    const p0 = q[0], p1 = q[1], p2 = q[2], p3 = q[3];
+    const dx1 = p1[0] - p2[0], dx2 = p3[0] - p2[0], dx3 = p0[0] - p1[0] + p2[0] - p3[0];
+    const dy1 = p1[1] - p2[1], dy2 = p3[1] - p2[1], dy3 = p0[1] - p1[1] + p2[1] - p3[1];
+    let a, b, c, d, e, f, g, i;
+    if (Math.abs(dx3) < 1e-9 && Math.abs(dy3) < 1e-9) {
+      a = p1[0] - p0[0]; b = p2[0] - p1[0]; c = p0[0];
+      d = p1[1] - p0[1]; e = p2[1] - p1[1]; f = p0[1]; g = 0; i = 0;
+    } else {
+      const den = dx1 * dy2 - dx2 * dy1;
+      g = (dx3 * dy2 - dx2 * dy3) / den;
+      i = (dx1 * dy3 - dx3 * dy1) / den;
+      a = p1[0] - p0[0] + g * p1[0]; b = p3[0] - p0[0] + i * p3[0]; c = p0[0];
+      d = p1[1] - p0[1] + g * p1[1]; e = p3[1] - p0[1] + i * p3[1]; f = p0[1];
+    }
+    const m = [a / w, d / w, 0, g / w, b / h, e / h, 0, i / h, 0, 0, 1, 0, c, f, 0, 1];
+    return 'matrix3d(' + m.map(n => Math.round(n * 1e6) / 1e6).join(',') + ')';
+  }
   function placeMenu() {
     const el = document.getElementById('menu');
-    if (!el) return;
-    const R = Math.min(cv.width, cv.height) / 2;
-    const dpr = cv.width / Math.max(1, window.innerWidth);
-    const k = R / (S.fov * Math.PI / 360);         /* master px per radian of altitude */
-    let rC = (Math.PI / 2 - MENU.alt) * k;         /* the centre altitude, as a radius */
-    let hPx = 2 * MENU.halfAlt * k;                /* the panel's depth, radially */
-    let wPx = rC * 2 * MENU.halfAz;                /* and the arc it spans across */
-    /* whatever the fov, the panel stays inside the circle: pull it in, then shorten it */
-    const lim = 0.98 * R, qa = 1 + MENU.halfAz * MENU.halfAz;
-    const disc = hPx * hPx + 4 * qa * (lim * lim - hPx * hPx / 4);
-    const root = disc > 0 ? (-hPx + Math.sqrt(disc)) / (2 * qa) : 0;
-    if (rC > root) { rC = Math.max(0, root); wPx = rC * 2 * MENU.halfAz; }
-    const depth = 2 * Math.max(40, lim - rC);
-    if (hPx > depth) hPx = depth;
-    const ux = Math.cos(MENU.az), uy = -Math.sin(MENU.az);   /* the bearing, in screen axes */
-    const rot = Math.atan2(-ux, uy) * 180 / Math.PI;         /* the layer's up aims at the zenith */
-    el.style.left = ((cv.width / 2 + rC * ux) / dpr) + 'px';
-    el.style.top = ((cv.height / 2 + rC * uy) / dpr) + 'px';
-    el.style.width = MENU_W + 'px';
-    el.style.height = Math.max(24, Math.round(MENU_W * hPx / Math.max(1, wPx))) + 'px';
-    el.style.transform = 'translate(-50%, -50%) rotate(' + (S.dome ? rot.toFixed(2) : 0) + 'deg) scale(' +
-      ((wPx / dpr) / MENU_W).toFixed(4) + ')';
+    if (!el || !cv.width) return;
+    el.style.transformOrigin = '0 0';
+    el.style.left = '0px';
+    el.style.top = '0px';
+    el.style.transform = quadMatrix(el.offsetWidth, el.offsetHeight, menuCorners());
   }
 
   /* ---------------- interaction ---------------- */
   (function () {
+    /* the layer's place follows the aperture, so re-place whenever the aperture can have moved:
+       resize() sizes the canvas and then places the layer. Calling it here as well covers a load
+       that has not run a frame yet. */
+    const replaced = () => { resize(); };
+    window.addEventListener('resize', replaced);
     placeMenu();
-    window.addEventListener('resize', placeMenu);
+    requestAnimationFrame(replaced);
     let down = false, px = 0, py = 0;
     cv.addEventListener('pointerdown', e => {
       down = true; px = e.clientX; py = e.clientY;
@@ -734,14 +734,9 @@
     cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => {
       e.preventDefault();
-      if (S.dome) {
-        S.fov = Math.max(90, Math.min(300, S.fov * Math.exp(e.deltaY * 0.0006)));
-        const f = document.getElementById('fov');
-        if (f) f.value = String(Math.round(S.fov));
-        placeMenu();
-      } else {
-        S.dist = Math.max(1.8, Math.min(18, S.dist * Math.exp(e.deltaY * 0.0012)));
-      }
+      S.fov = Math.max(90, Math.min(300, S.fov * Math.exp(e.deltaY * 0.0006)));
+      const f = document.getElementById('fov');
+      if (f) f.value = String(Math.round(S.fov));
     }, { passive: false });
     cv.addEventListener('dblclick', front);
     window.addEventListener('keydown', e => {
@@ -749,6 +744,10 @@
       if (e.key === 'r') front();
       else if (e.key === 's') { $('#spin').checked = !$('#spin').checked; S.spin = $('#spin').checked; }
       else if (e.key === 'a') { $('#sweep').checked = !$('#sweep').checked; S.sweep = $('#sweep').checked; }
+      else if (e.key === 'h' || e.key === 'H') {
+        const m = document.getElementById('menu');
+        if (m) m.style.display = m.style.display === 'none' ? '' : 'none';
+      }
     });
     $('#spin').addEventListener('change', e => { S.spin = e.target.checked; });
     $('#sweep').addEventListener('change', e => { S.sweep = e.target.checked; });
@@ -759,7 +758,6 @@
     $('#front').addEventListener('click', front);
     /* the dome's own controls; guarded, so the viewer runs before the page markup has them */
     const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
-    on('dome', 'change', e => { S.dome = e.target.checked; S.cubeStale = true; placeMenu(); });
     on('guides', 'change', e => { S.guides = e.target.checked; });
     on('spin', 'change', e => { S.spin = e.target.checked; });
     on('size', 'input', e => {
@@ -768,7 +766,7 @@
     });
     on('fov', 'input', e => {
       const v = parseFloat(e.target.value);
-      if (v) { S.fov = Math.max(90, Math.min(300, v)); placeMenu(); }
+      if (v) S.fov = Math.max(90, Math.min(300, v));
     });
   })();
 
@@ -776,10 +774,7 @@
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
-    if (S.spin) {
-      if (S.dome) { S.spinAng += dt * 0.45; S.cubeStale = true; }
-      else S.yaw += dt * 0.32;
-    }
+    if (S.spin) { S.spinAng += dt * 0.45; S.cubeStale = true; }
     if (sweepParams(now)) S.dirty = true;
     if (S.dirty) S.cubeStale = true;
     if (S.dirty && now - S.lastBuild > Math.max(16, S.buildMs * 1.5)) rebuild(now);

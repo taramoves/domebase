@@ -6,45 +6,59 @@
 <title>domebase/lab/3d math</title>
 <link rel="stylesheet" href="../../assets/css/site.css">
 <style>/* 3d math — this page only. A fullscreen domemaster: the circle is inscribed in the
-   viewport, the centre of the circle is the zenith, and the rim is the horizon, which is how a
-   master is addressed. The menu is not in the scene: it is a 2d layer placed in the master's own
-   coordinates, low on the dome's front left — the spot lab/pitch gives its phone — and it stays
-   there while the shape turns underneath it. It is drawn with its up pointing at the zenith, the
-   way round a panel reads from inside a dome, so on the master it sits tilted like the phone. */
-:root{--menu-w:488px}
+   viewport, the centre of the circle is the zenith and the rim is the horizon. The menu is not in
+   the scene: it is a patch of the dome, low on the front left — the spot lab/pitch gives its phone
+   — drawn over the canvas and warped onto that patch, so it sits on the dome and stays editable.
+   Its placement is locked: computed once from a fixed 180 degrees, and again on resize only.
+   H hides and shows it. */
 #stage{position:fixed;inset:0;background:#fff;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 #cv.drag{cursor:grabbing}
 #stage .say{position:fixed;left:50%;top:12px;transform:translateX(-50%);font-size:12.5px}
 #crumb{position:fixed;left:0;top:0;z-index:4;padding:9px 12px;background:#fff;
   border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
-/* the menu: 488 css px of layout, placed and scaled by placeMenu(). transform-origin is its own
-   centre, so the rotation is about the middle of the block. */
-#menu{position:fixed;left:50%;top:50%;z-index:3;transform-origin:50% 50%;
-  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
-  width:var(--menu-w);height:270px;background:rgba(255,255,255,.95);
-  border:2px solid var(--line);font-size:10px;line-height:1.15}
-#menu > *{overflow:auto;min-width:0;min-height:0}
-.pane{border-top:1px solid var(--line);border-left:1px solid var(--line)}
-#pane-shapes{border-top:0;border-left:0}
-#pane-params{border-top:0}
-#pane-view{border-left:0}
+/* the menu: 330 x 190 css px of layout, warped onto the dome patch by placeMenu(). transform-origin
+   is the box's own top left, so the matrix maps straight onto page coordinates. */
+#menu{position:fixed;left:0;top:0;transform-origin:0 0;z-index:3;
+  display:grid;grid-template-columns:1fr 0.72fr;grid-template-rows:1fr 1fr 1fr;
+  width:300px;height:150px;background:rgba(255,255,255,.95);border:1.5px solid var(--line);
+  font-size:8px;line-height:1.15}
+#menu > .pane{overflow:auto;min-width:0;min-height:0}
+#pane-shapes{grid-column:1;grid-row:1 / 4;border-right:1px solid var(--line)}
+#pane-params{grid-column:2;grid-row:1;border-bottom:1px solid var(--line)}
+#pane-view{grid-column:2;grid-row:2;border-bottom:1px solid var(--line)}
+#pane-measures{grid-column:2;grid-row:3}
 .pane .ph{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);
-  padding:0 4px;font-weight:700;font-size:10px}
-table{width:100%}
+  padding:0 3px;font-weight:700;font-size:8px}
+table{width:100%;table-layout:fixed}
 #index th,#params th,#spec th{cursor:default}
-#index td,#index th,#params td,#params th,#spec td,#spec th{padding:0 4px;font-size:10px}
-td.n,th.n{text-align:right;white-space:nowrap}
+#index td,#index th,#params td,#params th,#spec td,#spec th{padding:0 3px;font-size:8px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.n,th.n{text-align:right}
 tr.row.on td{background:var(--head);font-weight:700}
-#colour{margin-left:5px;padding:0 2px}
-#params input[type=number]{width:46px;padding:0 2px;text-align:right;font-size:10px}
-#params input.p{width:34px;border-color:var(--hair)}
-#params select{max-width:96px;padding:0 1px;font-size:10px}
+/* shapes: the name column at half width, the pane full height, the names cut off as needed */
+#index th:nth-child(1),#index td:nth-child(1){width:50%}
+#index th:nth-child(2),#index td:nth-child(2){width:18%}
+#index th:nth-child(3),#index td:nth-child(3){width:17%}
+#index th:nth-child(4),#index td:nth-child(4){width:15%}
+/* parameters: an eighth of the panel's width a column, and everything cuts off rather than spills */
+#params th:nth-child(1),#params td:nth-child(1){width:42%}
+#params th:nth-child(2),#params td:nth-child(2){width:26%}
+#params th:nth-child(3),#params td:nth-child(3){width:16%}
+#params th:nth-child(4),#params td:nth-child(4){width:16%}
+#params input[type=number]{width:26px;padding:0 1px;text-align:right;font-size:8px}
+#params input.p{width:20px;border-color:var(--hair);font-size:7px}
+#params select{width:100%;max-width:44px;padding:0;font-size:7px}
 td.k{white-space:nowrap}
-#spec td.v{text-align:right;white-space:nowrap}
+/* measures: the measure column as it reads, the value column a quarter, cutting off as needed */
+#spec th:nth-child(1),#spec td:nth-child(1){width:75%}
+#spec th:nth-child(2),#spec td:nth-child(2){width:25%}
+#spec td.v{text-align:right}
 #spec a{text-decoration:none;border-bottom:1px solid var(--hair)}
-#viewbody{padding:2px 4px;display:flex;flex-wrap:wrap;gap:0 7px;align-items:center}
-#viewbody input[type=number]{width:42px;padding:0 2px;text-align:right;font-size:10px}
+#viewbody{padding:1px 2px;display:flex;flex-wrap:wrap;gap:0 3px;align-items:center;line-height:1.1}
+#viewbody input[type=number]{width:24px;padding:0;text-align:right;font-size:8px}
+#viewbody select{font-size:8px;max-width:40px;padding:0}
+#viewbody .chk{white-space:nowrap}
 </style>
 </head>
 <body class="app">
@@ -78,8 +92,7 @@ td.k{white-space:nowrap}
       <label class="chk"><input type="checkbox" id="depth" checked>depth</label>
       <label class="chk"><input type="checkbox" id="edges" checked>edges</label>
       <label class="chk"><input type="checkbox" id="faces" checked>faces</label>
-      <label class="chk">colour<select id="colour" style="font-size:10px"><option value="0">off</option><option value="1">data</option><option value="2" selected>normal</option></select></label>
-      <label class="chk"><input type="checkbox" id="dome" checked>dome</label>
+      <label class="chk">colour<select id="colour"><option value="0">off</option><option value="1">data</option><option value="2" selected>normal</option></select></label>
       <label class="chk">fov<input type="number" id="fov" value="180" min="90" max="300" step="5">°</label>
       <label class="chk">size<input type="number" id="size" value="1.45" min="1.1" max="4" step="0.05"></label>
       <label class="chk"><input type="checkbox" id="guides" checked>guides</label>
