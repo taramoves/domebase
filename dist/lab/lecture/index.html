@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domebase/lab/lecture</title>
+<link rel="stylesheet" href="../../assets/css/site.css">
+<style>/* lecture — this page only. Document page in the sheet's terms: black on white, hairline rules,
+   Arial, no colour. Every sentence on it is a quotation; the only thing written here is the grid. */
+.doc{padding:34px 24px 96px;max-width:760px}
+h2{font-size:14px;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+h2:first-of-type{margin-top:28px}
+h3{font-size:12.5px;margin:30px 0 8px;padding-bottom:3px;border-bottom:1px solid var(--line)}
+h4{font-size:10px;letter-spacing:.13em;text-transform:uppercase;margin:22px 0 4px;font-weight:700}
+p{margin:0 0 11px;max-width:74ch}
+p.lede{font-size:13.5px;line-height:1.5;margin:0 0 4px;padding:10px 0 12px;border-bottom:2px solid var(--line);
+  max-width:74ch}
+p.lede b{font-weight:700}
+p.att{font-size:11.5px;margin:0 0 24px}
+ul{margin:0 0 12px;padding-left:15px;max-width:74ch;list-style:none}
+ul li{margin:0 0 7px;padding-left:12px;border-left:1px solid var(--hair)}
+figure{margin:18px 0}
+.fig{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0 14px;
+  overflow-x:auto}
+figcaption{font-size:11.5px;margin-top:8px;max-width:74ch}
+figcaption b{font-weight:700}
+canvas{display:block;max-width:100%;height:auto}
+/* the sheet styles every th and td for the database grid; a document page's tables are ruled lists */
+table{border-collapse:collapse;width:100%;max-width:74ch;margin:10px 0 12px;font-size:12px}
+th,td{position:static;cursor:auto;background:transparent;border:1px solid var(--line);padding:4px 7px;
+  vertical-align:top;text-align:left;font-size:12px;line-height:1.4}
+th:first-child,td:first-child{border-left:1px solid var(--line)}
+th{font-weight:700;background:var(--head);width:104px}
+table.sig th{width:110px}
+p.tabcap{font-size:11.5px;margin:0 0 14px}
+.src{font-size:11.5px;margin:34px 0 0;padding-top:8px;border-top:1px solid var(--hair);max-width:74ch;
+  text-align:left}
+@media (max-width:700px){.doc{padding:22px 16px 72px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><a href="../../">domebase</a>/<a href="../">lab</a>/lecture</h1>
+  <a class="bmc" href="https://buymeacoffee.com/taramoves" target="_blank" rel="noopener">buy me a coffee</a>
+  <div class="menu"><a href="../../database/">database</a><a href="../../library/">library</a><span class="on">lab</span></div>
+</header>
+
+<main class="doc">
+
+<p class="lede">"<b>more or less continuous expositions by a speaker who wants the audience to learn
+something</b>"</p>
+<p class="att">Bligh, <i>What's the Use of Lectures?</i></p>
+
+<h2>common forms of lecture organization</h2>
+
+<h3>1 hierarchic forms</h3>
+
+<h4>a the classification hierarchy</h4>
+
+<figure>
+<div class="fig" id="f51" aria-label="Diagram redrawn from figure 5.1: a box reading topic, title of lecture, branching below to two circled roman numerals, one and two; the first branch carries points one, two and three, with point two giving (a) and (b); the second branch carries points one and two, with point one giving (a), (b) and (c)."></div>
+<figcaption><b>figure 5.1.</b> example of the classification hierarchy form to show "links".</figcaption>
+</figure>
+
+<figure>
+<div class="fig" id="f52" aria-label="Figure 5.2: one column of a lecture's headings — I, 1, 2, (a), (b), 3, II, 1, (a), (b), (c), 2 — each heading followed by a horizontal rule whose dash pattern marks its level in the hierarchy."></div>
+<figcaption><b>figure 5.2.</b> sequence and probable blackboard organization of a hierarchic
+lecture.</figcaption>
+</figure>
+
+<ul>
+<li>"Assuming that the organization of information requires grouping in some way, this is about the
+simplest form there can be. Each item of information is linked with only one other idea, so that
+the grouping aids the memory while there are a minimum of links to be remembered."</li>
+<li>"Since, for most people, there is a limit to the number of items they can remember under one
+heading, it is advisable to subdivide them when there are more than nine, and preferably when there
+are more than five."</li>
+</ul>
+
+<h4>b the problem-centered lecture</h4>
+
+<figure>
+<div class="fig" id="f53" aria-label="Figure 5.3: an ellipse reading Problem, above three circled hypotheses numbered one, two and three; a row of twelve small circles at the foot as items of information, an arrow from every item to every hypothesis, an arrow from each hypothesis to the problem, and a labelled arrow down the right side reading lines of questioning."></div>
+<figcaption><b>figure 5.3.</b> diagram to illustrate the problem-centered lecture form.</figcaption>
+</figure>
+
+<ul>
+<li>"In using the problem-centered form, the lecturer asks a question or presents a problem and
+thereafter gives information, arguments, and hypotheses as possible solutions, so that everything
+said focuses on the initial problem."</li>
+</ul>
+
+<h3>2 chaining</h3>
+
+<figure>
+<div class="fig" id="f54" aria-label="Figure 5.4: points one, two and three joined by arrows; below three, a descending column three, two, one under the label taking stock; the chain resumes four and five, then a second descending column five to one under taking stock; point six, then a descending column six to one under the label summary."></div>
+<figcaption><b>figure 5.4.</b> diagram to illustrate the organization of a six-point chaining
+lecture with a summary and two periods of taking stock.</figcaption>
+</figure>
+
+<ul>
+<li>"A story consists of a chain of events; perhaps it is because both our experience and our speech
+are in sequential form that chaining seems a natural form of exposition."</li>
+<li>"Assuming the links between one stage and the next are easy to follow, chaining is a form of
+organization that maintains attention very well, as may be evident from the use of stories with
+children; but if attention is lost, it is difficult for the student to pick up the thread again."</li>
+<li>"the lecturer who adopts the chaining form must employ tracking devices so that students may
+mentally return to where they left off."</li>
+</ul>
+
+<h3>3 variations and more complex forms</h3>
+
+<h4>a comparison</h4>
+
+<figure>
+<div class="fig" id="f56" aria-label="The compare and contrast table: a heading cell reading criterion of, over a contrasts band with four numbered rows and one column per item compared, over a similarities band whose three numbered rows sit in a single cell spanning both columns."></div>
+<figcaption><b>figure 5.6.</b> "compare and contrast . . ." variant of figure 5.5.</figcaption>
+</figure>
+
+<ul>
+<li>"A common variant of the hierarchic form is the comparison. It is a form of paired
+classification."</li>
+</ul>
+
+<h4>b the thesis</h4>
+
+<figure>
+<div class="fig" id="f57" aria-label="Figure 5.7: propositions in a chain of argument numbered one, two, three and four, climbing upward; evidence (a), (b), (c) into proposition three, evidence (a) and (b) into proposition two, evidence (a) into proposition one; raw data (i) and (ii) into the (a) that feeds proposition two."></div>
+<figcaption><b>figure 5.7.</b> the form of a thesis lecture.</figcaption>
+</figure>
+
+<ul>
+<li>"If one regards a complex argument as the answer to a problem supported by a chain of reasoning,
+a lecture presenting a thesis is likely to be a combination of the chaining and problem-centered
+forms."</li>
+</ul>
+
+<h4>c logical dichotomy</h4>
+
+<figure>
+<div class="fig" id="f59" aria-label="Figure 5.9: a two by two grid with the columns headed men and women and the rows labelled advantages and disadvantages."></div>
+<figcaption><b>figure 5.9.</b> visual display for the logical dichotomy.</figcaption>
+</figure>
+
+<ul>
+<li>"A particularly useful variation of the hierarchic form is the logical dichotomy. Its merit is
+that it may break down a complex subject without omissions."</li>
+</ul>
+
+<h4>d network</h4>
+
+<figure>
+<div class="fig" id="f512" aria-label="Figure 5.12: eight small circles spaced evenly around a larger circle, every pair of them joined by a dashed line."></div>
+<figcaption><b>figure 5.12.</b> example of a network. "You are invited to construct the pattern of
+relationships by completing the dashed lines in Figure 5.12 (to form solid ones) wherever you
+consider that one factor will affect another."</figcaption>
+</figure>
+
+<ul>
+<li>"Each facet is linked with many others to produce a complex network of interrelationships. But
+because a lecture necessarily takes place in time, it has a linear form."</li>
+</ul>
+
+<h2>making the organization clear</h2>
+
+<ul>
+<li>"It has already been suggested that summaries of a whole lecture both at the beginning and the
+end are often recommended."</li>
+<li>"Certainly the dictum 'First tell 'em what you're gonna tell 'em; then tell 'em; and then tell
+'em what you've told 'em' can usefully be applied to lectures and is particularly appropriate to
+those who teach a difficult subject or who cannot easily get down to the students' level of
+understanding."</li>
+</ul>
+
+<h3>1 introductions: state the organization at the beginning</h3>
+
+<ul>
+<li>"A lecture is likely to be more effective if its organization is given at the beginning."</li>
+</ul>
+
+<table>
+<tr><th>giving framework</th><td>1. Announce lecture topic.<br>2. Outline the structure.<br>3. Indicate its scope.<br>4. Present lecturer's aims.</td></tr>
+<tr><th>setting context</th><td>5. Show importance and relevance of topic.<br>6. Refer to earlier lectures.<br>7. Relate new topic to given material.</td></tr>
+</table>
+
+<ul>
+<li>"Thompson made two pertinent observations. First, lecturers mix and muddle these functions. For
+example, mentioning 1, 4, 6, 7, 4, 3, 5 in that order was typical. It might be better to follow the
+order in Table 5.2."</li>
+</ul>
+
+<figure>
+<div class="fig" id="fseq" aria-label="The introduction's eight items as eight numbered cells that can be moved, opening in the order the book recommends: one, two and three under the band aims; four, five and six under the band context; seven and eight under the band framework. Any order is possible."></div>
+<figcaption><b>table 5.2.</b> recommended sequence for lecture introductions.</figcaption>
+</figure>
+
+<table class="sig">
+<tr><th>introductions</th><td>"What I'm going to talk about is . . . OK . . . All right . . . Last time . . . To begin with . . . Let us begin."</td></tr>
+<tr><th>new key point</th><td>"The next thing is . . . Another development was . . . As you may have heard . . . Firstly . . . You can imagine what happened . . . The problem is . . . The surprising thing is . . . (Display on blackboard or screen)"</td></tr>
+<tr><th>conclusions</th><td>"To sum up . . . In conclusion . . . In this lecture . . . Where does this take us? . . . How does all this answer the question with which we began? . . . Well . . . X, y and z in this lecture lead us to consider question Q next time."</td></tr>
+</table>
+<p class="tabcap"><b>table 5.1.</b> common macro signals of lecture organization.</p>
+
+<h3>2 for each new point: itemize</h3>
+
+<ul>
+<li>"In the absence of an advance organizer, each item provides a peg on which detail may be hung.
+Detail is best remembered by association, and the item provides this."</li>
+<li>"Although it may be obvious to lecturers whenever they are going on to a fresh point, this is
+not so obvious to listeners, least of all students who are not already familiar with the topic."</li>
+<li>"If students daydream, or have microsleeps, they may easily lose the thread of an argument. If
+points are itemized, they will know they have lost a point; they might pick it up again more easily
+and then fill it in with the help of another student later."</li>
+<li>"Itemization is an aid to memory. Revision from notes is more thorough if the students know,
+say, that 'there are five points to be remembered on this topic and seven on the other.'"</li>
+</ul>
+
+<h3>3 for each new point: use a visual buildup</h3>
+
+<ul>
+<li>"The organization of itemized points will be clearer if they are displayed on a blackboard or
+screen immediately after being mentioned."</li>
+<li>"With most lecture forms numbering, indenting, and underlining assist clarity by differentiating
+points and indicating their relative importance."</li>
+<li>"Students are more likely to note what is written on the board partly because they believe it
+must be important if the lecturer has taken the trouble, and partly because they have time to write
+it when the lecturer stops the steady flow of words to do the same."</li>
+<li>"For these two reasons, the display is a valuable technique of emphasis."</li>
+</ul>
+
+<h4>notes on using overhead projector</h4>
+
+<ul>
+<li>"The organization can be progressively revealed or shown all at once."</li>
+<li>"Black on white is perceived 15 percent more quickly and copied with fewer errors than white on
+black."</li>
+<li>"Color is more pleasing against a white background and color coding can be used to contrast
+levels in a hierarchy."</li>
+<li>"Transparencies provide both a permanent record and continuity from one lecture and the
+next."</li>
+<li>"The overlay facility allows both buildup and breakdown of complex diagrams (as with anatomy or
+engine parts)."</li>
+</ul>
+
+<h3>4 for conclusions, take stock and summarize</h3>
+
+<ul>
+<li>"The technique of taking stock, which consists of reviewing what has been said up to that time,
+is valuable for setting the next point in its context. It aids learning by showing how the parts are
+related to the whole."</li>
+</ul>
+
+<p class="src">source: writings/bligh5.pdf, chapter 5, pp. 69–88.</p>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<script src="figures.js"></script>
+
+</body>
+</html>
