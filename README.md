@@ -4,7 +4,7 @@ A fulldome resource site, built and deployed as plain static files.
 
 ```
 src/                    what the site is — hand-written pages and assets, nothing generated
-  index.html            the home page: the header alone — the name and the five section names
+  index.html            the home page: the header alone — the name and the section names
   assets/css/site.css   the one stylesheet
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
@@ -13,15 +13,15 @@ src/                    what the site is — hand-written pages and assets, noth
   lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
+  lab/learn/            the technical basics of fulldome: the master, the two signal chains
   lab/pitch/            the domemaster pitch: the lecture as dome masters, one per slide
   lab/surface/          the slide editor: the deck, the domemaster, the audience's view
-  archive/ lab/ learn/  one folder per section, as they are built
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
 work/lab/               the lab's contracts and checks: CONTRACT.md, SURFACE.md, the node checks
 build/nav.py            the site's navigation: the header, built once and injected into every page
 build/build_site.py     the site build
-dist/                   the deploy root — generated; the only thing that is ever served
+dist/                   the deploy root — generated, and the only thing that is ever served
 IDEA.md  STYLE.md  README.md  DEPLOY.md
 ```
 
@@ -31,7 +31,8 @@ pipeline (`work/db/` — the source CSVs, the provenance, the raw programme dump
 committed from a local build, so a host needs nothing but files.
 
 Style: `STYLE.md` — black on white, Arial, ruled spreadsheets, no colour, no decoration,
-no descriptive lines. Brief: `IDEA.md` — five sections: database, archive, library, lab, learn.
+no descriptive lines. The menu comes from `build/nav.py`: database, library, lab, with the learn
+page inside the lab. Brief: `IDEA.md`.
 
 ## Build
 

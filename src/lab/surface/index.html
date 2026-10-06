@@ -10,18 +10,18 @@
    tables; the dome canvas is the only place the slide's own background decides the colour. */
 html,body{margin:0;height:100%}
 body.tool{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#fff;color:#000;
-  font:12px/1.45 Arial,Helvetica,sans-serif}
+  font:12.5px/1.45 Arial,Helvetica,sans-serif}
 header#top{flex:0 0 auto;display:flex;align-items:center;border-bottom:1px solid #000;height:38px}
-header#top h1{margin:0;padding:0 12px 0 10px;font:400 11px/38px Arial,Helvetica,sans-serif;
-  text-transform:uppercase;letter-spacing:.08em;border-right:1px solid #c9c9c9;white-space:nowrap}
+header#top h1{margin:0;padding:0 14px 0 12px;font:700 14px/38px Arial,Helvetica,sans-serif;
+  border-right:1px solid #c9c9c9;white-space:nowrap}
 header#top h1 a{color:#000;text-decoration:none}
 header#top h1 a:hover{background:#000;color:#fff}
 header#top .sp{flex:1 1 auto}
 .grp{display:flex}
 .grp .b{border:1px solid #000;border-left:0}
 .grp .b:first-child{border-left:1px solid #000}
-.b{font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.07em;
-  padding:7px 9px;background:#fff;color:#000;border:1px solid #000;border-radius:0;cursor:pointer}
+.b{font:12.5px/1 Arial,Helvetica,sans-serif;
+  padding:7px 10px;background:#fff;color:#000;border:1px solid #000;border-radius:0;cursor:pointer}
 .b:hover{background:#000;color:#fff}
 .b[aria-pressed="true"]{background:#000;color:#fff}
 .b.wide{width:100%}
@@ -39,12 +39,12 @@ aside#slides,aside#props{position:static;inset:auto;transform:none;width:auto;he
 aside#slides{flex:0 0 186px;border-right:1px solid #000;overflow:auto;background:#fff}
 aside#props{flex:0 0 244px;border-left:1px solid #000;overflow:auto;background:#fff}
 .hd{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #000;
-  font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+  font:700 12px/1 Arial,Helvetica,sans-serif}
 .srow{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid #c9c9c9;border-left:4px solid #fff;
   cursor:pointer}
 .srow:hover{background:#efefef}
 .srow.on{border-left-color:#000;font-weight:700}
-.srow .n{font:400 10px/1 Arial,Helvetica,sans-serif;letter-spacing:.06em;min-width:14px}
+.srow .n{font:11.5px/1 Arial,Helvetica,sans-serif;min-width:16px}
 .srow .t{flex:1 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .srow .th{width:34px;height:34px;border:1px solid #000;flex:0 0 auto;display:block;background:#000}
 .srow .k{border:0;background:none;font:400 11px/1 Arial;cursor:pointer;padding:2px 3px;color:#000}
@@ -61,25 +61,25 @@ aside#props{flex:0 0 244px;border-left:1px solid #000;overflow:auto;background:#
 .lrow.off .t{color:#8a8a8a;text-decoration:line-through}
 .lrow.drop{background:#000;color:#fff}
 .lrow .g{flex:0 0 auto;border:1px solid #c9c9c9;padding:2px 3px;min-width:11px;text-align:center;
-  font:400 9px/1 Arial,Helvetica,sans-serif}
+  font:10px/1 Arial,Helvetica,sans-serif}
 .lrow .t{flex:1 1 auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .lrow .k{border:0;background:none;cursor:pointer;padding:2px 3px;color:#000;
-  font:400 9px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+  font:10px/1 Arial,Helvetica,sans-serif}
 .lrow .k:hover{background:#000;color:#fff}
 #stage{flex:1 1 auto;position:relative;min-width:0;background:#efefef}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #readout{position:absolute;left:0;bottom:0;display:flex;background:#fff;border-top:1px solid #000;
   border-right:1px solid #000}
 #readout div{padding:5px 8px;border-right:1px solid #c9c9c9;
-  font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  font:11.5px/1 Arial,Helvetica,sans-serif;white-space:nowrap}
 #readout b{font-weight:400}
 #keys{position:absolute;left:0;top:0;background:#fff;border-right:1px solid #000;border-bottom:1px solid #000;
   padding:8px 10px;display:none;max-width:280px}
 #keys.on{display:block}
-#keys p{margin:0 0 4px;font:400 10px/1.5 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.05em}
+#keys p{margin:0 0 5px;font:11.5px/1.5 Arial,Helvetica,sans-serif}
 #keys kbd{font:400 10px/1.5 Arial;border:1px solid #c9c9c9;padding:0 3px}
 .f{padding:7px 9px;border-bottom:1px solid #c9c9c9}
-.lb{display:block;font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.08em;
+.lb{display:block;font:11.5px/1 Arial,Helvetica,sans-serif;
   margin-bottom:4px}
 input[type=number],input[type=text],textarea,select{width:100%;box-sizing:border-box;border:1px solid #000;
   border-radius:0;background:#fff;color:#000;padding:4px 5px;font:11px/1.4 Arial,Helvetica,sans-serif}
@@ -94,7 +94,7 @@ input:focus,textarea:focus,select:focus{outline:1px solid #000;outline-offset:-1
 #bar .b{border:0;border-right:1px solid #c9c9c9;height:32px;padding:0 10px}
 #bar .b:hover{background:#000;color:#fff}
 #bar .sp{flex:1 1 auto}
-#bar .note{padding:0 10px;font:400 10px/1 Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+#bar .note{padding:0 10px;font:11.5px/1 Arial,Helvetica,sans-serif}
 #file,#fileImg{display:none}
 body.present #top,body.present #slides,body.present #props,body.present #bar{display:none}
 body.present #stage{background:#000}

@@ -20,7 +20,10 @@ all in place, so the navigation exists once and cannot drift page by page.
 import re
 from pathlib import Path
 
-SECTIONS = ("database", "archive", "library", "lab", "learn")
+# The menu's sections, in order. A section shows as a link only when dist/<section>/index.html
+# exists; with no page it stays a name. Archive has no page yet, and the learn page sits in the
+# lab, so neither is in the list — add archive back the day it has an index.
+SECTIONS = ("database", "library", "lab")
 COFFEE = "https://buymeacoffee.com/taramoves"
 MARKER = re.compile(r"<!--nav\s*([^>]*?)\s*-->")
 

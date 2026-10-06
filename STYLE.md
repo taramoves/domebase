@@ -18,13 +18,16 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   writes it into every page that asks for it — a page carries `<!--nav domebase/section/page-->`
   where its header belongs — so the navigation exists once and cannot drift page by page. Each
   part of the path is a link except the page itself, so no page is more than two clicks from the
-  home page. Under the path sit the five sections, hard left, the current one bold; a section with
-  no page yet stays a name. At the right, `buy me a coffee` — a text link, in the same voice as
-  the menu, on the pages that carry the site's navigation and nowhere else.
+  home page. Under the path sit the site's sections, hard left, the current one bold; a section
+  with no page yet stays a name. At the right, `buy me a coffee` — a text link, in the same voice
+  as the menu, on the pages that carry the site's navigation and nowhere else.
+- **The menu is `build/nav.py`'s `SECTIONS`**, and a section shows as a link only once its page
+  exists. Today: database, library, lab. The learn page sits in the lab; archive carries no page,
+  so the menu leaves it out until it does.
 - **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
   dome pages (`lab/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
-  styling.
-- The home page is the header alone: the name, the five sections, the coffee link — top left.
+  styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
+- The home page is the header alone: the name, the sections, the coffee link — top left.
 - A section index is the header, then one line per page in that section.
 - Ship the smallest artifact that works.
 
@@ -32,14 +35,14 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ```
 src/                    hand-written pages and assets — what the site is
-  index.html            home: the header alone — the name and the five section names, linked
-                        where a page exists
+  index.html            home: the header alone — the name and the section names, linked where a
+                        page exists
   assets/css/site.css   the one stylesheet: document pages link it, the database page inlines it
   assets/fonts/         cmu-serif-roman.woff, OFL.txt (kept, unused since Arial)
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's own index: one line per page in the lab
-  archive/ learn/       a folder per section, as they are built
+  lab/learn/            the learn page: the master, the two signal chains, a glossary
 work/db/                the database pipeline: sources, parsers, page build
 work/library/           the library pipeline: the shelf (data/) and its build
 build/nav.py            the site's navigation: the header, built once and injected into every page
@@ -257,7 +260,8 @@ That old sheet is kept at `work/db/build/archive/browser_style.print-index.css`.
 ## Open
 
 - Name: `domebase` is neither bought nor final.
-- Sections and order as listed in `IDEA.md`: database, archive, library, lab, learn.
+- The menu's sections are `build/nav.py`'s `SECTIONS`: database, library, lab. The learn page sits
+  in the lab; archive has no page yet, so the menu leaves it out.
 - Publishing: `dist/` is the deploy root, and `DEPLOY.md` has the GitHub Pages / Vercel /
   Netlify recipes. No backend is needed or wanted.
 - Indexing is undecided: nothing carries a `robots` tag yet. The taramoves hub is unlisted and
