@@ -949,9 +949,10 @@ function buildControlsFor(id, name, opts, mode) {
   buildVoiceSettings(voicesBody, config, opts.voices, opts);
 }
 
-// ---- the panel: a corner of the page, and it hides --------------------------------
-// H, or the button in the panel's own status row, hides it; the small corner button
-// brings it back. Hidden is a class on <body>, so nothing has to know the panel's size.
+// ---- the panel and the heading: two corners of the page, and they hide -------------------
+// H, or the button in the panel's own status row, hides them both; the small corner button
+// brings them back. Hidden is a class on <body> (`panel-off`), so nothing has to know either
+// one's size — `looper.css` hides the panel and the heading off that one class.
 
 function togglePanel() { document.body.classList.toggle('panel-off'); }
 

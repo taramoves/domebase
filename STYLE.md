@@ -214,7 +214,8 @@ word stay black on white, and `off` puts the figure back in the greys.
   in the frame loop, never from `fov` — so no interaction moves it; only the aperture does.
   `resize()` sizes the canvas and then places the layer, and the interaction block calls `resize()`
   on a window resize and once on the first frame: placing the layer at init alone puts it on the
-  canvas's default 300×150 aperture and leaves it there. H hides and shows the layer.
+  canvas's default 300×150 aperture and leaves it there. H hides and shows the layer, and the
+  corner heading with it.
 - **The panel's size and columns are the levers on what fits.** 300×150 against the old 488×271 is
   0.61 of the linear size and 0.34 of the area. The shapes pane takes the full height with its name
   column half the pane; parameters and view take half the height each of the right column, which is
@@ -261,9 +262,9 @@ panel its monospace; the heading is the sheet's.
 - **Everything but the drawing sits in a corner.** The heading is the top-left corner, the control
   panel is docked bottom-right. The page itself never scrolls (`html,body{overflow:hidden}`); the
   panel scrolls inside itself.
-- **`h` hides the panel**, and so does `Hide` in the panel's own status row; hidden, a `Controls`
-  button stays in that corner to bring it back. Hidden is a class on `<body>` (`panel-off`), so no
-  element has to know the panel's size. The `keydown` handler on `document` ignores a focused
+- **`h` hides the panel and the heading**, and so does `Hide` in the panel's own status row; hidden,
+  a `Controls` button stays in that corner to bring them back. Hidden is a class on `<body>`
+  (`panel-off`), so no element has to know the panel's or the heading's size. The `keydown` handler on `document` ignores a focused
   `<select>`, which uses the letter keys to jump its options.
 - **The canvas follows the window and the drawing follows the canvas.** `fit()` writes `SIZE` (the
   shorter side of the window), `cx`/`cy` (the window's centre) and `opts.maxR` (`SIZE / 2`), and

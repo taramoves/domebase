@@ -743,8 +743,11 @@
       else if (e.key === 's') { $('#spin').checked = !$('#spin').checked; S.spin = $('#spin').checked; }
       else if (e.key === 'a') { $('#sweep').checked = !$('#sweep').checked; S.sweep = $('#sweep').checked; }
       else if (e.key === 'h' || e.key === 'H') {
-        const m = document.getElementById('menu');
-        if (m) m.style.display = m.style.display === 'none' ? '' : 'none';
+        /* the corner goes with the menu: hidden means the drawing and nothing else */
+        ['menu', 'crumb'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+        });
       }
     });
     $('#spin').addEventListener('change', e => { S.spin = e.target.checked; });

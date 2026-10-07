@@ -7,6 +7,8 @@
              max-height:min(74vh,820px); overflow:auto; padding:14px; background:#000;
              border:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
   body.panel-off .controls{ display:none; }
+  /* the heading goes with it: hidden means the drawing and nothing else */
+  body.panel-off .crumb{ display:none; }
   .controlsToggle{ position:fixed; right:14px; bottom:14px; z-index:2; display:none;
                    background:#000; border:1px solid #444; color:#fff; font-family:inherit;
                    font-size:9px; padding:5px 9px; cursor:pointer; text-transform:uppercase;
