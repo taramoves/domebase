@@ -4,8 +4,9 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ## Rules
 
-- Black on white. All text `#000`. No colour. (Two exceptions, both in Sketch: the 3d math
-  canvas, which may carry the shape's own data, and the three looper pages, which are black.)
+- Black on white. All text `#000`. No colour. (Sketch carries the exceptions: the 3d math canvas
+  may show the shape's own data and its page ground is the one grey, `#333`; the three looper pages
+  are black and keep the prototype's monospace.)
 - **Arial**, everywhere. No webfont, no serif.
 - A spreadsheet, not a document: ruled grid, sheet tabs, boxed controls, `#efefef` header
   fill. Structure comes from rules and fills.
@@ -30,8 +31,8 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 - **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
   dome pages (`sketch/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
-  The three looper pages keep a corner of their own in their own type as well, because the page
-  under it is the prototype's: black, monospace, uppercase small labels.
+  The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
+  on a black tab, because the page under it is the prototype's.
 - The home page is the header alone: the name, the sections, the coffee link — top left.
 - A section index is the header, then one line per page in that section.
 - Ship the smallest artifact that works.
@@ -245,11 +246,25 @@ cells, each with a sweep checkbox that animates it. No mesh files, no library, n
 Each shape states its own invariant in `verify()` and the checks must report zero problems
 before a family joins the page.
 
-**The three loopers are the prototype's own sketches, one to a page.** They came out of
-`taramoves/public/prototypes/av-loopers.html`, where all three sat side by side, and they keep
-that page's styling: black ground, monospace type, a 420 px canvas with its own control panel
-under it. Each is a domemaster in two dimensions — the circle is the dome, the centre the
-zenith, the rim the horizon — so the page reads as a master with nothing projected.
+**The three loopers are the prototype's own sketches, one to a page, and fullscreen like 3d math.**
+They came out of `taramoves/public/prototypes/av-loopers.html`, where all three sat side by side on a
+420 px canvas each; now the canvas is the window and the circle is inscribed in it — the shorter
+side is the diameter — so each page reads as a domemaster (the circle is the dome, the centre the
+zenith, the rim the horizon) with nothing projected. The ground stays the prototype's black and the
+panel its monospace; the heading is the sheet's.
+
+- **Everything but the drawing sits in a corner, and everything in a corner hides.** The heading is
+  the top-left corner, the control panel is docked bottom-right, the porting note is a disclosure at
+  the bottom-left — closed it is one line, open it is a panel. The page itself never scrolls
+  (`html,body{overflow:hidden}`); the panel and the note scroll inside themselves.
+- **`h` hides the panel**, and so does `Hide` in the panel's own status row; hidden, a `Controls`
+  button stays in that corner to bring it back. Hidden is a class on `<body>` (`panel-off`), so no
+  element has to know the panel's size. The `keydown` handler on `document` ignores a focused
+  `<select>`, which uses the letter keys to jump its options.
+- **The canvas follows the window and the drawing follows the canvas.** `fit()` writes `SIZE` (the
+  shorter side of the window), `cx`/`cy` (the window's centre) and `opts.maxR` (`SIZE / 2`), and
+  `p.windowResized = fit`. The grid is re-derived from `opts.maxR` every frame, so a resize writes
+  numbers and rebuilds nothing — the same property that lets a layout change carry the shapes.
 
 ```
 src/sketch/looper.css         the prototype's style block, plus the corner each page draws
@@ -270,9 +285,12 @@ work/sketch/port_from_prototype.py  slices the pages out of the prototype by lin
   canvas and `buildControlsFor('ctrl1', 'SPIRAL / ESCARGOT', opts, 'spiral')` builds the
   panel, both out of `looper.js`; the three pages differ only in the config they declare and
   the name their panel shows.
-- **The prototype's porting note rides on every page.** The plaintext note for the
-  TouchDesigner build sits behind a `<details>` at the foot of all three — the same text three
-  times, because each page is meant to stand alone. Move it to one place if it drifts.
+- **The prototype's porting note is a corner disclosure on every page.** The plaintext note for the
+  TouchDesigner build is the same text three times, because each page is meant to stand alone. Move
+  it to one place if it drifts.
+- **Every difference from the prototype lives in the port script**, one asserted string swap each:
+  `fit()` and the fullscreen canvas, the corner panel and the hide key, the corner heading, the note
+  as a disclosure. A prototype that moves stops the run rather than half-porting.
 
 ## Lab
 

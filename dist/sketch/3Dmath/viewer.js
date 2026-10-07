@@ -343,7 +343,7 @@
     'void main() {',
     '  vec2 p = (gl_FragCoord.xy - 0.5 * uRes) / (0.5 * min(uRes.x, uRes.y));',
     '  float r = length(p);',
-    '  if (r > 1.0) { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); return; }',
+    '  if (r > 1.0) { gl_FragColor = vec4(0.2, 0.2, 0.2, 1.0); return; }',   // #333, the page's ground
     '  float th = r * radians(uFov) * 0.5;',
     '  float ph = atan(p.y, p.x);',
     '  vec3 c = vec3(0.0, 1.0, 0.0);',

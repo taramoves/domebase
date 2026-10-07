@@ -184,7 +184,9 @@ exposes as table cells (with a per-parameter sweep, so any of them animates), bu
 attractor, dome. The page is a fullscreen equidistant domemaster — the circle inscribed in the
 window, its centre the zenith, its rim the horizon — whose menu is a layer warped onto the
 dome's own surface rather than a panel in the scene, so the controls sit on the dome and the
-frame never moves.
+frame never moves. The ground outside the disc is `#333` — the same tone the dome pass clears to —
+so the master reads as a white disc on a dark field and the rim is the drawing's edge, not the
+window's; inside the disc the sheet's greys hold.
 
 ```bash
 node work/lab/check_geom.cjs                                 # the helpers, against known values
@@ -196,10 +198,15 @@ invariant its `verify()` must state with a number. Both checks report zero probl
 family joins the page.
 
 `dist/sketch/{spiral,concentric,pinball}/index.html` are the three AV loopers: the taramoves
-prototype `public/prototypes/av-loopers.html` with its three sketches split one to a page, each
-kept as it was — black ground, monospace type, a 420 px canvas with its own control panel under
-it. Each is a domemaster in two dimensions (the circle is the dome), so nothing is projected to
-read one. The engine is one shared file, `src/sketch/looper.js`; a page declares a config, calls
-into it, and owns nothing else. A shape stores where it belongs rather than where it is, so the
-layout controls move the shapes with their sections. `work/sketch/port_from_prototype.py` writes
-the three pages out of the prototype by line, so a rebuild is a re-run, not a retype.
+prototype `public/prototypes/av-loopers.html` with its three sketches split one to a page and made
+fullscreen — the canvas is the window and the circle is inscribed in it, the shorter side the
+diameter — while the ground stays the prototype's black and the panel its monospace. Each is a
+domemaster in two dimensions (the circle is the dome), so nothing is projected to read one. The
+drawing is the whole page and everything else sits in a corner and hides: the heading top-left, the
+control panel bottom-right (`h`, or `Hide`, closes it; a `Controls` button brings it back), the
+porting note a disclosure bottom-left. The engine is one shared file, `src/sketch/looper.js`; a page
+declares a config, calls into it, and owns nothing else. A shape stores where it belongs rather than
+where it is, so the layout controls move the shapes with their sections. The heading is the sheet's
+own type at the sheet's size on all four sketch pages. `work/sketch/port_from_prototype.py` writes
+the three pages out of the prototype by line — every difference from it an asserted swap — so a
+rebuild is a re-run, not a retype.

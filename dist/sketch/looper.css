@@ -1,7 +1,19 @@
-  html,body{ margin:0; background:#000; color:#fff; font-family: Menlo, Consolas, 'SF Mono', monospace; }
-  .row{ display:flex; gap:24px; flex-wrap:wrap; justify-content:center; padding:30px 20px; align-items:flex-start;}
-  .sketchWrap{ background:#000; border:1px solid #333; width:420px; box-sizing:border-box;}
-  .controls{ padding:14px; border-top:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
+  html,body{ margin:0; height:100%; overflow:hidden; background:#000; color:#fff;
+             font-family: Menlo, Consolas, 'SF Mono', monospace; }
+  /* fullscreen: the canvas is the window, and the drawing is inscribed in it */
+  #sketch1 canvas{ position:fixed; left:0; top:0; z-index:1; display:block; }
+  /* the panel takes the bottom right corner, over the drawing, and scrolls inside itself */
+  .controls{ position:fixed; right:14px; bottom:14px; z-index:2; width:min(360px,92vw);
+             max-height:min(74vh,820px); overflow:auto; padding:14px; background:#000;
+             border:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
+  body.panel-off .controls{ display:none; }
+  .controlsToggle{ position:fixed; right:14px; bottom:14px; z-index:2; display:none;
+                   background:#000; border:1px solid #444; color:#fff; font-family:inherit;
+                   font-size:9px; padding:5px 9px; cursor:pointer; text-transform:uppercase;
+                   letter-spacing:0.05em;}
+  body.panel-off .controlsToggle{ display:block; }
+  .controlsToggle:hover{ border-color:#fff; }
+  .hideBtn{ margin-left:6px; }
 
   .statusRow{ display:flex; align-items:center; gap:8px; user-select:none; padding-bottom:10px; margin-bottom:8px; border-bottom:1px solid #222;}
   .statusRow .toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; }
@@ -53,10 +65,19 @@
 
   input[type=checkbox]{ accent-color:#fff; }
 
-  details.tdnotes{ max-width:760px; margin:0 auto 40px; font-size:12px; line-height:1.6; opacity:0.7; padding:0 20px;}
-  details.tdnotes summary{ cursor:pointer; opacity:0.9; margin-bottom:6px;}
+  /* the porting note is a corner disclosure too: closed it is one line in the corner, open
+     it is a panel over the drawing. The page itself never scrolls. */
+  details.tdnotes{ position:fixed; left:14px; bottom:14px; z-index:2; width:min(620px,92vw);
+                   max-height:min(74vh,820px); overflow:auto; background:#000; margin:0;
+                   border:1px solid #333; padding:0 14px; font-size:12px; line-height:1.6; opacity:0.7; padding:0 20px;}
+  details.tdnotes summary{ cursor:pointer; opacity:0.9; margin:0; padding:9px 0; }
+  details.tdnotes:not([open]){ padding:0 14px; }
+  details.tdnotes[open]{ padding:0 14px 12px; }
   pre{ background:#0a0a0a; border:1px solid #222; padding:10px; overflow-x:auto; font-size:11px;}
-  /* the page's own corner — the prototype carried no way back to a site */
-  .crumb{ padding:18px 20px 0; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; opacity:0.75; }
-  .crumb a{ color:#fff; text-decoration:none; border-bottom:1px solid #333; }
-  .crumb a:hover{ border-color:#fff; }
+  /* the page's own corner, in the sheet's own type and the same shape as 3d math's: the same
+     heading, at the same size, case and place, inverted for a black page. */
+  .crumb{ position:fixed; left:0; top:0; z-index:3; padding:9px 12px; background:#000;
+          border-right:2px solid #fff; border-bottom:2px solid #fff; }
+  .crumb h1{ font:700 16px/1.45 Arial,Helvetica,"Liberation Sans",sans-serif; }
+  .crumb a{ color:#fff; text-decoration:none; }
+  .crumb a:hover{ text-decoration:underline; text-underline-offset:3px; }

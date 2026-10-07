@@ -9,7 +9,7 @@
      integer part is the cell and the fraction is how far into it
    ========================================================================= */
 
-const SIZE = 420;
+let SIZE = 420;      // the drawing's own square: the shorter side of the window, set by fit()
 const SCALE_HZ = [261.63, 293.66, 329.63, 392.00, 440.00,
                   523.25, 587.33, 659.25, 783.99, 880.00];
 const GLYPHS = { star: '\u2605', circle: '\u25CF', triangle: '\u25B2',
@@ -205,14 +205,27 @@ function createLooperSketch(containerId, opts) {
     let loopPos = 0;   // STEP UNITS, always increasing, wraps at totalSteps()
     let prevPos = 0;
     let lastMillis = 0;
-    const cx = SIZE / 2, cy = SIZE / 2;
+    let cx = SIZE / 2, cy = SIZE / 2;
 
     // tells the HTML shape-list panel (if registered) to re-render
     function notify() { if (opts.onShapesChanged) opts.onShapesChanged(); }
 
+    /* The page is fullscreen: the canvas is the window and the circle is inscribed in it, so the
+       shorter side is the diameter and the corners sit outside the dome. The grid is re-derived
+       from opts.maxR every frame (currentGrid), so a resize writes three numbers and rebuilds
+       nothing — no shape is stranded, which is the whole point of the symbolic positions. */
+    function fit() {
+      SIZE = Math.min(p.windowWidth, p.windowHeight);
+      cx = p.windowWidth / 2; cy = p.windowHeight / 2;
+      opts.maxR = SIZE / 2;
+      p.resizeCanvas(p.windowWidth, p.windowHeight);
+    }
+    p.windowResized = fit;
+
     p.setup = () => {
-      const cnv = p.createCanvas(SIZE, SIZE);
+      const cnv = p.createCanvas(1, 1);
       cnv.parent(containerId);
+      fit();
       lastMillis = p.millis();
       cnv.mousePressed(() => handleClick(p.mouseX, p.mouseY));
       seedDefaultShapes();
@@ -700,7 +713,13 @@ function buildStatusRow(container, name, playState, opts) {
   clear.textContent = 'Clear all';
   clear.addEventListener('click', () => { if (opts.api) opts.api.clearAll(); });
 
-  row.appendChild(toggle); row.appendChild(clear);
+  const hide = document.createElement('button');
+  hide.type = 'button';
+  hide.className = 'clearBtn hideBtn';
+  hide.textContent = 'Hide';
+  hide.addEventListener('click', () => togglePanel());
+
+  row.appendChild(toggle); row.appendChild(clear); row.appendChild(hide);
   container.appendChild(row);
 }
 
@@ -929,3 +948,27 @@ function buildControlsFor(id, name, opts, mode) {
   const voicesBody = buildCollapsible(c, 'Shapes & Sounds', true);
   buildVoiceSettings(voicesBody, config, opts.voices, opts);
 }
+
+// ---- the panel: a corner of the page, and it hides --------------------------------
+// H, or the button in the panel's own status row, hides it; the small corner button
+// brings it back. Hidden is a class on <body>, so nothing has to know the panel's size.
+
+function togglePanel() { document.body.classList.toggle('panel-off'); }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'h' && e.key !== 'H') return;
+  const typing = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
+  if (typing) return;                       // a select uses the letter keys to jump its options
+  togglePanel();
+});
+
+(function cornerButton() {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'controlsToggle';
+  b.textContent = 'Controls';
+  b.title = 'h';
+  b.addEventListener('click', togglePanel);
+  document.body.appendChild(b);
+})();
+
