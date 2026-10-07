@@ -387,18 +387,30 @@ fig('f512', 470, 400, function (s) {
   N.forEach(function (n) { node(s, n.x, n.y, r, ''); });
 });
 
-/* ---------- table 5.2. the introduction's items, in any order ---------- */
+/* ---------- the introduction's items, in any order ---------- */
 
 (function () {
-  const cw = 74, x0 = 24, rowY = 116, th = 40, tw = 66;
-  const bands = [['aims', 0, 3], ['context', 3, 6], ['framework', 6, 8]];
-  const order = [1, 2, 3, 4, 5, 6, 7, 8];
-  let held = -1, over = -1, mx = 0, my = 0, el = null;
+  const x0 = 24, rw = 612, rowH = 26, gap = 4, step = rowH + gap, top = 12;
+  const items = [
+    "1. Announce lecture topic.",
+    "2. Outline the structure.",
+    "3. Indicate its scope.",
+    "4. Present lecturer's aims.",
+    "5. Show importance and relevance of topic.",
+    "6. Refer to earlier lectures.",
+    "7. Relate new topic to given material."
+  ];
+  const order = items.map(function (_, i) { return i; });
+  let held = -1, mx = 0, my = 0, el = null;
 
-  function slotAt(x, y) {
-    if (y < rowY - 12 || y > rowY + th + 12) return -1;
-    const i = Math.floor((x - x0) / cw);
-    return (i < 0 || i > 7) ? -1 : i;
+  const rowY = function (i) { return top + i * step; };
+  function rowAt(x, y) {
+    if (x < x0 || x > x0 + rw || y < top || y > rowY(6) + rowH) return -1;
+    return Math.floor((y - top + gap / 2) / step);
+  }
+  function targetAt(x, y) {
+    if (x < x0 - 40 || x > x0 + rw + 40) return -1;
+    return Math.max(0, Math.min(6, Math.floor((y - top + gap / 2) / step)));
   }
   function place(to) {
     if (to === -1 || to === held) return;
@@ -406,58 +418,47 @@ fig('f512', 470, 400, function (s) {
     held = to;
   }
 
-  fig('fseq', 660, 232, function (s) {
-    /* the book's three bands, over the slots it recommends */
-    bands.forEach(function (b) {
-      const a = x0 + b[1] * cw + (cw - tw) / 2, z = x0 + b[2] * cw - (cw - tw) / 2;
-      label(s, b[0], (a + z) / 2, 62, { align: s.CENTER, size: 11 });
-      rule(s, a, z, 74);
-      seg(s, a, 74, a, 84);
-      seg(s, z, 74, z, 84);
-    });
-
-    for (let i = 0; i < 8; i++) {
-      cell(s, x0 + i * cw + (cw - tw) / 2, rowY, tw, th);
-      if (held !== i) label(s, order[i] + '.', x0 + i * cw + (cw - tw) / 2 + 10, rowY + 25, { size: 11 });
+  fig('fseq', 660, 250, function (s) {
+    for (let i = 0; i < 7; i++) {
+      if (held === i) continue;
+      cell(s, x0, rowY(i), rw, rowH);
+      label(s, items[order[i]], x0 + 12, rowY(i) + 17, { size: 11 });
     }
-
+    /* the item in hand: its row is left open where it would land */
     if (held !== -1) {
-      /* the item in hand, and where the book puts it */
-      cell(s, x0 + (order[held] - 1) * cw + (cw - tw) / 2, rowY, tw, th, { hair: true, dash: true });
-      if (over !== -1 && over !== held) cell(s, x0 + over * cw + (cw - tw) / 2, rowY, tw, th, { hair: true, dash: true });
+      cell(s, x0, rowY(held), rw, rowH, { hair: true, dash: true });
       s.push();
       s.fill(PAPER);
       s.stroke(INK);
       s.strokeWeight(1);
-      s.rect(mx - tw / 2, my - th / 2, tw, th);
+      s.rect(x0, my - rowH / 2, rw, rowH);
       s.pop();
-      label(s, order[held] + '.', mx - tw / 2 + 10, my + 5, { size: 11 });
+      label(s, items[order[held]], x0 + 12, my + 5, { size: 11 });
     }
-
-    label(s, 'drag the items', x0, 198, { size: 10.5 });
+    label(s, 'drag the items', x0, 238, { size: 10.5 });
   }, {
     ready: function (s, c) { el = c.elt; },
     mousePressed: function (s) {
-      const i = slotAt(s.mouseX, s.mouseY);
+      const i = rowAt(s.mouseX, s.mouseY);
       if (i === -1) return;
-      held = i; over = i; mx = s.mouseX; my = s.mouseY;
+      held = i; mx = s.mouseX; my = s.mouseY;
       if (el) el.style.cursor = 'grabbing';
       s.redraw();
     },
     mouseDragged: function (s) {
       if (held === -1) return;
       mx = s.mouseX; my = s.mouseY;
-      place(slotAt(mx, my));
+      place(targetAt(mx, my));
       s.redraw();
     },
     mouseReleased: function (s) {
       if (held === -1) return;
-      held = -1; over = -1;
+      held = -1;
       if (el) el.style.cursor = 'default';
       s.redraw();
     },
     mouseMoved: function (s) {
-      if (el) el.style.cursor = (slotAt(s.mouseX, s.mouseY) === -1) ? 'default' : 'grab';
+      if (el) el.style.cursor = (rowAt(s.mouseX, s.mouseY) === -1) ? 'default' : 'grab';
     },
     touchStarted: function (s) { this.mousePressed(s); },
     touchMoved: function (s) { this.mouseDragged(s); },
