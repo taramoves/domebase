@@ -29,7 +29,7 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   sketch holds experiments — work that could go on a dome.**
 
 - **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
-  dome pages (`sketch/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
+  dome pages (`sketch/3Dmath`, `sketch/pitch`, `lab/dome-diagram`, `sketch/slides`) draw their own path in their own
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
   The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
   on a black tab, because the page under it is the prototype's.
@@ -201,7 +201,7 @@ word stay black on white, and `off` puts the figure back in the greys.
   (`S.cubeStale`): with the master fixed, yaw and pitch no longer re-render anything by themselves,
   so a drag that forgets it does nothing visible unless the spin happens to be re-rendering.
 - **The menu is a layer warped onto the dome, never in the scene.** It is a patch of the dome's own
-  surface low on the front left — the spot `lab/pitch` gives its phone — centred at azimuth 228° of
+  surface low on the front left — the spot `sketch/pitch` gives its phone — centred at azimuth 228° of
   the master and 42° above the horizon, spanning ±39° across and ±15° of altitude. Its layout box is
   300×150 css px, and `placeMenu()` asks where the dome puts that box's four corners, then carries
   the box onto that quad with a projective map (`matrix3d`): the layer foreshortens as a panel on
@@ -295,6 +295,20 @@ work/sketch/port_from_prototype.py  slices the pages out of the prototype by lin
   `fit()` and the fullscreen canvas, the corner panel and the hide key, the corner heading, the note
   removed (slice, styles, template). A prototype that moves stops the run rather than half-porting.
 
+`dist/sketch/slides/index.html` is the dome slide editor, hand-written and copied in by the build. It
+links `../../assets/css/site.css` and it is a tool rather than a sheet: a full-height column of
+header, side panels and status bar around the canvas. Black on white holds elsewhere — but the
+canvas takes the slide's own background, which is a colour the author picks (paper and black the
+two buttons that cover most decks), and the ink that reads on it follows its brightness. Two
+sheet rules have to be reset by the page itself: every `aside` is given the fixed, slid-out
+detail-panel treatment, so the tool's two columns set `position:static`, and `th`/`td` are global,
+which is why the panels are built from divs. What it edits is a domemaster, so the page's own
+conventions are the dome's: the centre of the circle is the zenith, the rim is the horizon, and a
+card sits at an azimuth and an elevation with its up pointing at the zenith — which is why the
+presenter's notes read upside down at the back of the dome and why content at azimuth ±90 reads
+sideways. Authoring in the master removes the inverse problem: the pointer's position on the canvas
+*is* the coordinate.
+
 ## Lab
 
 `dist/lab/dome-diagram/index.html` is the SAT dome master, copied in by the build as it stands. It is
@@ -312,20 +326,6 @@ page with a script: the interaction demo in part 0, whose styles are scoped to `
 sheet's `.chip`, `th` and `td` rules are global. Its diagrams are
 inline SVG in the same greys and black hairlines, and a shape that is active is filled where a
 resting one is hollow, since the sheet carries no second colour.
-
-`dist/lab/surface/index.html` is the dome slide editor, hand-written and copied in by the build. It
-links `../../assets/css/site.css` and it is a tool rather than a sheet: a full-height column of
-header, side panels and status bar around the canvas. Black on white holds elsewhere — but the
-canvas takes the slide's own background, which is a colour the author picks (paper and black the
-two buttons that cover most decks), and the ink that reads on it follows its brightness. Two
-sheet rules have to be reset by the page itself: every `aside` is given the fixed, slid-out
-detail-panel treatment, so the tool's two columns set `position:static`, and `th`/`td` are global,
-which is why the panels are built from divs. What it edits is a domemaster, so the page's own
-conventions are the dome's: the centre of the circle is the zenith, the rim is the horizon, and a
-card sits at an azimuth and an elevation with its up pointing at the zenith — which is why the
-presenter's notes read upside down at the back of the dome and why content at azimuth ±90 reads
-sideways. Authoring in the master removes the inverse problem: the pointer's position on the canvas
-*is* the coordinate.
 
 ## Not taramoves
 
