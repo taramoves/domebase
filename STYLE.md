@@ -253,10 +253,9 @@ side is the diameter — so each page reads as a domemaster (the circle is the d
 zenith, the rim the horizon) with nothing projected. The ground stays the prototype's black and the
 panel its monospace; the heading is the sheet's.
 
-- **Everything but the drawing sits in a corner, and everything in a corner hides.** The heading is
-  the top-left corner, the control panel is docked bottom-right, the porting note is a disclosure at
-  the bottom-left — closed it is one line, open it is a panel. The page itself never scrolls
-  (`html,body{overflow:hidden}`); the panel and the note scroll inside themselves.
+- **Everything but the drawing sits in a corner.** The heading is the top-left corner, the control
+  panel is docked bottom-right. The page itself never scrolls (`html,body{overflow:hidden}`); the
+  panel scrolls inside itself.
 - **`h` hides the panel**, and so does `Hide` in the panel's own status row; hidden, a `Controls`
   button stays in that corner to bring it back. Hidden is a class on `<body>` (`panel-off`), so no
   element has to know the panel's size. The `keydown` handler on `document` ignores a focused
@@ -285,12 +284,12 @@ work/sketch/port_from_prototype.py  slices the pages out of the prototype by lin
   canvas and `buildControlsFor('ctrl1', 'SPIRAL / ESCARGOT', opts, 'spiral')` builds the
   panel, both out of `looper.js`; the three pages differ only in the config they declare and
   the name their panel shows.
-- **The prototype's porting note is a corner disclosure on every page.** The plaintext note for the
-  TouchDesigner build is the same text three times, because each page is meant to stand alone. Move
-  it to one place if it drifts.
+- **The porting note is not ported.** The prototype's plaintext note for the TouchDesigner build
+  stays with the build, in the taramoves repo; its stylesheet rules (`details.tdnotes`, `pre`) go
+  with it, so no page carries a rule nothing uses.
 - **Every difference from the prototype lives in the port script**, one asserted string swap each:
   `fit()` and the fullscreen canvas, the corner panel and the hide key, the corner heading, the note
-  as a disclosure. A prototype that moves stops the run rather than half-porting.
+  removed (slice, styles, template). A prototype that moves stops the run rather than half-porting.
 
 ## Lab
 

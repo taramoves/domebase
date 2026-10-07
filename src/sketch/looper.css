@@ -65,15 +65,7 @@
 
   input[type=checkbox]{ accent-color:#fff; }
 
-  /* the porting note is a corner disclosure too: closed it is one line in the corner, open
-     it is a panel over the drawing. The page itself never scrolls. */
-  details.tdnotes{ position:fixed; left:14px; bottom:14px; z-index:2; width:min(620px,92vw);
-                   max-height:min(74vh,820px); overflow:auto; background:#000; margin:0;
-                   border:1px solid #333; padding:0 14px; font-size:12px; line-height:1.6; opacity:0.7; padding:0 20px;}
-  details.tdnotes summary{ cursor:pointer; opacity:0.9; margin:0; padding:9px 0; }
-  details.tdnotes:not([open]){ padding:0 14px; }
-  details.tdnotes[open]{ padding:0 14px 12px; }
-  pre{ background:#0a0a0a; border:1px solid #222; padding:10px; overflow-x:auto; font-size:11px;}
+
   /* the page's own corner, in the sheet's own type and the same shape as 3d math's: the same
      heading, at the same size, case and place, inverted for a black page. */
   .crumb{ position:fixed; left:0; top:0; z-index:3; padding:9px 12px; background:#000;

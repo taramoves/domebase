@@ -203,8 +203,9 @@ fullscreen — the canvas is the window and the circle is inscribed in it, the s
 diameter — while the ground stays the prototype's black and the panel its monospace. Each is a
 domemaster in two dimensions (the circle is the dome), so nothing is projected to read one. The
 drawing is the whole page and everything else sits in a corner and hides: the heading top-left, the
-control panel bottom-right (`h`, or `Hide`, closes it; a `Controls` button brings it back), the
-porting note a disclosure bottom-left. The engine is one shared file, `src/sketch/looper.js`; a page
+control panel bottom-right (`h`, or `Hide`, closes it; a `Controls` button brings it back). The
+prototype's TouchDesigner porting note is not ported. The engine is one shared file,
+`src/sketch/looper.js`; a page
 declares a config, calls into it, and owns nothing else. A shape stores where it belongs rather than
 where it is, so the layout controls move the shapes with their sections. The heading is the sheet's
 own type at the sheet's size on all four sketch pages. `work/sketch/port_from_prototype.py` writes
