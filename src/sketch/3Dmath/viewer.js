@@ -91,7 +91,7 @@
     'uniform float uNear;',
     'uniform float uFar;',
     'uniform float uHasTone;', /* 1 when the family supplied its own data value */
-    'varying float vInk;',    /* ink, in the sheet's greys */
+    'varying float vInk;',    /* the ink level, painted as it is: light ink on a black sheet */
     'varying float vCov;',    /* coverage: the depth fade alone, for the spectrum */
     'varying float vData;',   /* the shape's own value, 0..1 */
     'varying vec3 vNrm;',     /* model space, so colour stays fixed to the object */
@@ -123,7 +123,7 @@
 
   const FS = [
     'precision mediump float;',
-    'uniform float uColor;',  /* 0 = the sheet's greys, 1 = the shape's own value, 2 = the normal */
+    'uniform float uColor;',  /* 0 = ink, 1 = the shape's own value, 2 = the normal */
     'varying float vInk;',
     'varying float vCov;',
     'varying float vData;',
@@ -135,12 +135,12 @@
     '}',
     'void main() {',
     '  float cov = clamp(vInk, 0.0, 1.0);',
-    '  if (uColor < 0.5) { gl_FragColor = vec4(vec3(1.0 - cov), 1.0); return; }',
-    /* colour is the shape's own value, laid on white in proportion to how near
+    '  if (uColor < 0.5) { gl_FragColor = vec4(vec3(cov), 1.0); return; }',   // the ink, unprefixed
+    /* colour is the shape's own value, laid on black in proportion to how near
        it is — the reference's look: flat data colour, no lighting model */
     '  float az = atan(vNrm.y, vNrm.x) / 6.2831853 + 0.5;',
     '  vec3 hue = spectrum(dot(vNrm, vNrm) > 0.25 && uColor > 1.5 ? az : vData);',
-    '  gl_FragColor = vec4(mix(vec3(1.0), hue, clamp(vCov, 0.0, 1.0)), 1.0);',
+    '  gl_FragColor = vec4(mix(vec3(0.0), hue, clamp(vCov, 0.0, 1.0)), 1.0);',
     '}'
   ].join('\n');
 
@@ -359,7 +359,7 @@
     '    g = max(g, 0.5 * (1.0 - smoothstep(0.0, w, abs(r - 0.6667))));',
     '    g = max(g, 0.4 * (1.0 - smoothstep(0.0, w, abs(p.x))));',
     '    g = max(g, 0.4 * (1.0 - smoothstep(0.0, w, abs(p.y))));',
-    '    col = mix(col, vec3(0.0), clamp(g, 0.0, 1.0) * 0.5);',
+    '    col = mix(col, vec3(1.0), clamp(g, 0.0, 1.0) * 0.5);',   // light guides, black disc,
     '  }',
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
@@ -452,7 +452,7 @@
       gl.disable(gl.CULL_FACE);
       for (let i = 0; i < 6; i++) {
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, cube, 0);
-        gl.clearColor(1, 1, 1, 1);
+        gl.clearColor(0, 0, 0, 1);   // the sheet under the ink, black
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         drawFace(FACE_LOOK[i]);
       }
@@ -475,7 +475,7 @@
 
   function draw() {
     const aspect = resize();
-    gl.clearColor(1, 1, 1, 1);
+    gl.clearColor(0.2, 0.2, 0.2, 1);   // the field, under everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     if (!S.out) return;
     drawDome();

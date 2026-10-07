@@ -11,12 +11,13 @@
    — drawn over the canvas and warped onto that patch, so it sits on the dome and stays editable.
    Its placement is locked: computed once from a fixed 180 degrees, and again on resize only.
    H hides and shows it. */
-/* the ground outside the disc is a dark grey — the same tone the dome pass clears to — so the
-   master reads as a white disc on a dark field and the rim is the drawing's edge, not the window's */
+/* The ground outside the disc is a dark grey, the tone the dome pass clears its outside to, so
+   the rim reads as the drawing's edge rather than the window's. Inside the disc the sheet is black
+   and the shapes are light ink on it. */
 #stage{position:fixed;inset:0;background:#333;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 #cv.drag{cursor:grabbing}
-#stage .say{position:fixed;left:50%;top:12px;transform:translateX(-50%);font-size:12.5px}
+#stage .say{position:fixed;left:50%;top:12px;transform:translateX(-50%);font-size:12.5px;color:#fff}
 #crumb{position:fixed;left:0;top:0;z-index:4;padding:9px 12px;background:#fff;
   border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
 /* the menu: 330 x 190 css px of layout, warped onto the dome patch by placeMenu(). transform-origin

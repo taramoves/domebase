@@ -4,9 +4,9 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ## Rules
 
-- Black on white. All text `#000`. No colour. (Sketch carries the exceptions: the 3d math canvas
-  may show the shape's own data and its page ground is the one grey, `#333`; the three looper pages
-  are black and keep the prototype's monospace.)
+- Black on white. All text `#000`. No colour. (Sketch carries the exceptions: the 3d math canvas may
+  show the shape's own data, and its disc is black on the page's one grey, `#333`; the three looper
+  pages are black and keep the prototype's monospace.)
 - **Arial**, everywhere. No webfont, no serif.
 - A spreadsheet, not a document: ruled grid, sheet tabs, boxed controls, `#efefef` header
   fill. Structure comes from rules and fills.
@@ -174,11 +174,15 @@ Columns, tabs and the workflow: `work/library/README.md`.
 fullscreen domemaster whose menu is a layer warped onto the dome's own surface, low on its front
 left — and it links `../../assets/css/site.css`
 from a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
-`#c9c9c9`) with black hairlines. The canvas is the one exception to the sheet's black and
-white, in two modes: the greys of a lit form, or — with `colour` set to `data` or `normal` —
-the full spectrum of the shape's own value, which is how Knill's figures are coloured (his
-colours map data, not light). The frame, the tables and every word stay black on white, and
-`off` puts the figure back in the greys.
+`#c9c9c9`) with black hairlines. **Inside the disc the sheet is black and the ink is the positive**:
+the cube faces clear to black, each face's grey is painted as itself, so a lit form reads light on
+dark rather than dark on light, and the guides mix toward white rather than black. The ground
+outside the rim is `#333` — the tone the dome pass clears its outside to — so the rim reads as the
+drawing's edge rather than the window's. The canvas is otherwise the one exception to the sheet's
+black and white, in two modes: the greys of a lit form, or — with `colour` set to `data` or
+`normal` — the full spectrum of the shape's own value, laid on the black sheet, which is how
+Knill's figures are coloured (his colours map data, not light). The frame, the tables and every
+word stay black on white, and `off` puts the figure back in the greys.
 
 **The dome format.** The page is a domemaster, not a viewport with a picture in it:
 

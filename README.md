@@ -184,9 +184,10 @@ exposes as table cells (with a per-parameter sweep, so any of them animates), bu
 attractor, dome. The page is a fullscreen equidistant domemaster — the circle inscribed in the
 window, its centre the zenith, its rim the horizon — whose menu is a layer warped onto the
 dome's own surface rather than a panel in the scene, so the controls sit on the dome and the
-frame never moves. The ground outside the disc is `#333` — the same tone the dome pass clears to —
-so the master reads as a white disc on a dark field and the rim is the drawing's edge, not the
-window's; inside the disc the sheet's greys hold.
+frame never moves. Inside the disc the sheet is black and the ink is the positive: the cube faces
+clear black, each face's grey is painted as itself, and the guides — rim, 30°, 60°, axes — mix
+toward white. The ground outside the rim is `#333`, the tone the dome pass clears its outside to, so
+the rim reads as the drawing's edge rather than the window's.
 
 ```bash
 node work/lab/check_geom.cjs                                 # the helpers, against known values
