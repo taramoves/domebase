@@ -4,7 +4,8 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ## Rules
 
-- Black on white. All text `#000`. No colour. (The lab canvas is the one exception — see Lab.)
+- Black on white. All text `#000`. No colour. (Two exceptions, both in Sketch: the 3d math
+  canvas, which may carry the shape's own data, and the three looper pages, which are black.)
 - **Arial**, everywhere. No webfont, no serif.
 - A spreadsheet, not a document: ruled grid, sheet tabs, boxed controls, `#efefef` header
   fill. Structure comes from rules and fills.
@@ -22,11 +23,15 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   with no page yet stays a name. At the right, `buy me a coffee` — a text link, in the same voice
   as the menu, on the pages that carry the site's navigation and nowhere else.
 - **The menu is `build/nav.py`'s `SECTIONS`**, and a section shows as a link only once its page
-  exists. Today: database, library, lab. The learn page sits in the lab; archive carries no page,
-  so the menu leaves it out until it does.
+  exists. Today: database, library, lab, sketch. The learn page sits in the lab; archive carries
+  no page, so the menu leaves it out until it does. **The lab holds tools and research; the
+  sketch holds experiments — work that could go on a dome.**
+
 - **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
-  dome pages (`lab/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
+  dome pages (`sketch/3Dmath`, `lab/dome-diagram`, `lab/surface`) draw their own path in their own
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
+  The three looper pages keep a corner of their own in their own type as well, because the page
+  under it is the prototype's: black, monospace, uppercase small labels.
 - The home page is the header alone: the name, the sections, the coffee link — top left.
 - A section index is the header, then one line per page in that section.
 - Ship the smallest artifact that works.
@@ -43,6 +48,9 @@ src/                    hand-written pages and assets — what the site is
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's own index: one line per page in the lab
   lab/learn/            the learn page: the master, the two signal chains, a glossary
+  sketch/index.html     the sketch's own index: one line per page in the sketch
+  sketch/looper.css     the three looper pages' stylesheet
+  sketch/looper.js      the looper engine they share: grid, sketch, control panel
 work/db/                the database pipeline: sources, parsers, page build
 work/library/           the library pipeline: the shelf (data/) and its build
 build/nav.py            the site's navigation: the header, built once and injected into every page
@@ -159,9 +167,9 @@ disk, a link pointing at a work that is not on the shelf, an idea resting on a r
 on the shelf, or two rows on one file; it warns on a row with no year and on a tag used once.
 Columns, tabs and the workflow: `work/library/README.md`.
 
-## Lab
+## Sketch
 
-`dist/lab/3Dmath/index.html` is hand-written and copied in by the build. It is an app page — a
+`dist/sketch/3Dmath/index.html` is hand-written and copied in by the build. It is an app page — a
 fullscreen domemaster whose menu is a layer warped onto the dome's own surface, low on its front
 left — and it links `../../assets/css/site.css`
 from a section folder. Figures are drawn in the sheet's own greys (`#efefef`, `#e2e2e2`,
@@ -222,20 +230,51 @@ colours map data, not light). The frame, the tables and every word stay black on
   returns to the default view. The frame never moves.
 
 ```
-src/lab/index.html         the lab's index: the path back, one line per page
-src/lab/3Dmath/index.html  the page: markup and the page's own CSS
-src/lab/3Dmath/viewer.js   the renderer and the controls
-src/lab/3Dmath/geom.js     the geometry helpers every family builds on
-src/lab/3Dmath/fam_*.js    one file per family: polytopes packing fractal surface curve attractor dome
-work/lab/CONTRACT.md       what a family file must do, and how it is checked
-work/lab/check_geom.cjs    the helpers against known values
-work/lab/check_family.cjs  every shape at its default and at each parameter extreme
+src/sketch/index.html         the sketch's index: the path back, one line per page
+src/sketch/3Dmath/index.html  the page: markup and the page's own CSS
+src/sketch/3Dmath/viewer.js   the renderer and the controls
+src/sketch/3Dmath/geom.js     the geometry helpers every family builds on
+src/sketch/3Dmath/fam_*.js    one file per family: polytopes packing fractal surface curve attractor dome
+work/lab/CONTRACT.md          what a family file must do, and how it is checked
+work/lab/check_geom.cjs       the helpers against known values
+work/lab/check_family.cjs     every shape at its default and at each parameter extreme
 ```
 
 Every shape is procedural and parameterised — a function of numbers the page exposes as table
 cells, each with a sweep checkbox that animates it. No mesh files, no library, no network.
 Each shape states its own invariant in `verify()` and the checks must report zero problems
 before a family joins the page.
+
+**The three loopers are the prototype's own sketches, one to a page.** They came out of
+`taramoves/public/prototypes/av-loopers.html`, where all three sat side by side, and they keep
+that page's styling: black ground, monospace type, a 420 px canvas with its own control panel
+under it. Each is a domemaster in two dimensions — the circle is the dome, the centre the
+zenith, the rim the horizon — so the page reads as a master with nothing projected.
+
+```
+src/sketch/looper.css         the prototype's style block, plus the corner each page draws
+src/sketch/looper.js          the engine: grid builders, the sketch factory, the control panel
+src/sketch/spiral/            the spiral looper: its config, and one call into the engine
+src/sketch/concentric/        the rings looper: the same, its own config
+src/sketch/pinball/           the ball looper: the same, and its own physics
+work/sketch/port_from_prototype.py  slices the pages out of the prototype by line
+```
+
+- **A shape stores where it belongs, never where it is.** Its position is symbolic — a cell
+  index, or `ring:split` — and its angle, radius and trigger time are re-derived from the
+  current grid every frame, so changing turns, cell count, rings or splits carries the shapes
+  with their sections instead of stranding them off the end of a curve.
+- **Shape and sound are one thing.** A voice is a shape and the sound it makes; a star is a
+  sound that is drawn.
+- **A page owns a config and nothing else.** `createLooperSketch('sketch1', opts)` builds the
+  canvas and `buildControlsFor('ctrl1', 'SPIRAL / ESCARGOT', opts, 'spiral')` builds the
+  panel, both out of `looper.js`; the three pages differ only in the config they declare and
+  the name their panel shows.
+- **The prototype's porting note rides on every page.** The plaintext note for the
+  TouchDesigner build sits behind a `<details>` at the foot of all three — the same text three
+  times, because each page is meant to stand alone. Move it to one place if it drifts.
+
+## Lab
 
 `dist/lab/dome-diagram/index.html` is the SAT dome master, copied in by the build as it stands. It is
 a tool, not a sheet: `body` is a column of one header and one stage, the drawing fills the stage and

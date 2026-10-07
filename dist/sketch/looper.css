@@ -1,0 +1,62 @@
+  html,body{ margin:0; background:#000; color:#fff; font-family: Menlo, Consolas, 'SF Mono', monospace; }
+  .row{ display:flex; gap:24px; flex-wrap:wrap; justify-content:center; padding:30px 20px; align-items:flex-start;}
+  .sketchWrap{ background:#000; border:1px solid #333; width:420px; box-sizing:border-box;}
+  .controls{ padding:14px; border-top:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
+
+  .statusRow{ display:flex; align-items:center; gap:8px; user-select:none; padding-bottom:10px; margin-bottom:8px; border-bottom:1px solid #222;}
+  .statusRow .toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; }
+  .statusRow .dot{ width:9px; height:9px; border:1px solid #fff; flex-shrink:0;}
+  .statusRow .dot.on{ background:#fff; }
+  .statusRow .name{ letter-spacing:0.06em; font-size:12px;}
+  .statusRow .state{ opacity:0.5; font-size:11px;}
+  .clearBtn{ margin-left:auto; background:#000; border:1px solid #444; color:#fff; font-size:9px;
+             padding:4px 8px; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em;}
+  .clearBtn:hover{ border-color:#fff; }
+
+  details.settingsGroup{ border-top:1px solid #222; }
+  details.settingsGroup summary{ cursor:pointer; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; opacity:0.55; padding:9px 0; list-style:none; }
+  details.settingsGroup summary::-webkit-details-marker{ display:none; }
+  details.settingsGroup summary::before{ content:"+ "; }
+  details.settingsGroup[open] summary::before{ content:"\2013 "; }
+  details.settingsGroup[open] summary{ opacity:0.9; }
+  .settingsBody{ display:flex; flex-direction:column; gap:10px; padding:2px 0 12px; }
+
+  .sliders{ display:flex; flex-direction:column; gap:8px;}
+  .ctrl{ display:flex; align-items:center; gap:8px;}
+  .ctrl label{ width:88px; flex-shrink:0; opacity:0.7;}
+  .ctrl input[type=range]{ flex:1; accent-color:#fff; }
+  .ctrl .val{ width:48px; text-align:right; opacity:0.5; flex-shrink:0;}
+  .ctrl.checkrow label{ width:auto; opacity:0.85;}
+  select{ background:#000; color:#fff; border:1px solid #444; font-family:inherit; font-size:11px; padding:2px 4px; flex:1;}
+
+  .voiceHint{ opacity:0.45; font-size:10px; line-height:1.5; }
+  .voiceBlock{ border-bottom:1px solid #1a1a1a; padding-bottom:7px; }
+  .voiceRow{ display:flex; align-items:center; gap:9px; padding:5px 0;}
+  .voiceGlyph{ width:28px; height:28px; flex-shrink:0; cursor:pointer; box-sizing:border-box;
+               border:1px solid #444; display:flex; align-items:center; justify-content:center; font-size:14px; background:#000;}
+  .voiceGlyph.selected{ border-color:#fff; outline:1px solid #fff; outline-offset:2px;}
+  .voiceRow .vname{ width:52px; flex-shrink:0;}
+  .pitchSel{ flex:0 0 74px; font-size:10px; }
+  .editBtn{ margin-left:auto; background:#000; border:1px solid #444; color:#fff; font-size:9px; padding:3px 7px; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em;}
+  .editBtn.open{ border-color:#fff; }
+  .editPanel{ padding:8px 0 4px 20px; margin-left:8px; border-left:1px solid #222; display:flex; flex-direction:column; gap:7px; }
+  .auditionBtn{ background:#000; border:1px solid #444; color:#fff; font-size:9px; padding:4px 0; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+
+  .placedRow{ display:flex; align-items:center; gap:6px; padding:0 0 4px 37px; }
+  .placedRow.empty{ opacity:0.35; }
+  .placedCount{ flex:1; opacity:0.6; font-size:10px; }
+  .miniBtn{ background:#000; border:1px solid #444; color:#fff; font-size:9px; padding:3px 6px;
+            cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.04em; flex-shrink:0;}
+  .miniBtn:hover:not(:disabled){ border-color:#fff; }
+  .miniBtn.delBtn:hover:not(:disabled){ border-color:#ff5b8d; color:#ff5b8d; }
+  .miniBtn:disabled{ opacity:0.4; cursor:default; }
+
+  input[type=checkbox]{ accent-color:#fff; }
+
+  details.tdnotes{ max-width:760px; margin:0 auto 40px; font-size:12px; line-height:1.6; opacity:0.7; padding:0 20px;}
+  details.tdnotes summary{ cursor:pointer; opacity:0.9; margin-bottom:6px;}
+  pre{ background:#0a0a0a; border:1px solid #222; padding:10px; overflow-x:auto; font-size:11px;}
+  /* the page's own corner — the prototype carried no way back to a site */
+  .crumb{ padding:18px 20px 0; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; opacity:0.75; }
+  .crumb a{ color:#fff; text-decoration:none; border-bottom:1px solid #333; }
+  .crumb a:hover{ border-color:#fff; }

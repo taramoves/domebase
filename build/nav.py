@@ -22,8 +22,9 @@ from pathlib import Path
 
 # The menu's sections, in order. A section shows as a link only when dist/<section>/index.html
 # exists; with no page it stays a name. Archive has no page yet, and the learn page sits in the
-# lab, so neither is in the list — add archive back the day it has an index.
-SECTIONS = ("database", "library", "lab")
+# lab, so neither is in the list — add archive back the day it has an index. The sketch section
+# holds the experiments — work that could go on a dome — where the lab holds tools and research.
+SECTIONS = ("database", "library", "lab", "sketch")
 COFFEE = "https://buymeacoffee.com/taramoves"
 MARKER = re.compile(r"<!--nav\s*([^>]*?)\s*-->")
 

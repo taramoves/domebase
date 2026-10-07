@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domebase/sketch/pinball</title>
+<link rel="stylesheet" href="../looper.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+</head>
+<body>
+
+<header class="crumb"><h1><a href="../../">domebase</a>/<a href="../">sketch</a>/pinball</h1></header>
+
+<div class="row">
+  <div class="sketchWrap">
+    <div id="sketch1"></div>
+    <div class="controls" id="ctrl1"></div>
+  </div>
+</div>
+
+<details class="tdnotes">
+<summary>Notes for the TouchDesigner build (plaintext, read if porting)</summary>
+<pre>
+CORE PRINCIPLE: A SHAPE'S POSITION IS DERIVED, NEVER STORED.
+This is the single most important structural decision in here, and it's
+what makes the layout controls (turns, cell count, rings, splits) safe
+to change at runtime.
+
+  the problem it solves: shapes used to store absolute angle/radius.
+  change "turns" and the entire spiral curve moves underneath them —
+  stored angles now point off the end of the curve or to a radius the
+  curve no longer passes through, so shapes detach from the grid and
+  their trigger positions go out of range. same class of bug for cell
+  count, ring count, and splits.
+
+  the fix: a shape stores only WHERE IT BELONGS, symbolically, and its
+  actual angle/radius/trigger-time are recomputed from the current grid
+  every frame (resolveAll). shapes therefore move WITH their sections
+  when the layout changes, which is the intuitive behavior.
+
+  quantized shape stores:
+      sectionKey  -- cell index (spiral) or "ring:split" (rings)
+      slot, slotCount -- its position among the shapes sharing that
+                         section, so several shapes in one cell stay
+                         evenly spread and ordered
+  free shape stores:
+      loopT       -- normalized 0..1 position along the loop (its
+                     timing, preserved across layout changes)
+      angle       -- rings only: its true angular position, which is
+                     independent of ring/split counts
+      radialFrac  -- spiral only: 0..1 across the band's thickness
+
+  when a count shrinks, symbolic keys are clamped into range
+  (cell = min(cell, cellCount-1), etc.) so nothing is ever orphaned.
+
+  in TD: this is the difference between baking transforms into the
+  shapes table versus keeping the table symbolic and computing
+  positions in CHOPs downstream. Keep it symbolic.
+
+TRIGGER POSITION IN STEP UNITS:
+  - loop position is measured in STEPS, advancing at exactly 1.0 per
+    stepDurationMs and wrapping at totalSteps (cellCount for spiral,
+    ringsCount for rings).
+  - spiral: stepPos = arcLengthAt(angle) / arcStep, where
+    arcStep = totalArcLength / cellCount. the integer part IS the cell,
+    the fraction IS how far into it — cell membership and trigger time
+    are literally the same number, so they cannot disagree. (earlier
+    versions mixed angle-space cells with arc-space timing; that was
+    the timing bug.)
+  - rings: stepPos = (radius-minR)/(maxR-minR) * ringsCount.
+  - firing = window-crossing test on the monotonically increasing loop
+    position, which handles wraparound and any framerate.
+
+PLAYBACK DIRECTION (outward / inward), per sketch:
+  - the loop counter always increases monotonically (that keeps the
+    crossing test simple). direction is applied as a MAPPING instead:
+        triggerAt = outward ? stepPos : (totalSteps - stepPos)
+    and the drawn playhead reads
+        readPos   = outward ? loopPos : (totalSteps - loopPos)
+  - so inward playback needs no separate reversed-counter logic; one
+    subtraction covers both the audio and the visual.
+  - in TD: a Math CHOP negate+offset on the counter, or just reverse
+    the Lookup CHOP's index.
+
+PITCH MODE (up / straight / down), per voice:
+  - replaces the old rise-with-position checkbox. 'up' takes the scale
+    degree from the shape's normalized loop position (outward = higher),
+    'down' uses (1 - that position) so it starts high and descends,
+    'straight' is one fixed pitch for the voice regardless of placement.
+  - stored on the voice, so melodic and fixed voices can coexist.
+
+VOICES: SHAPE AND SOUND ARE ONE THING
+    type   -- 'star'|'circle'|'triangle'|'square'|'flower'. this is
+              simultaneously the glyph drawn AND the identity of the
+              sound. picking a star means you place a star and it sounds
+              like a star; voices are named after their shape for
+              exactly that reason.
+    color, wave, pitchMul, harmonic, harmonicLevel, filterHz,
+    attack, release, gain, pitchMode
+  - a shape's voiceIndex is a foreign key into this table and gives it
+    both appearance and sound.
+
+SOUND DESIGN: each note = two oscillators (fundamental + optional
+harmonic partial at a settable ratio/level) -> lowpass filter that
+closes as the note decays -> attack/release gain envelope -> stereo
+panner. The harmonic partial is what makes the voices timbrally
+distinct; a single bare oscillator makes them all the same beep with a
+different waveform.
+  - STILL A PROTOTYPE SYNTH. for the real build use sampled one-shots
+    (an Audio File In CHOP per voice, triggered by the same table).
+    The parameters here map onto that world, so the data model is
+    unchanged — only the sound source is.
+
+CHANNEL ROUTING: channel count is not a separate setting; it equals the
+angular sections already present (splitsCount for rings, cells per
+revolution for spiral). A shape's channel is which angular section its
+angle falls in. Simulated with stereo pan here; in TD use a Select CHOP
+keyed on channel into an Audio Device Out CHOP with one physical output
+per section.
+
+TAPERED LOG SPIRAL WITH A CENTER HUB:
+  - radius grows by a constant multiplier per turn (r = hubR *
+    e^(k*angle)), like a nautilus shell, so coil spacing stays
+    proportional rather than crowding at the center.
+  - the first full revolution holds radius FLAT at hubR — that flat turn
+    IS the hub, so the ribbon's inner edge meets the hub all the way
+    around, not at a single seam.
+  - turns sets growth per turn: turnGrowth = (maxR/hubR)^(1/turns).
+    fewer = looser, more = tighter.
+  - band width IS the gap between coils: bandAt(a) = radiusAt(a+2*pi) -
+    radiusAt(a), clamped to maxR.
+  - closed-form arc length exists because the tangent-to-radius angle is
+    constant: ds/da = r*sqrt(1+k^2). cells are equal-ARC segments, so
+    every drawn cell is equal travel and therefore equal duration.
+
+SPIRAL PLAYHEAD = ONE CELL AT A TIME: no sweeping line. The cell at
+floor(readPos) is filled, stepping every stepDurationMs; shapes inside
+play as it lights. A shape at cell center fires halfway through the
+highlight, off-center shapes proportionally earlier/later, which keeps
+free placement meaningful. Rings keeps a continuously expanding circle,
+the natural playhead for a growing radius.
+
+MULTIPLE SHAPES PER SECTION: clicking an occupied quantized cell ADDS
+another. The cell's shapes redistribute evenly across arc within it via
+slot/slotCount, firing in sequence across that cell's highlight rather
+than all at once.
+
+MUTE / DELETE PER SHAPE:
+  - every shape carries id and muted fields. clicking a shape ON THE
+    BOARD toggles muted — quick and reversible, appropriate for a
+    stray/casual click. muted shapes are skipped by the trigger test
+    entirely (no sound, no flash) and drawn at low alpha so mute state
+    is visible at a glance.
+  - deleting is deliberate and lives in the "Shapes on board" panel:
+    a plain list of every shape (its voice, and which cell/ring:split
+    or "Free" it belongs to) with per-row Mute and Delete buttons.
+    Splitting these two actions across two surfaces — quick toggle on
+    the board, precise removal in a list — avoids accidental deletes
+    from imprecise clicks while keeping muting fast.
+  - the panel re-renders via an opts.onShapesChanged hook the sketch
+    calls after every add/remove/mute (from either the canvas or the
+    panel itself), so the two surfaces never drift out of sync.
+  - in TD: id/muted are just two more columns on the shapes Table DAT;
+    a muted row is filtered out of whatever drives the Trigger CHOP,
+    the same way it's filtered out of the JS forEach here.
+
+TRIGGER FEEDBACK: a fired shape briefly scales up and eases back over
+~220ms — no outline, halo, or wash. In TD: drive scale from a Trigger
+CHOP decay off the same pulse that fires the sound.
+
+MULTI-USER (future): local clicks and phone/network messages both just
+add/remove a row in the shapes table, e.g. { "sketchId":"rings-1",
+"action":"add", "sectionKey":"3:5", "voiceIndex":2, "userId":"phone_23" }.
+Because positions are derived, a remote client only needs to name a
+section — it never has to know the current geometry.
+
+AUDIO IMPL: plain Web Audio API, no p5.sound dependency.
+</pre>
+</details>
+
+<script src="../looper.js"></script>
+<script>
+// ---- instantiate -----------------------------------------------------
+const config = { ringsCount: 5, splitsCount: 8,
+                 quantize: false,      // pinball placement is always free-form
+                 direction: 'outward', // fixed; unused by physics, kept for shared code
+                 dropIntervalMs: 1200, gravity: 520, bounce: 0.72,
+                 activeVoiceIndex: 0, showChannelNumbers: true,
+                 stepDurationMs: 350 };
+const voices = defaultVoices();
+const playState = { playing: true };
+const opts = { mode: 'pinball', config: config, voices: voices,
+               playState: playState, minR: 0, maxR: SIZE / 2 };
+
+createLooperSketch('sketch1', opts);
+buildControlsFor('ctrl1', 'PINBALL / GRAVITY', opts, 'pinball');
+</script>
+</body>
+</html>

@@ -10,15 +10,23 @@ src/                    what the site is — hand-written pages and assets, noth
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's index: one line per page in the lab
-  lab/3Dmath/           the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   lab/learn/            the technical basics of fulldome: the master, the two signal chains
   lab/pitch/            the domemaster pitch: the lecture as dome masters, one per slide
   lab/surface/          the slide editor: the deck, the domemaster, the audience's view
+  sketch/index.html     the sketch's index: one line per page in the sketch
+  sketch/3Dmath/        the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
+  sketch/looper.css     the three loopers' stylesheet, and the corner they draw
+  sketch/looper.js      the looper engine they share: grid builders, sketch, control panel
+  sketch/concentric/    the rings looper: a 420 px canvas and its control panel
+  sketch/pinball/       the ball looper: the same page, its own physics
+  sketch/spiral/        the spiral looper: the same page, its own curve
 work/db/                the fulldome festival database: sources, parsers, page build
 work/library/           the library: the shelf (data/) and its build
-work/lab/               the lab's contracts and checks: CONTRACT.md, SURFACE.md, the node checks
+work/lab/               the contracts and checks for the lab and 3d math: CONTRACT.md, SURFACE.md,
+                        PITCH.md, the node checks
+work/sketch/            the sketch's brief, and the port that wrote the looper pages out
 build/nav.py            the site's navigation: the header, built once and injected into every page
 build/build_site.py     the site build
 dist/                   the deploy root — generated, and the only thing that is ever served
@@ -31,8 +39,9 @@ pipeline (`work/db/` — the source CSVs, the provenance, the raw programme dump
 committed from a local build, so a host needs nothing but files.
 
 Style: `STYLE.md` — black on white, Arial, ruled spreadsheets, no colour, no decoration,
-no descriptive lines. The menu comes from `build/nav.py`: database, library, lab, with the learn
-page inside the lab. Brief: `IDEA.md`.
+no descriptive lines. The menu comes from `build/nav.py`: database, library, lab, sketch — the lab
+holds tools and research, the sketch holds experiments. Brief: `IDEA.md`.
+
 
 ## Build
 
@@ -71,14 +80,15 @@ header belongs:
 
 The trail is what the header prints: each part above the page is a link, the page itself is text,
 and the part's href is the folder at that depth, so no page hand-writes `../`. A trail that does
-not match the page's own depth stops the build. Under the path sit the five sections, hard left,
-with the current one bold and a section that has no page yet left as a name; at the right, `buy me
-a coffee`. The home page is that header alone.
+not match the page's own depth stops the build. Under the path sit the menu's sections
+(`build/nav.py`'s `SECTIONS`: database, library, lab, sketch), hard left, with the current one
+bold and a section that has no page yet left as a name; at the right, `buy me a coffee`. The home
+page is that header alone.
 
-A page that hides the navigation carries no marker and draws its own corner: `lab/3Dmath`,
-`lab/dome-diagram` and `lab/surface` keep their own path in their own styling. The coffee link
-rides with the header, so it appears on the pages that carry the site's navigation and nowhere
-else.
+A page that hides the navigation carries no marker and draws its own corner: `sketch/3Dmath`,
+the three looper pages (`sketch/{spiral,concentric,pinball}`), `lab/dome-diagram` and
+`lab/surface` keep their own path in their own styling. The coffee link rides with the header,
+so it appears on the pages that carry the site's navigation and nowhere else.
 
 ## The data
 
@@ -103,22 +113,7 @@ never become public URLs.
 
 ## Lab
 
-`dist/lab/3Dmath/index.html` is hand-written and copied in by the build — no generator, no
-data. It draws Knill's `3dprinter/math` figures as live geometry: one WebGL context, no
-library, no network, no mesh files. Every shape is a function of numeric parameters the page
-exposes as table cells (with a per-parameter sweep, so any of them animates), built from
-`geom.js` and one `fam_<family>.js` per family: polytopes, packing, fractal, surface, curve,
-attractor, dome.
-
-```bash
-node work/lab/check_geom.cjs                              # the helpers, against known values
-node work/lab/check_family.cjs src/lab/3Dmath/fam_*.js    # every shape, at defaults and at each parameter extreme
-```
-
-`work/lab/CONTRACT.md` is what a family file has to do: the interface, the rules, and the
-invariant its `verify()` must state with a number. Both checks report zero problems before a
-family joins the page.
-
+`dist/lab/dome-diagram/index.html` is the SAT
 `dist/lab/dome-diagram/index.html` is the SAT dome master, published as it stands and copied in by
 the build: one SVG, no library and no network, with panel rings, projector circles and speaker
 rings drawn as percentages of the dome radius, numbers and a test pattern to switch on. It saves
@@ -176,3 +171,35 @@ scene to a cubemap and a fisheye shader flattens it to the dome, so the page sho
 shows; **S** saves the current slide as a PNG. It loads three.js, p5 and two handwriting fonts from
 CDNs, and keeps its own styling: dark ground, round nav buttons, ink on white cards. Its source is
 `src/lab/pitch/index.html`.
+
+## Sketch
+
+The lab holds tools and research; the sketch holds experiments — work that could go on a dome.
+
+`dist/sketch/3Dmath/index.html` is hand-written and copied in by the build — no generator, no
+data. It draws Knill's `3dprinter/math` figures as live geometry: one WebGL context, no
+library, no network, no mesh files. Every shape is a function of numeric parameters the page
+exposes as table cells (with a per-parameter sweep, so any of them animates), built from
+`geom.js` and one `fam_<family>.js` per family: polytopes, packing, fractal, surface, curve,
+attractor, dome. The page is a fullscreen equidistant domemaster — the circle inscribed in the
+window, its centre the zenith, its rim the horizon — whose menu is a layer warped onto the
+dome's own surface rather than a panel in the scene, so the controls sit on the dome and the
+frame never moves.
+
+```bash
+node work/lab/check_geom.cjs                                 # the helpers, against known values
+node work/lab/check_family.cjs src/sketch/3Dmath/fam_*.js    # every shape, at defaults and at each parameter extreme
+```
+
+`work/lab/CONTRACT.md` is what a family file has to do: the interface, the rules, and the
+invariant its `verify()` must state with a number. Both checks report zero problems before a
+family joins the page.
+
+`dist/sketch/{spiral,concentric,pinball}/index.html` are the three AV loopers: the taramoves
+prototype `public/prototypes/av-loopers.html` with its three sketches split one to a page, each
+kept as it was — black ground, monospace type, a 420 px canvas with its own control panel under
+it. Each is a domemaster in two dimensions (the circle is the dome), so nothing is projected to
+read one. The engine is one shared file, `src/sketch/looper.js`; a page declares a config, calls
+into it, and owns nothing else. A shape stores where it belongs rather than where it is, so the
+layout controls move the shapes with their sections. `work/sketch/port_from_prototype.py` writes
+the three pages out of the prototype by line, so a rebuild is a re-run, not a retype.
