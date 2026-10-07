@@ -8,7 +8,7 @@
    centre   the same cards through a camera at the dome's centre: what the audience sees.
    chrome   selection outline and handles, in screen pixels, drawn from the projected corners.
 
-   No library, in the shape lab/3Dmath established. */
+   No library, in the shape sketch/3Dmath established. */
 window.surfaceGL = function (canvas) {
   var gl = canvas.getContext("webgl", { antialias: true, alpha: false, premultipliedAlpha: false });
   if (!gl) throw new Error("no webgl");

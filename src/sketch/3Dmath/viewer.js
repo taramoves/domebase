@@ -638,7 +638,7 @@
 
   /* ---------------- the menu, on the dome, as a layer ----------------
      The menu is not in the scene. It is a patch of the dome itself — low on the front left, the
-     spot lab/pitch gives its phone — and is drawn over the canvas as a 2d layer warped onto that
+     spot sketch/pitch gives its phone — and is drawn over the canvas as a 2d layer warped onto that
      patch: the four corners of its layout box are placed where the dome puts them and a projective
      map (a CSS matrix3d) carries the box onto that quad, so the layer foreshortens the way a panel
      on the dome does. An element can only send straight lines to straight lines; the fisheye bends
