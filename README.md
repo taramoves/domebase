@@ -13,7 +13,8 @@ src/                    what the site is — hand-written pages and assets, noth
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   lab/learn/            the technical basics of fulldome: the master, the two signal chains
-  sketch/index.html     the sketch's index: one line per page in the sketch
+  sketch/index.html     the sketch's index: one line per page, the three loopers under the
+                        name they share
   sketch/3Dmath/        the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
   sketch/looper.css     the three loopers' stylesheet, and the corner they draw
   sketch/looper.js      the looper engine they share: grid builders, sketch, control panel

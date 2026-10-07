@@ -34,7 +34,8 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
   on a black tab, because the page under it is the prototype's.
 - The home page is the header alone: the name, the sections, the coffee link — top left.
-- A section index is the header, then one line per page in that section.
+- A section index is the header, then one line per page in that section. Pages that share a
+  name sit under it, indented; the name itself is text, not a link, since it is not a page.
 - Ship the smallest artifact that works.
 
 ## Files
