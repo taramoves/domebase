@@ -211,6 +211,13 @@ colours map data, not light). The frame, the tables and every word stay black on
   have its height; the figures it carried — counts, the build time, the frame rate — are not on the
   page, and neither is the source link it held, which was the page's citation to Knill. Bring the
   citation back somewhere before this page is treated as finished.
+- **Alt and a drag turns the camera; a drag alone turns the shape.** The camera is the observer's
+  own direction, and it is applied to the sampling in the fisheye pass and nowhere else: the cube
+  faces are untouched (a camera turn marks nothing stale), the frame, the guides and the layer hold
+  still, and the world swings behind them. It lives in `camYaw`/`camPitch` as `Rx(pitch) . Ry(yaw)`,
+  inverted into the sampling by `camMatrix()`, and `front` — the button, `r`, a double click —
+  resets it with the rest of the view. Its sense is deliberately the opposite of the shape's drag,
+  because turning a camera and turning an object are opposites.
 - Drag turns the shape, the wheel sets `fov` of the dome, and `front`
   returns to the default view. The frame never moves.
 

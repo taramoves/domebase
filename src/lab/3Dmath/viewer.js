@@ -184,7 +184,7 @@
     def: null, P: {}, out: null, geo: { triN: 0, lineN: 0, hasTone: false },
     dirty: true, buildMs: 0, lastBuild: 0, stats: {},
     yaw: -0.62, pitch: 0.30, dist: 4.4,
-    fov: 180, guides: true, spinAng: 0, faceDist: 1.45, cubeStale: true,
+    fov: 180, guides: true, spinAng: 0, faceDist: 1.45, cubeStale: true, camYaw: 0, camPitch: 0,
     spin: true, sweep: false, depth: true, edges: true, faces: true, colour: 2,
     sweepOn: {}, period: {}, fps: 60, frames: 0, fpsAt: 0
   };
@@ -303,6 +303,22 @@
     return M.mul(o, modB, modA);
   }
 
+  /* The camera: alt and a drag turns the observer's direction instead of turning the shape. The
+     turn is inverted and applied to the sampling direction in the fisheye pass, so the cube faces
+     are untouched (nothing is marked stale), the frame, the guides and the menu hold still, and the
+     world swings behind them. C = Rx(pitch) . Ry(yaw), so the inverse is Ry(-yaw) . Rx(-pitch). */
+  const camA = new Float32Array(16), camB = new Float32Array(16), camInv = new Float32Array(16);
+  const cam3 = new Float32Array(9);
+  function camMatrix() {
+    M.rotY(camA, -S.camYaw);
+    M.rotX(camB, -S.camPitch);
+    M.mul(camInv, camA, camB);
+    cam3[0] = camInv[0]; cam3[1] = camInv[1]; cam3[2] = camInv[2];
+    cam3[3] = camInv[4]; cam3[4] = camInv[5]; cam3[5] = camInv[6];
+    cam3[6] = camInv[8]; cam3[7] = camInv[9]; cam3[8] = camInv[10];
+    return cam3;
+  }
+
   function link(vsSrc, fsSrc) {
     const p = gl.createProgram();
     gl.attachShader(p, compile(gl.VERTEX_SHADER, vsSrc));
@@ -323,6 +339,7 @@
     'uniform vec2 uRes;',
     'uniform float uFov;',
     'uniform float uGuide;',
+    'uniform mat3 uCam;',            /* the observer's turn, inverted: the view, not the frame */
     'void main() {',
     '  vec2 p = (gl_FragCoord.xy - 0.5 * uRes) / (0.5 * min(uRes.x, uRes.y));',
     '  float r = length(p);',
@@ -333,6 +350,7 @@
     '  vec3 rt = vec3(1.0, 0.0, 0.0);',
     '  vec3 up = vec3(0.0, 0.0, -1.0);',
     '  vec3 dir = c * cos(th) + (rt * cos(ph) + up * sin(ph)) * sin(th);',
+    '  dir = uCam * dir;',           /* the camera turns here and nowhere else */
     '  vec3 col = textureCube(uCube, dir).rgb;',
     '  if (uGuide > 0.5) {',
     '    float w = 1.7 / (0.5 * min(uRes.x, uRes.y));',
@@ -353,7 +371,8 @@
     cube: gl.getUniformLocation(progDome, 'uCube'),
     res: gl.getUniformLocation(progDome, 'uRes'),
     fov: gl.getUniformLocation(progDome, 'uFov'),
-    guide: gl.getUniformLocation(progDome, 'uGuide')
+    guide: gl.getUniformLocation(progDome, 'uGuide'),
+    cam: gl.getUniformLocation(progDome, 'uCam')
   };
 
   /* the cube the faces are drawn into, and the square the circle is drawn on */
@@ -449,6 +468,7 @@
     gl.uniform2f(UD.res, cv.width, cv.height);
     gl.uniform1f(UD.fov, S.fov);
     gl.uniform1f(UD.guide, S.guides ? 1 : 0);
+    gl.uniformMatrix3fv(UD.cam, false, camMatrix());
     attrib(AD.q, buf.quad, 2);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
@@ -609,7 +629,7 @@
 
   function front() {
     S.fov = 180;
-    S.yaw = 0; S.pitch = 0; S.spinAng = 0; S.dist = 4.4;
+    S.yaw = 0; S.pitch = 0; S.spinAng = 0; S.dist = 4.4; S.camYaw = 0; S.camPitch = 0;
     S.cubeStale = true;
     const f = document.getElementById('fov');
     if (f) f.value = String(Math.round(S.fov));
@@ -685,16 +705,24 @@
     window.addEventListener('resize', replaced);
     placeMenu();
     requestAnimationFrame(replaced);
-    let down = false, px = 0, py = 0;
+    let down = false, cam = false, px = 0, py = 0;
     cv.addEventListener('pointerdown', e => {
-      down = true; px = e.clientX; py = e.clientY;
+      down = true; cam = e.altKey; px = e.clientX; py = e.clientY;
       cv.classList.add('drag'); cv.setPointerCapture(e.pointerId);
     });
     cv.addEventListener('pointermove', e => {
       if (!down) return;
-      S.yaw -= (e.clientX - px) * 0.0075;
-      S.pitch = Math.max(-1.5, Math.min(1.5, S.pitch + (e.clientY - py) * 0.0075));
+      const dx = e.clientX - px, dy = e.clientY - py;
       px = e.clientX; py = e.clientY;
+      if (cam) {
+        /* alt: turn the view. The cube holds — the turn is applied when the master is sampled —
+           and the layer follows the aperture, not the camera, so it stays where it is. */
+        S.camYaw -= dx * 0.0075;
+        S.camPitch = Math.max(-1.4, Math.min(1.4, S.camPitch + dy * 0.0075));
+        return;
+      }
+      S.yaw -= dx * 0.0075;
+      S.pitch = Math.max(-1.5, Math.min(1.5, S.pitch + dy * 0.0075));
       /* the master is fixed, so a drag turns the scene inside the cube faces: without this the
          picture only moves while the spin happens to be re-rendering it */
       S.cubeStale = true;
