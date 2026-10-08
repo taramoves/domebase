@@ -6,36 +6,35 @@
 <title>domebase/library</title>
 <link rel="stylesheet" href="../assets/css/site.css">
 <style>/* library -- this page only */
-.tabs{display:flex;flex-wrap:wrap;align-items:flex-end;background:var(--paper);
-  padding:0 18px;border-bottom:1px solid var(--line)}
 #pane-ideas{display:none}
 body[data-tab=ideas] #pane-ideas{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
 body[data-tab=ideas] #pane-shelf{display:none}
 td.n,th.n{text-align:right;width:34px}
 td.yr,th.yr{width:54px;text-align:right}
 td.kind,th.kind{width:80px;white-space:nowrap}
-td.topic,th.topic{width:150px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-td.vd,th.vd{width:56px;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#555}
-td.rec,th.rec{width:186px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-td.rec i{font-style:normal;text-transform:uppercase;font-size:10px;letter-spacing:.04em;color:#555;padding-right:5px}
-td.rec.list i{color:#8a8a8a}
-#tagbox summary{cursor:pointer;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 0;user-select:none}
+td.topic,th.topic{width:150px;font-size:var(--fs-th);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.vd,th.vd{width:56px;font-size:var(--fs-micro);text-transform:uppercase;
+  letter-spacing:var(--ls-tight);color:var(--ink)}
+td.rec,th.rec{width:186px;font-size:var(--fs-th);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.rec i{font-style:normal;text-transform:uppercase;font-size:var(--fs-micro);
+  letter-spacing:var(--ls-tight);color:var(--ink);padding-right:5px}
+#tagbox summary{cursor:pointer;font-size:var(--fs-small);letter-spacing:var(--ls-tight);text-transform:uppercase;padding:6px 0;user-select:none}
 td.tags,th.tags{width:182px}
 td.q,th.q{width:30px;text-align:right}
-td.lk,th.lk{width:148px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-td.src,th.src{width:168px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+td.lk,th.lk{width:148px;font-size:var(--fs-th);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.src,th.src{width:168px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-th)}
 td.cov b{font-weight:700}
 td.cov.dim{opacity:.5}
-.pill.on{background:var(--ink);color:var(--paper)}
-.pill .n{font-size:11px;opacity:.65;padding-left:3px}
+.pill.on{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.pill .n{font-size:var(--fs-small);opacity:.65;padding-left:var(--s1)}
 .pill.on .n{opacity:.85}
-th .ar{font-size:10px;padding-left:2px}
+th .ar{font-size:var(--fs-micro);padding-left:2px}
 #pane-ideas th.n{width:30px}
 td.claim{font-weight:700}
 td.ev,th.ev{width:60px;text-align:right}
-td.srcs,th.srcs{max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
-td.upd,th.upd{width:84px;font-size:12px;white-space:nowrap}
-td.conf,th.conf{width:78px;font-size:12px}
+td.srcs,th.srcs{max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-th)}
+td.upd,th.upd{width:84px;font-size:var(--fs-th);white-space:nowrap}
+td.conf,th.conf{width:78px;font-size:var(--fs-th)}
 </style>
 </head>
 <body class="app" data-tab="shelf">

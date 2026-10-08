@@ -4,7 +4,7 @@ A fulldome resource site, built and deployed as plain static files.
 
 ```
 src/                    what the site is — hand-written pages and assets, nothing generated
-  index.html            the home page: the header alone — the name and the section names
+  index.html            the home page: the header, then the section names listed on the page
   assets/css/site.css   the one stylesheet
   assets/fonts/         Computer Modern (kept, unused since the site moved to Arial)
   database/             app.html + app.js — the database section's own page source
@@ -85,7 +85,7 @@ and the part's href is the folder at that depth, so no page hand-writes `../`. A
 not match the page's own depth stops the build. Under the path sit the menu's sections
 (`build/nav.py`'s `SECTIONS`: database, library, lab, sketch), hard left, with the current one
 bold and a section that has no page yet left as a name; at the right, `buy me a coffee`. The home
-page is that header alone.
+page is that header, with the section names listed under it.
 
 A page that hides the navigation carries no marker and draws its own corner: `sketch/3Dmath`,
 `sketch/pitch`, the three looper pages (`sketch/{spiral,concentric,pinball}`), `lab/dome-diagram`

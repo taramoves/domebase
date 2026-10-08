@@ -14,7 +14,7 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   a sentence explaining what the page or a section is, and never a "how this works" block.
 - Anything you can open, sort, filter or go to is a link. Inside the sheet, links are not
   underlined until hover.
-- Dead names are fine in this project; dead links are not. The home page names the five
+- Dead names are fine in this project; dead links are not. The home page names the
   sections and links the ones that have pages.
 - **The header is one built block: the path, the site's menu, the coffee link.** `build/nav.py`
   writes it into every page that asks for it — a page carries `<!--nav domebase/section/page-->`
@@ -33,7 +33,8 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
   The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
   on a black tab, because the page under it is the prototype's.
-- The home page is the header alone: the name, the sections, the coffee link — top left.
+- The home page is the header, and then the sections listed on the page itself, hard left: the name,
+  the section names, the coffee link — top left.
 - A section index is the header, then one line per page in that section. Pages that share a
   name sit under it, indented; the name itself is text, not a link, since it is not a page.
 - Ship the smallest artifact that works.
@@ -42,7 +43,7 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
 
 ```
 src/                    hand-written pages and assets — what the site is
-  index.html            home: the header alone — the name and the section names, linked where a
+  index.html            home: the header, then the section names listed on the page, linked where a
                         page exists
   assets/css/site.css   the one stylesheet: document pages link it, the database page inlines it
   assets/fonts/         cmu-serif-roman.woff, OFL.txt (kept, unused since Arial)
