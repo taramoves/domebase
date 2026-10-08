@@ -1842,13 +1842,6 @@ function buildControlsFor(id, name, opts, mode) {
   const config = opts.config;
   buildStatusRow(c, name, opts.playState, opts);
 
-  // the take is the point of the page, so the audio sits first in the column and needs no
-  // scrolling to reach — everything else is settings for the drawing above it
-  if (opts.audioChannels) {
-    const audio = buildCollapsible(c, 'Audio routing', true);
-    buildAudioRouting(audio, opts);
-  }
-
   const playback = buildCollapsible(c, 'Playback', true);
   if (mode === 'pinball') {
     const gHint = document.createElement('div');
@@ -1882,13 +1875,19 @@ function buildControlsFor(id, name, opts, mode) {
     { key: 'quantize', label: 'Quantize', type: 'checkbox' }
   ]);
 
-  const display = buildCollapsible(c, 'Display', true);
-  buildSliders(display, config, [
-    { key: 'showChannelNumbers', label: 'Channel numbers', type: 'checkbox' }
-  ]);
+  // no display group: the channel numbers are always on, since they are how the drawing says
+  // which channel a shape feeds
+  config.showChannelNumbers = true;
 
   const voicesBody = buildCollapsible(c, 'Shapes & Sounds', true);
   buildVoiceSettings(voicesBody, config, opts.voices, opts);
+
+  // the channel numbers are always on — the pages set them and nothing turns them off — so the
+  // audio comes last in the column, under the shapes it belongs to
+  if (opts.audioChannels) {
+    const audio = buildCollapsible(c, 'Audio routing', true);
+    buildAudioRouting(audio, opts);
+  }
 }
 
 // The bus, one row per channel: a level bar on the measured energy in that channel and the
