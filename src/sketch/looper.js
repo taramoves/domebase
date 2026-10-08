@@ -1842,6 +1842,13 @@ function buildControlsFor(id, name, opts, mode) {
   const config = opts.config;
   buildStatusRow(c, name, opts.playState, opts);
 
+  // the take is the point of the page, so the audio sits first in the column and needs no
+  // scrolling to reach — everything else is settings for the drawing above it
+  if (opts.audioChannels) {
+    const audio = buildCollapsible(c, 'Audio routing', true);
+    buildAudioRouting(audio, opts);
+  }
+
   const playback = buildCollapsible(c, 'Playback', true);
   if (mode === 'pinball') {
     const gHint = document.createElement('div');
@@ -1882,11 +1889,6 @@ function buildControlsFor(id, name, opts, mode) {
 
   const voicesBody = buildCollapsible(c, 'Shapes & Sounds', true);
   buildVoiceSettings(voicesBody, config, opts.voices, opts);
-
-  if (opts.audioChannels) {
-    const audio = buildCollapsible(c, 'Audio routing', true);
-    buildAudioRouting(audio, opts);
-  }
 }
 
 // The bus, one row per channel: a level bar on the measured energy in that channel and the

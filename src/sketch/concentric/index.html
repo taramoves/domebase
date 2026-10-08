@@ -22,7 +22,7 @@ const config = { stepDurationMs: 350, ringsCount: 5, splitsCount: 8, quantize: t
 const voices = defaultVoices();
 const playState = { playing: true };
 const opts = { mode: 'rings', config: config, voices: voices,
-               playState: playState, minR: 0, maxR: SIZE / 2 };
+               playState: playState, minR: 0, maxR: SIZE / 2, audioChannels: 8 };
 
 createLooperSketch('sketch1', opts);
 buildControlsFor('ctrl1', 'RINGS / CONCENTRIC', opts, 'rings');
