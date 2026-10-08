@@ -1852,8 +1852,7 @@ function buildControlsFor(id, name, opts, mode) {
       { key: 'dropIntervalMs', label: 'Drop every', min: 200, max: 4000, step: 50, unit: 'ms' },
       { key: 'gravity', label: 'Gravity', min: 100, max: 1600, step: 20 },
       { key: 'bounce', label: 'Bounce', min: 0.2, max: 0.95, step: 0.01 },
-      { key: 'ringsCount', label: 'Rings', min: 2, max: 10, step: 1 },
-      { key: 'splitsCount', label: 'Splits', min: 3, max: 24, step: 1 }
+      { key: 'ringsCount', label: 'Rings', min: 2, max: 10, step: 1 }
     ]);
     const drop = document.createElement('button');
     drop.type = 'button';
@@ -1870,7 +1869,6 @@ function buildControlsFor(id, name, opts, mode) {
   ] : [
     { key: 'stepDurationMs', label: 'Step duration', min: 50, max: 1500, step: 10, unit: 'ms' },
     { key: 'ringsCount', label: 'Rings', min: 2, max: 10, step: 1 },
-    { key: 'splitsCount', label: 'Splits', min: 3, max: 24, step: 1 },
     { key: 'direction', label: 'Direction', type: 'select', options: ['outward', 'inward'] },
     { key: 'quantize', label: 'Quantize', type: 'checkbox' }
   ]);
@@ -1878,6 +1876,10 @@ function buildControlsFor(id, name, opts, mode) {
   // no display group: the channel numbers are always on, since they are how the drawing says
   // which channel a shape feeds
   config.showChannelNumbers = true;
+
+  // no splits control either: the grid is 8 unless a page says otherwise, which is what the
+  // concentric and pinball pages already ask for
+  config.splitsCount = config.splitsCount || 8;
 
   const voicesBody = buildCollapsible(c, 'Shapes & Sounds', true);
   buildVoiceSettings(voicesBody, config, opts.voices, opts);
