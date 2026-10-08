@@ -16,13 +16,16 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   underlined until hover.
 - Dead names are fine in this project; dead links are not. The home page names the
   sections and links the ones that have pages.
-- **The header is one built block: the path, the site's menu, the coffee link.** `build/nav.py`
+- **The header is one built block: the path and the site's menu** — and the coffee link, when it is
+  on. `build/nav.py`
   writes it into every page that asks for it — a page carries `<!--nav domebase/section/page-->`
   where its header belongs — so the navigation exists once and cannot drift page by page. Each
   part of the path is a link except the page itself, so no page is more than two clicks from the
   home page. Under the path sit the site's sections, hard left, the current one bold; a section
-  with no page yet stays a name. At the right, `buy me a coffee` — a text link, in the same voice
-  as the menu, on the pages that carry the site's navigation and nowhere else.
+  with no page yet stays a name. The coffee link rides at the right — a text link, in the same voice
+  as the menu, on the pages that carry the site's navigation and nowhere else — but `nav.py`'s
+  `SHOW_COFFEE` is off for now, with the markup and the sheet's `.bmc` rules kept for the day it
+  comes back.
 - **The menu is `build/nav.py`'s `SECTIONS`**, and a section shows as a link only once its page
   exists. Today: database, library, lab, sketch. The learn page sits in the lab; archive carries
   no page, so the menu leaves it out until it does. **The lab holds tools and research; the
@@ -33,8 +36,8 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
   The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
   on a black tab, because the page under it is the prototype's.
-- The home page is the header, and then the sections listed on the page itself, hard left: the name,
-  the section names, the coffee link — top left.
+- The home page is the header, and then the sections listed on the page itself, hard left: the name
+  and the section names — top left.
 - A section index is the header, then one line per page in that section. Pages that share a
   name sit under it, indented; the name itself is text, not a link, since it is not a page.
 - Ship the smallest artifact that works.

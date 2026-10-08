@@ -84,13 +84,14 @@ The trail is what the header prints: each part above the page is a link, the pag
 and the part's href is the folder at that depth, so no page hand-writes `../`. A trail that does
 not match the page's own depth stops the build. Under the path sit the menu's sections
 (`build/nav.py`'s `SECTIONS`: database, library, lab, sketch), hard left, with the current one
-bold and a section that has no page yet left as a name; at the right, `buy me a coffee`. The home
-page is that header, with the section names listed under it.
+bold and a section that has no page yet left as a name; at the right the coffee link, though
+`nav.py`'s `SHOW_COFFEE` is off for now. The home page is that header, with the section names
+listed under it.
 
 A page that hides the navigation carries no marker and draws its own corner: `sketch/3Dmath`,
 `sketch/pitch`, the three looper pages (`sketch/{spiral,concentric,pinball}`), `lab/dome-diagram`
 and `sketch/slides` keep their own path in their own styling. The coffee link rides with the header,
-so it appears on the pages that carry the site's navigation and nowhere else.
+so it appears on the pages that carry the site's navigation and nowhere else — off for now.
 
 ## The data
 

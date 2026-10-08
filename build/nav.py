@@ -9,10 +9,10 @@ that depth — so no page hand-writes `../` and no part can point at the wrong l
 the page itself is text; every part above it is a link. A trail that does not match the page's own
 depth fails the build.
 
-Under the trail the header carries the site's sections, left justified, and the coffee link at the
-right — the same on every page that has a header. A section with no page of its own stays a name.
-A page that hides the navigation (the fullscreen dome pages) carries no marker and keeps whatever
-corner it draws for itself.
+Under the trail the header carries the site's sections, left justified — the same on every page that
+has a header. A section with no page of its own stays a name. The coffee link rides at the right
+when `SHOW_COFFEE` is on; it is off for now. A page that hides the navigation (the fullscreen dome
+pages) carries no marker and keeps whatever corner it draws for itself.
 
 `build_site.py` runs `inject(dist)` once, after the generated pages and the hand-written pages are
 all in place, so the navigation exists once and cannot drift page by page.
@@ -26,6 +26,9 @@ from pathlib import Path
 # holds the experiments — work that could go on a dome — where the lab holds tools and research.
 SECTIONS = ("database", "library", "lab", "sketch")
 COFFEE = "https://buymeacoffee.com/taramoves"
+# The coffee link is hidden for now: the URL, the markup and the sheet's `.bmc` rules all stay, so
+# flipping this back on puts the link back on every page that carries the header.
+SHOW_COFFEE = False
 MARKER = re.compile(r"<!--nav\s*([^>]*?)\s*-->")
 
 
@@ -57,8 +60,9 @@ def header(trail, depth, linked):
             menu.append(f'<a href="{up}{s}/">{s}</a>')
     return ("<header>\n"
             f"  <h1>{''.join(parts)}</h1>\n"
-            f'  <a class="bmc" href="{COFFEE}" target="_blank" rel="noopener">buy me a coffee</a>\n'
-            f'  <div class="menu">{"".join(menu)}</div>\n'
+            + (f'  <a class="bmc" href="{COFFEE}" target="_blank" rel="noopener">'
+               f"buy me a coffee</a>\n" if SHOW_COFFEE else "")
+            + f'  <div class="menu">{"".join(menu)}</div>\n'
             "</header>")
 
 
