@@ -2,10 +2,11 @@
              font-family: Menlo, Consolas, 'SF Mono', monospace; }
   /* fullscreen: the canvas is the window, and the drawing is inscribed in it */
   #sketch1 canvas{ position:fixed; left:0; top:0; z-index:1; display:block; }
-  /* the panel takes the bottom right corner, over the drawing, and scrolls inside itself */
-  .controls{ position:fixed; right:14px; bottom:14px; z-index:2; width:min(360px,92vw);
-             max-height:min(74vh,820px); overflow:auto; padding:14px; background:#000;
-             border:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
+  /* the panel is a full-height column down the right side, over the drawing's empty corner:
+     top to bottom, everything reachable, and it scrolls inside itself when it has to */
+  .controls{ position:fixed; right:0; top:0; bottom:0; z-index:2; width:min(360px,92vw);
+             overflow-y:auto; overflow-x:hidden; padding:14px; background:#000;
+             border-left:1px solid #333; display:flex; flex-direction:column; gap:4px; font-size:11px;}
   body.panel-off .controls{ display:none; }
   /* the heading goes with it: hidden means the drawing and nothing else */
   body.panel-off .crumb{ display:none; }
@@ -16,6 +17,13 @@
   body.panel-off .controlsToggle{ display:block; }
   .controlsToggle:hover{ border-color:#fff; }
   .hideBtn{ margin-left:6px; }
+  /* the keyboard hint, bottom left: one line, and it says what H will do next. Click-through,
+     so the drawing still takes a click aimed at it. */
+  .menuHint{ position:fixed; left:14px; bottom:14px; z-index:2; font-size:9px;
+             text-transform:uppercase; letter-spacing:0.07em; opacity:0.45; pointer-events:none;
+             user-select:none; }
+  .menuHint::before{ content:"press H to hide menu"; }
+  body.panel-off .menuHint::before{ content:"press H to show menu"; }
 
   .statusRow{ display:flex; align-items:center; gap:8px; user-select:none; padding-bottom:10px; margin-bottom:8px; border-bottom:1px solid #222;}
   .statusRow .toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; }
@@ -55,6 +63,16 @@
   .editBtn.open{ border-color:#fff; }
   .editPanel{ padding:8px 0 4px 20px; margin-left:8px; border-left:1px solid #222; display:flex; flex-direction:column; gap:7px; }
   .auditionBtn{ background:#000; border:1px solid #444; color:#fff; font-size:9px; padding:4px 0; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+  .auditionBtn.recOn{ background:#fff; border-color:#fff; color:#000; }
+
+  /* audio routing: what the page asked its output for, and the measured bus */
+  .routeLine{ font-size:10px; opacity:0.75; }
+  .meters{ display:flex; flex-direction:column; gap:3px; }
+  .meterRow{ display:flex; align-items:center; gap:7px; }
+  .meterLabel{ width:14px; flex-shrink:0; opacity:0.5; font-size:10px; }
+  .meterBar{ flex:1; height:7px; border:1px solid #333; background:#000; }
+  .meterBar i{ display:block; height:100%; width:0%; background:#fff; }
+  .meterVal{ width:26px; text-align:right; font-size:9px; opacity:0.45; flex-shrink:0; }
 
   .placedRow{ display:flex; align-items:center; gap:6px; padding:0 0 4px 37px; }
   .placedRow.empty{ opacity:0.35; }
