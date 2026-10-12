@@ -13,6 +13,9 @@ src/                    what the site is — hand-written pages and assets, noth
   lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   lab/learn/            the technical basics of fulldome: the master, the two signal chains
+  lab/shelf/            the texts, one page per source: lecture, ontology, practice as research,
+                        immersion, spectacle, interaction of color, spheres, audiovisual archiving
+  lab/timeline/         the plan as one timeline
   sketch/index.html     the sketch's index: one line per page, the three loopers under the
                         name they share
   sketch/3Dmath/        the 3d math page: viewer.js, geom.js, one fam_*.js per shape family
@@ -116,7 +119,6 @@ never become public URLs.
 
 ## Lab
 
-`dist/lab/dome-diagram/index.html` is the SAT
 `dist/lab/dome-diagram/index.html` is the SAT dome master, published as it stands and copied in by
 the build: one SVG, no library and no network, with panel rings, projector circles and speaker
 rings drawn as percentages of the dome radius, numbers and a test pattern to switch on. It saves
@@ -125,13 +127,15 @@ of the working tool; the frame and the controls are black on white like the rest
 source is `src/lab/dome-diagram/index.html`.
 
 `dist/lab/instrument/index.html` is also hand-written and copied in by the build: a document
-page, not a spreadsheet, for the audience interaction system. It carries its own diagrams as
-inline SVG — the dome, the parts, the objects table, placement, playback, audio routing, the
-seat-error cross-section. Part 0 also runs the interaction demo, ported from the escargot
-outline's own widget: every rule it uses is scoped to `#w6`, it needs `--guide` and `--faint`
-(the sheet does not define them), and an `IntersectionObserver` starts and stops its frame loop
-as it scrolls in and out, so the page is idle when the demo is off screen. Its source is
-`src/lab/instrument/index.html`, and it is edited by hand.
+page, not a spreadsheet, for the audience interaction system. Today it carries the summary, one
+diagram in inline SVG — phone, hub, AV engine, artist, with calibration named on the phone-to-hub
+link — and the interaction demo; the detail it once carried is saved in
+`work/lab/instrument-cut-sections.html`. The demo is ported from the escargot outline's own
+widget: every rule it uses is scoped to `#w6`, it needs `--guide` and `--faint` (the sheet does
+not define them), an `IntersectionObserver` starts and stops its frame loop as it scrolls in and
+out, it opens on the *Stamp trail* preset, and *Simulate participants* runs a crowd on every
+preset. Its source is `src/lab/instrument/index.html`, and it is edited by hand; the record of
+what it says and what the escargot build holds is `work/lab/INSTRUMENT.md`.
 
 ## Sketch
 

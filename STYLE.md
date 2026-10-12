@@ -54,6 +54,8 @@ src/                    hand-written pages and assets — what the site is
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's own index: one line per page in the lab
   lab/learn/            the learn page: the master, the two signal chains, a glossary
+  lab/instrument/       the instrument page: one hand-written document, its diagram inline
+  lab/shelf/            the texts, one page per source, each with the figures it redraws
   sketch/index.html     the sketch's own index: one line per page in the sketch
   sketch/looper.css     the three looper pages' stylesheet
   sketch/looper.js      the looper engine they share: grid, sketch, control panel

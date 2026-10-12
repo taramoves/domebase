@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domebase/lab/timeline</title>
+<link rel="stylesheet" href="../../assets/css/site.css">
+<style>/* timeline — this page only. Black on white, hairline rules, Arial, no colour: the axis, the dots,
+   the leaders and the year rules are hairlines, the labels are type. The chart scrolls sideways; the
+   buttons at its head jump it. The entries are the SAT dossier's (work/timeline/SOURCE.md); the
+   records are work/db/model, read by work/timeline/check_db.py. */
+.tl{border-bottom:2px solid var(--line)}
+.tlbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:7px 18px 6px;
+  border-bottom:1px solid var(--line)}
+.tlbar .lbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.tlbar button{background:var(--paper);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:12px;padding:2px 8px;cursor:pointer}
+.tlbar button:hover{background:var(--head)}
+.tlbar .hint{margin-left:auto;font-size:11.5px}
+.tlwrap{overflow-x:auto;overflow-y:hidden}
+.tlwrap:focus{outline:1px solid var(--line);outline-offset:-1px}
+.tlchart{position:relative}
+.tlchart svg{position:absolute;left:0;top:0}
+.tlchart .yr{position:absolute;font-size:10px;text-align:center}
+.tlchart .yr.half{font-size:9.5px}
+.tlchart .lab{position:absolute;font-size:11px;line-height:13px}
+.tlchart .lab .w b{font-size:10px;letter-spacing:.06em}
+.tlchart .lab .a{font-size:10px;font-weight:700}
+.tlchart .lab .v,.tlchart .lab .r{font-size:10px}
+.tlchart .lab .r a{color:var(--ink);text-decoration:none}
+.tlchart .lab .r a:hover{text-decoration:underline;text-underline-offset:2px}
+.tlchart .und{border-top:1px solid var(--hair);padding-top:6px}
+.tlchart .und-head{position:absolute;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.doc{padding:30px 24px 96px;max-width:860px}
+h2{font-size:14px;margin:34px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+p{margin:0 0 11px;max-width:74ch}
+p.lede{font-size:13.5px;line-height:1.5;margin:0 0 4px;padding:10px 0 12px;
+  border-bottom:2px solid var(--line);max-width:74ch}
+p.att{font-size:11.5px;margin:0 0 16px}
+p.cap{font-size:11.5px;margin:0 0 22px;padding-top:8px;border-top:1px solid var(--hair)}
+table{border-collapse:collapse;width:100%;margin:0 0 16px;font-size:12px;table-layout:fixed}
+th,td{position:static;cursor:auto;background:transparent;border:1px solid var(--line);padding:4px 7px;
+  vertical-align:top;text-align:left;font-size:12px;line-height:1.4}
+th{font-weight:700;background:var(--head)}
+table.db th:nth-child(1){width:196px}
+table.db th:nth-child(2){width:152px}
+table.db th:nth-child(3){width:84px}
+td.y{white-space:nowrap}
+a.link{text-decoration:none}
+a.link:hover{text-decoration:underline;text-underline-offset:2px}
+p.src{font-size:11.5px;margin:30px 0 0;padding-top:8px;border-top:1px solid var(--hair);max-width:74ch}
+@media (max-width:900px){.doc{padding:20px 16px 72px}table{font-size:11.5px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><a href="../../">domebase</a>/<a href="../">readings</a>/timeline</h1>
+  <div class="menu"><a href="../../database/">database</a><a href="../../library/">library</a><span class="on">readings</span><a href="../../sketch/">lab</a></div>
+</header>
+
+<section class="tl">
+<div class="tlbar">
+  <span class="lbl">jump to</span>
+  <button data-y="1923">1923</button>
+  <button data-y="1957">late 1950s</button>
+  <button data-y="1969">1969</button>
+  <button data-y="2001">the 2000s</button>
+  <button data-y="2018">2018–2024</button>
+  <button data-x="10020">no year given</button>
+  <span class="hint">scroll sideways · 1920 → 2030 · a label's last line links to its record</span>
+</div>
+<div class="tlwrap" tabindex="0"><div class="tlchart" id="chart"></div></div>
+</section>
+
+<main class="doc">
+
+<p class="lede">“Initiated in the late 1950s, with the series of experimental audiovisual concerts Vortex,
+organized by Jordan Belson and Henry Jacobs at the Morrison Planetarium in San Francisco, or later in 1969
+by the Rainbow Jam concert at the Salt Lake City planetarium, another trajectory quickly emerged in this
+story, that of artistic experimentation in immersive contexts.”</p>
+<p class="att">Mourad Bennacer and Vincent Brault, SAT creation team, 28 June 2024</p>
+
+<p class="cap">Twenty-seven dated entries on one axis, 1920 to 2030; nine the dossier leaves undated
+stand in the panel past its end. A label's last line opens its record.</p>
+
+<h2>the database</h2>
+
+<table class="db">
+<tr><th>work</th><th>artist</th><th>year</th><th>record</th></tr>
+<tr><td>Labyrinth</td><td>Sergey Prokofyev</td><td class="y">2021</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Labyrinth">FM0606</a></td></tr>
+<tr><td>Inner Island</td><td>Sergey Prokofyev</td><td class="y">2024</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Inner+Island">FM0546</a></td></tr>
+<tr><td>SWARM</td><td>Maarten Isaac de Heer</td><td class="y">2022</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Swarm">FM1003</a></td></tr>
+<tr><td>Dancing with Dead Animals</td><td>Maarten Isaac de Heer</td><td class="y">2023</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Dancing+with+Dead+Animals">FM0253</a></td></tr>
+<tr><td>Ignite!</td><td>Lynn Tomlinson</td><td class="y">2024</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Ignite">FM0523</a></td></tr>
+<tr><td>ASTRO</td><td>Weidi Zhang</td><td class="y">2021</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Astro">FM0085</a></td></tr>
+<tr><td>CLOUD BODIES</td><td>Allison Moore, Arthur Desmarteaux, Lucy Fandel</td><td class="y">2021–2022</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Cloud+Bodies">FM0207</a></td></tr>
+<tr><td>One Sky</td><td>—</td><td class="y">2022</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=One+Sky">FM0786</a></td></tr>
+<tr><td>Space Explorers: The ISS Experience</td><td>Félix &amp; Paul Studios</td><td class="y">2026</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Space+Explorers">FM0965</a></td></tr>
+<tr><td>Introduction to econometrics</td><td>Kaminska (Lydia Yakonowsky)</td><td class="y">2022</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Introductory+Econometrics">FM0560</a>
+held as <i>Introductory Econometrics</i>, credits empty</td></tr>
+<tr><td>Iwakura</td><td>Ali M. Demirel, Kazuya Nagaya, Maurice Jones</td><td class="y">2023</td>
+<td><a class="link" href="../../database/#v=films&amp;in=title&amp;q=Iwakura">FM0571</a> the title alone,
+its source printing no credits</td></tr>
+<tr><td>VORTEX</td><td>Jordan Belson, Henry Jacobs</td><td class="y">late 1950s</td>
+<td>not held — <a class="link" href="../../database/#v=films&amp;in=title&amp;q=Vortex">FM1218</a> VORTEX
+(2012) is another work</td></tr>
+<tr><td>Rainbow Jam</td><td>—</td><td class="y">1969</td><td>not held</td></tr>
+<tr><td>Panoscope 360</td><td>Luc Courchesne</td><td class="y">early 2000s</td><td>not held</td></tr>
+<tr><td>4D-mix 3</td><td>TOT [Open Territories]</td><td class="y">2003–2009</td><td>not held</td></tr>
+<tr><td>Reveries of Giverny</td><td>Lynn Tomlinson</td><td class="y">—</td><td>not held</td></tr>
+<tr><td>The Orchid and the Bee</td><td>Frances Adair Mckenzie</td><td class="y">—</td><td>not held</td></tr>
+<tr><td>Trajectories</td><td>Chikashi Miyama</td><td class="y">2018</td><td>not held</td></tr>
+<tr><td>Disorder</td><td>François Moncarey, Kevin Ramseier, Thomas Köppel</td><td class="y">2018</td>
+<td>not held — <a class="link" href="../../database/#v=films&amp;in=title&amp;q=Disorder">FM0309</a>
+DISORDER (2016), by Perry-James Sugden, is another work</td></tr>
+<tr><td>Antilogy</td><td>susy.technology, Paige Culley</td><td class="y">2022</td><td>not held</td></tr>
+<tr><td>'THAN'</td><td>Maria Takeuchi</td><td class="y">2022</td><td>not held</td></tr>
+<tr><td>ENN</td><td>Maria Takeuchi</td><td class="y">2023</td><td>not held</td></tr>
+<tr><td>Biliminal</td><td>Collective Sans Perte</td><td class="y">—</td><td>not held</td></tr>
+<tr><td>TRIAL</td><td>CLAUDE x Shin Hyejin</td><td class="y">—</td><td>not held</td></tr>
+<tr><td>Metatact</td><td>Manami Sakamoto, Yuri Urano</td><td class="y">—</td><td>not held</td></tr>
+<tr><td>Entanglement</td><td>France Jobin, Markus Heckmann</td><td class="y">2023</td><td>not held</td></tr>
+<tr><td>UNION: Play the memory game</td><td>Nancy Lee, Kiran Bhumber</td><td class="y">2023</td>
+<td>not held</td></tr>
+<tr><td>BEATS</td><td>—</td><td class="y">2021</td><td>not held</td></tr>
+</table>
+
+<p class="src">source: the SAT dossier <i>Fulldome</i>, 28 June 2024, by Mourad Bennacer and Vincent
+Brault — the page as pasted is kept at <code>work/timeline/dossier.md</code>, read into
+<code>work/timeline/SOURCE.md</code>. The records are read out of <code>work/db/model</code> (1,262 works
+· 1,662 appearances · 7 festivals · 53 editions) by <code>work/timeline/check_db.py</code>. Eleven of
+these twenty-eight works have a record. Eight carry the dossier's artist in the row's own credits; One
+Sky carries Sebastien Gauthier; Introduction to Econometrics names Lydia Yakonowsky in the quote it was
+extracted from and nothing in its credits; Iwakura holds the title alone. Three more titles are held by
+other works — VORTEX, SWARM and DISORDER. The other seventeen are not in the database at all: the dossier
+names work shown at MUTEK, Melbourne, Berlin, the Cité des Sciences and in Nuit Blanche, and our records
+come from seven festival programmes.</p>
+
+</main>
+
+<script src="timeline.js"></script>
+
+</body>
+</html>

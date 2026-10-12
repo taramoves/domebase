@@ -20,11 +20,13 @@ all in place, so the navigation exists once and cannot drift page by page.
 import re
 from pathlib import Path
 
-# The menu's sections, in order. A section shows as a link only when dist/<section>/index.html
-# exists; with no page it stays a name. Archive has no page yet, and the learn page sits in the
-# lab, so neither is in the list — add archive back the day it has an index. The sketch section
-# holds the experiments — work that could go on a dome — where the lab holds tools and research.
+# The menu's sections, in order — the folder each one lives in. A folder's name is a URL, and URLs
+# do not move: the texts live in lab/ and are called readings; the tools and the experiments live in
+# sketch/ and are called lab. A section shows as a link only when dist/<section>/index.html exists;
+# with no page it stays a name. Archive has no page yet, so it is not in the list — add archive back
+# the day it has an index.
 SECTIONS = ("database", "library", "lab", "sketch")
+LABELS = {"lab": "readings", "sketch": "lab"}
 COFFEE = "https://buymeacoffee.com/taramoves"
 # The coffee link is hidden for now: the URL, the markup and the sheet's `.bmc` rules all stay, so
 # flipping this back on puts the link back on every page that carries the header.
@@ -41,23 +43,26 @@ def trail_of(text):
 def header(trail, depth, linked):
     """The header for a page `depth` folders deep, whose path reads `trail`."""
     up = "../" * depth
+    shown = lambda part: LABELS.get(part, part)
     parts = []
     for i, label in enumerate(trail):
+        # the folder name is the URL; the name printed on the page is the label
+        text = shown(label) if i == 1 else label
         if i == len(trail) - 1:                       # the page itself is not a link
-            parts.append(label)
+            parts.append(text)
         else:
-            parts.append(f'<a href="{"../" * (depth - i)}">{label}</a>')
+            parts.append(f'<a href="{"../" * (depth - i)}">{text}</a>')
         if i < len(trail) - 1:
             parts.append("/")
     current = trail[1] if len(trail) > 1 else ""
     menu = []
     for s in SECTIONS:
         if s not in linked:
-            menu.append(f"<span>{s}</span>")          # a section with no page yet
+            menu.append(f"<span>{shown(s)}</span>")   # a section with no page yet
         elif s == current:
-            menu.append(f'<span class="on">{s}</span>')
+            menu.append(f'<span class="on">{shown(s)}</span>')
         else:
-            menu.append(f'<a href="{up}{s}/">{s}</a>')
+            menu.append(f'<a href="{up}{s}/">{shown(s)}</a>')
     return ("<header>\n"
             f"  <h1>{''.join(parts)}</h1>\n"
             + (f'  <a class="bmc" href="{COFFEE}" target="_blank" rel="noopener">'

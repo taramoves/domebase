@@ -5,6 +5,10 @@ work/
 # deploy tooling state
 .vercel/
 
+# the texts' source material: the PDFs, the dumps and the artist talks stay local
+writings/
+artist talks/
+
 # scratch
 __pycache__/
 *.pyc

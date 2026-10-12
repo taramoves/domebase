@@ -170,6 +170,8 @@ table.fixed td,table.fixed th{overflow:hidden;text-overflow:ellipsis}
 .doc p{margin:0 0 2em}
 .doc .sections div{padding:.22em 0}
 .doc .sections div.sub{padding-left:1.7em}
+/* the home page's two statements — what a domeform is, and what the site is for */
+.doc .defs div{padding:.22em 0;max-width:62ch;line-height:1.5}
 .doc a{text-decoration:none}
 .doc a:hover{text-decoration:underline;text-underline-offset:3px}
 
