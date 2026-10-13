@@ -1,17 +1,18 @@
 /* timeline — the chart.
    One horizontal axis, a dot per entry, and a hairline leader from each dot to a label carrying the
-   year, what happened, who did it and where. Labels sit in four rows either side of the axis and
-   never move; the whole chart scrolls sideways. Black and hairlines only, the sheet's terms.
+   year, what happened, who did it and where. Labels sit in four rows either side of the axis; the whole
+   chart scrolls sideways. Black and hairlines only, the sheet's terms.
 
-   The entries are the SAT dossier's, in its order (work/timeline/SOURCE.md). `rec` marks a work the
-   database holds — the id, and the title to search for — and the label's last line becomes the link
-   into the database. Nothing is drawn by hand: change E and the chart re-lays itself out.
+   The entries are the SAT dossier's, in its order. Where the dossier prints no year, the year is filled
+   from our own records (work/db/model, read by work/timeline/check_db.py) or from the venue's or the
+   work's own record on the web; every one of those years is listed against its source in
+   work/timeline/SOURCE.md, and none of them is guessed. `recs` marks a work the database holds — the
+   id and the title to search for — and the label's last line becomes the link into the database.
 
-   Layout: a label wants about 252px, so the year scale (PX) and the four rows a side decide
-   whether twenty entries across six years can sit near their dots. 90px a year keeps the whole span
-   to about six screens of scrolling; the twenty entries of 2018–2024 then fan out from their cluster
-   into the empty axis either side of it, which is what the leaders are for. The year rules run every
-   ten years, with the years between them ticked on the axis. */
+   Layout: a label wants about 252px, so the year scale (PX) and the four rows a side decide whether the
+   entries of 2020-2024 can sit near their dots. At 90px a year they fan out from the cluster into the
+   quieter axis either side of it, which is what the leaders are for. The year rules run every ten years,
+   with the years between them ticked on the axis. */
 
 (function () {
   const CHART = document.getElementById('chart');
@@ -27,9 +28,9 @@
   const AND = 2030;                        /* the axis runs a little past the last entry */
   const xAt = y => LEFT + (y - Y0) * PX;
   const END = xAt(AND) + 40;
+  const WIDTH = END + 400;                 /* room for the last labels to fan past the axis */
   const H = AXIS + GAP + ROWS * ROWH + 42;
   const TOP = 8, BOT = H - 34;             /* the year rules' own labels */
-  const PANEL = END + 70, PANEL_W = 340;
 
   const E = [
     { y: 1923, what: 'the Model I, the first projection device for a geodesic dome',
@@ -45,13 +46,25 @@
       where: 'Quebec City, 400th anniversary' },
     { y: 2011, what: 'the Satosphere opens: 210° over a dance floor, 8 projectors, 93.5 channels',
       who: 'SAT', where: 'Montreal' },
+    { y: 2015, what: 'NEST Immersion founded: mobile domes and immersive VJing tools',
+      who: 'NEST Immersion', where: 'domes from 3 to 14 metres, and its own 360° software' },
     { y: 2018, what: 'Trajectories: sensing gloves drive a particle system in real time',
       who: 'Chikashi Miyama (JP/DE)', where: 'Satosphere, Montreal, in residence' },
     { y: 2018, what: 'Disorder: a dancer at the centre, 3D scans animated in real time',
       who: 'François Moncarey, Kevin Ramseier, Thomas Köppel (CH)' },
+    { y: 2020, what: 'the FVL DOME: two domes given to digital art', who: 'C-Lab',
+      where: 'Taipei, among the precursors of immersive telepresence' },
+    { y: 2020, what: 'Reverie de Giverny, a 360° film of Monet\u2019s water lilies',
+      who: 'Lynn Tomlinson' },
+    { y: 2020, what: 'The Orchid and the Bee, a five-minute VR film cut for the dome',
+      who: 'Frances Adair Mckenzie', where: 'National Film Board of Canada' },
     { y: 2021, what: 'an XR residency programme for indigenous artists', who: 'Wapikoni Mobile' },
     { y: 2021, what: 'Best of Earth, a cooperation of festivals', where: 'SAT joins in 2022' },
     { y: 2021, what: 'BEATS, a concert', where: 'MUTEK, Montreal' },
+    { y: 2021, what: 'the dome of Plymouth Market Hall opens, on the Satosphere\u2019s model',
+      who: 'Real Ideas', where: 'Plymouth, work for audiences with sensory processing disorders' },
+    { y: 2021, what: 'Hubblo founded: a catalogue of immersive works and an 8m mobile dome',
+      who: 'Hubblo', where: 'Montreal, distributing dome work internationally' },
     { y: 2021.5, ylab: '2021–2022', what: 'CLOUD BODIES, a choreographic performance made in residence',
       who: 'Allison Moore, Arthur Desmarteaux, Lucy Fandel', where: 'SAT, Montreal',
       recs: [['FM0207', 'Cloud Bodies']] },
@@ -65,6 +78,11 @@
       who: 'susy.technology, with Paige Culley' },
     { y: 2022, what: "'THAN', during Nuit Blanche: interaction or contemplation",
       who: 'Maria Takeuchi (US/JP)', where: 'Satosphere, Montreal' },
+    { y: 2022, what: 'SWARM', who: 'Maarten Isaac de Heer',
+      where: 'experimental animation: off-screen space and scale play',
+      recs: [['FM1003', 'Swarm']] },
+    { y: 2022, what: 'One Sky, an international collaboration of six countries',
+      where: 'planetariums', recs: [['FM0786', 'One Sky']] },
     { y: 2023, what: 'the Sphere opens, a dome built around content', where: 'Las Vegas' },
     { y: 2023, what: 'Entanglement, world premiere: speakers placed to answer the architecture',
       who: 'France Jobin, Markus Heckmann', where: 'Satosphere, Montreal, at MUTEK' },
@@ -79,29 +97,24 @@
     { y: 2023, what: 'CLOUD BODIES, adapted out of the Montreal residence',
       who: 'Moore, Desmarteaux, Fandel', where: 'CULTVRLAB, Cardiff, at Fulldome UK',
       recs: [['FM0207', 'Cloud Bodies']] },
+    { y: 2023, what: 'the Labos Immersifs, co-creation workshops on performing arts',
+      who: 'AADN', where: 'Planetarium of Vaulx-en-Velin, Lyon' },
+    { y: 2023, what: 'ASTRO at MUTEK Mexico, in the Digital Dome', who: 'Weidi Zhang',
+      recs: [['FM0085', 'Astro']] },
+    { y: 2023, what: 'Dancing with Dead Animals', who: 'Maarten Isaac de Heer',
+      where: 'experimental animation', recs: [['FM0253', 'Dancing with Dead Animals']] },
+    { y: 2023, what: 'CO-CREATE, a residency and the exhibition it ends in',
+      who: 'World Creation Studio', where: 'Montreal, with SAT mentoring' },
     { y: 2024, what: 'Inner Island takes the SAT Fest jury special mention', who: 'Sergey Prokofyev',
       where: 'Satosphere, Montreal', recs: [['FM0546', 'Inner Island']] },
     { y: 2024, what: "the Satosphere's system rebuilt: sound now 93.4 channels", who: 'SAT',
-      where: 'Satosphere, Montreal' }
-  ];
-
-  /* the entries the dossier prints no year for: a panel past the end of the axis */
-  const UND = [
-    { what: 'the Labos Immersifs, co-creation workshops on performing arts', who: 'AADN',
-      where: 'Planetarium of Vaulx-en-Velin, Lyon' },
-    { what: 'a dome on the Satosphere\u2019s model, work adapted for sensory processing disorders',
-      where: 'Plymouth Market Hall' },
-    { what: 'two domes, Future Vision Lab, immersive telepresence', where: 'C-Lab, Taipei' },
-    { what: 'the second Festival Sous dôme, 22–24 March',
+      where: 'Satosphere, Montreal' },
+    { y: 2024, what: 'the second Festival Sous dôme, 22–24 March',
       who: 'Cité des Sciences, with Jérémy Oury and 36°', where: 'Paris' },
-    { what: 'ASTRO', who: 'Weidi Zhang', where: 'MUTEK Mexico', recs: [['FM0085', 'Astro']] },
-    { what: 'One Sky, six countries; Space Explorers, filmed on the ISS', where: 'planetariums',
-      recs: [['FM0786', 'One Sky'], ['FM0965', 'Space Explorers']] },
-    { what: 'CO-CREATE, for emerging artists, with SAT mentoring', who: 'World Creation Studio' },
-    { what: 'experimental animation: SWARM, Dancing with Dead Animals, Reveries of Giverny, Ignite!, The Orchid and the Bee',
-      who: 'de Heer; Tomlinson; Mckenzie', recs: [['FM1003', 'Swarm'], ['FM0253', 'Dancing with Dead Animals'], ['FM0523', 'Ignite']] },
-    { what: 'mobile domes and immersive VJing tools; international distribution of dome work',
-      who: 'NEST Immersion; Hubblo' }
+    { y: 2024, what: 'Ignite!', who: 'Lynn Tomlinson', where: 'experimental animation',
+      recs: [['FM0523', 'Ignite']] },
+    { y: 2026, what: 'Space Explorers: The ISS Experience, filmed on the ISS',
+      where: 'planetariums', recs: [['FM0965', 'Space Explorers']] }
   ];
 
   /* ---------- a label's height, from the text it carries ---------- */
@@ -120,8 +133,8 @@
       if (best) return;
       for (let r = 0; r < ROWS; r++) {
         const left = Math.max(free[side][r], x - 40);
-        /* near the axis's end a label has to stay this side of the undated panel */
-        if (left - x <= MAXRUN && left + LBL_W <= PANEL - 24) {
+        /* a label has to stay inside the chart, however far it fans */
+        if (left - x <= MAXRUN && left + LBL_W <= WIDTH - 16) {
           best = { side: side, row: r, left: left }; return;
         }
       }
@@ -153,26 +166,23 @@
     Object.keys(css).forEach(k => n.style[k] = css[k]);
     return n;
   };
-  const link = (rec) => {
-    const a = document.createElement('a');
-    a.href = '../../database/#v=films&in=title&q=' + encodeURIComponent(rec[1]).replace(/%20/g, '+');
-    a.textContent = rec[0];
-    return a;
-  };
   const recordLine = (recs) => {
     const r = box('r', {});
     recs.forEach(function (rec, i) {
       if (i) r.appendChild(document.createTextNode(', '));
-      r.appendChild(link(rec));
+      const a = document.createElement('a');
+      a.href = '../../database/#v=films&in=title&q=' + encodeURIComponent(rec[1]).replace(/%20/g, '+');
+      a.textContent = rec[0];
+      r.appendChild(a);
     });
     r.appendChild(document.createTextNode(' in the database'));
     return r;
   };
 
-  CHART.style.width = (PANEL + PANEL_W + 30) + 'px';
+  CHART.style.width = WIDTH + 'px';
   CHART.style.height = H + 'px';
 
-  const g = svg('svg', { width: PANEL + PANEL_W + 30, height: H, class: 'ink' });
+  const g = svg('svg', { width: WIDTH, height: H, class: 'ink' });
   const line = (x1, y1, x2, y2, hair) => g.appendChild(svg('line', {
     x1: x1, y1: y1, x2: x2, y2: y2, stroke: hair ? '#c9c9c9' : '#000000', 'stroke-width': 1
   }));
@@ -184,10 +194,6 @@
   line(LEFT, AXIS, END, AXIS);
   g.appendChild(svg('polygon', {
     points: END + ',' + AXIS + ' ' + (END - 9) + ',' + (AXIS - 4) + ' ' + (END - 9) + ',' + (AXIS + 4)
-  }));
-  g.appendChild(svg('rect', {
-    x: PANEL, y: TOP + 12, width: PANEL_W, height: BOT - 18 - TOP, fill: 'none',
-    stroke: '#000000', 'stroke-width': 1
   }));
   CHART.appendChild(g);
 
@@ -233,21 +239,6 @@
     line(Math.min(p.x, p.left + 12), edge, Math.max(p.x, p.left + 12), edge);
   });
 
-  const head = box('und-head', { left: (PANEL + 10) + 'px', top: (TOP + 16) + 'px',
-    width: (PANEL_W - 20) + 'px' });
-  head.textContent = 'no year given';
-  CHART.appendChild(head);
-  let uy = TOP + 44;
-  UND.forEach(function (u) {
-    const l = box('lab und', { left: (PANEL + 10) + 'px', top: uy + 'px', width: (PANEL_W - 20) + 'px' });
-    const what = box('w', {}); what.textContent = u.what; l.appendChild(what);
-    if (u.who) { const w = box('a', {}); w.textContent = u.who; l.appendChild(w); }
-    if (u.where) { const w = box('v', {}); w.textContent = u.where; l.appendChild(w); }
-    if (u.recs) l.appendChild(recordLine(u.recs));
-    CHART.appendChild(l);
-    uy += l.offsetHeight + 10;
-  });
-
   document.querySelectorAll('.tlbar button').forEach(function (b) {
     b.addEventListener('click', function () {
       const wrap = document.querySelector('.tlwrap');
@@ -259,13 +250,10 @@
 
   /* what a check can read back */
   CHART.datum = {
-    entries: placed.length, undated: UND.length,
-    labels: CHART.querySelectorAll('.lab').length,
-    axisY: AXIS,
+    entries: placed.length, labels: CHART.querySelectorAll('.lab').length, axisY: AXIS, rows: ROWS,
     x: { '1923': xAt(1923), '1957': xAt(1957), '1969': xAt(1969), '2011': xAt(2011), '2018': xAt(2018) },
     maxrun: Math.round(Math.max.apply(null, placed.map(p => Math.abs(p.left + 12 - p.x)))),
-    minrun: Math.round(Math.min.apply(null, placed.map(p => Math.abs(p.left + 12 - p.x)))),
     maxlabel: Math.max.apply(null, placed.map(p => p.actual)),
-    width: PANEL + PANEL_W + 30
+    width: WIDTH
   };
 })();
