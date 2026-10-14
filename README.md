@@ -129,12 +129,16 @@ the frame and the controls are black on white like the rest of the site. Its sou
 `src/lab/floorplan/index.html`.
 
 The dome's own numbers are fields at the left of the first view: the radius and the wall in metres,
-how many speakers, how many projectors, and whether the panels are quads or cut in two. A count is
+the screen's span in degrees, how many speakers, how many projectors, and whether the panels are
+quads or cut in two. A count is
 read off the rig the room already is and scaled from it, so a number put back where it came from
 returns that rig exactly, whatever was typed in between; a ring that holds one speaker is the pole
 and stays one. `triangles` cuts every panel in two along a diagonal that turns with the band, on the
 plate and on the hemisphere, and the panel keeps its colour and its exit either way. The radius and
-the wall are the floor's own room fields: one room, three panes, one set of numbers.
+the wall are the floor's own room fields: one room, three panes, one set of numbers. The degrees are
+the screen's own span across the room, 180 for the hemisphere: past that the screen keeps its base
+and its wall and is a larger sphere, so it springs from the wall's top, widens above it and its
+horizon comes up off the wall — the floor, the wall and the plate do not move.
 
 The same page carries the room: **three views in tabs — dome, floor, 3d** — all in the master's own
 frame, so the plan's top is the back of the house (the master's azimuth 0), x runs east and y back,

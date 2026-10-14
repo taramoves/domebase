@@ -41,8 +41,11 @@
   function norm360(a) { a = a % 360; return a < 0 ? a + 360 : a; }
   function r3(v) { return Math.round(v * 1000) / 1000; }
   function fin(v) { return typeof v === "number" && isFinite(v); }
+  /* The screen's span across the room, in degrees: 180 is a hemisphere. A screen past a hemisphere
+     hangs below the horizon; a shallower one stops above it. Anything typed is read to a screen. */
+  function degrees(v) { return fin(v) && v >= 60 && v <= 340 ? v : 180; }
 
-  function def() { return { R: 10, wall: 0, step: 0.5, next: 1, items: [] }; }
+  function def() { return { R: 10, wall: 0, deg: 180, step: 0.5, next: 1, items: [] }; }
 
   /* the item's own frame: s its right hand, f the way it faces */
   function axes(it) {
@@ -225,7 +228,7 @@
       app: "sat-dome-floor", version: 1,
       units: "metres; x east, y back; rot the way an item faces, degrees clockwise from the back",
       floor: {
-        R: r3(F.R), wall: r3(F.wall), step: r3(F.step),
+        R: r3(F.R), wall: r3(F.wall), deg: Math.round(F.deg * 10) / 10, step: r3(F.step),
         items: F.items.map(function (it) {
           return { t: it.t, x: r3(it.x), y: r3(it.y), w: r3(it.w), d: r3(it.d),
                    rot: Math.round(norm360(it.rot) * 10) / 10 };
@@ -242,6 +245,7 @@
     F = def();
     if (fin(s.R) && s.R > 0) F.R = Math.min(1000, s.R);
     if (fin(s.wall) && s.wall >= 0) F.wall = Math.min(F.R, s.wall);
+    if (fin(s.deg)) F.deg = degrees(s.deg);
     if (fin(s.step) && s.step > 0) F.step = s.step;
     for (i = 0; i < s.items.length; i++) {
       var q = s.items[i];
@@ -263,6 +267,7 @@
     axes: axes, local: local, world: world, corners: corners, turnAt: turnAt,
     az: az, radius: radius, clampIn: clampIn, move: move, turn: turn, resize: resize, ring: ring,
     layout: layout,
-    hit: hit, pix: pix, m2p: m2p, p2m: p2m, snap: snap, norm360: norm360, out: out, load: load
+    hit: hit, pix: pix, m2p: m2p, p2m: p2m, snap: snap, norm360: norm360, degrees: degrees,
+    out: out, load: load
   };
 });

@@ -50,6 +50,7 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 <div class="pane">
 <h2>dome</h2>
 <div class="row"><label>radius <input class="num" id="dR"> m</label><label>wall <input class="num" id="dW"> m</label></div>
+<div class="row"><label>degrees <input class="num" id="dG"> &#176;</label></div>
 <div class="row"><label>speakers <input class="num" id="dSp"></label><label>projectors <input class="num" id="dPr"></label></div>
 <div class="row"><label>panels <select id="dSh"><option value="quad">quads</option><option value="tri">triangles</option></select></label></div>
 <div class="note" id="dst"></div>
@@ -452,7 +453,7 @@ render();
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, w, h);
     var sc = SD.scene({
-      R: F.R, wall: F.wall, map: ui.map, rings: f.rings, panels: f.panels, shape: f.shape, speakers: f.spk,
+      R: F.R, wall: F.wall, deg: F.deg, map: ui.map, rings: f.rings, panels: f.panels, shape: f.shape, speakers: f.spk,
       projectors: f.circ, exits: f.exits, grid: F.step, show: F.show,
       items: F.items.map(function (it) {
         var t = T[it.t];
@@ -474,7 +475,7 @@ render();
       ctx.fillStyle = "#000";
       ctx.fillText(l.text, l.x, l.y);
     });
-    say("gst", F.R + " m · wall " + F.wall + " m · " + f.spk.length + " speakers · " +
+    say("gst", F.R + " m · wall " + F.wall + " m · " + F.deg + "° · " + f.spk.length + " speakers · " +
               f.circ.length + " projectors · " + f.exits.length + " exits · " + F.items.length + " items");
   }
   function gmove(e) {
@@ -548,6 +549,7 @@ render();
     var R = Math.min(200, Math.max(1, parseFloat($("fR").value) || 10));
     F.R = R;
     F.wall = Math.max(0, Math.min(R, parseFloat($("fWa").value) || 0));
+    F.deg = FP.degrees(parseFloat($("dG").value));
     F.step = Math.max(.05, parseFloat($("fS").value) || .5);
     F.items.forEach(function (it) { FP.clampIn(it, F.R); });
     persist(); drawFloor(); draw3d(); fields();
@@ -687,6 +689,7 @@ render();
     $(p[0]).onchange = function () { F.show[p[1]] = $(p[0]).checked ? 1 : 0; persist(); drawFloor(); };
   });
   ["fx", "fy", "fw", "fd", "frt"].forEach(function (id) { $(id).onchange = function () { push(); field(id); }; });
+  $("dG").onchange = function () { push(); room(); };
   ["gR", "gWa", "dR", "dW"].forEach(function (id) {
     $(id).onchange = function () {
       $(/W$/.test(id) ? "fWa" : "fR").value = $(id).value;
@@ -758,7 +761,7 @@ render();
   function domeFields() {
     var tot = 0, rings = [];
     S.spk.forEach(function (r) { tot += r.n; rings.push(r.n); });
-    setv("dR", F.R); setv("dW", F.wall);
+    setv("dR", F.R); setv("dW", F.wall); setv("dG", F.deg);
     setv("dSp", tot); setv("dPr", S.circ.length);
     $("dSh").value = dome.shape(S);
     say("dst", dome.panelCount(N) + " panels · " + S.spk.length + " rings " + rings.join("·") +
