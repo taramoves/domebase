@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/lab/dome-diagram", "destination": "/lab/floorplan/", "permanent": true },
+    { "source": "/lab/dome-diagram/(.*)", "destination": "/lab/floorplan/", "permanent": true }
+  ],
   "outputDirectory": "dist",
   "buildCommand": null,
   "installCommand": null,

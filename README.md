@@ -10,7 +10,7 @@ src/                    what the site is — hand-written pages and assets, noth
   database/             app.html + app.js — the database section's own page source
   library/notes/        the library's notes, one per work
   lab/index.html        the lab's index: one line per page in the lab
-  lab/dome-diagram/     the SAT dome master: panels, speaker rings, projector circles
+  lab/floorplan/        the room: the SAT dome master, the floor plan, the room in 3d
   lab/instrument/       the instrument page: one hand-written document, diagrams inline
   lab/learn/            the technical basics of fulldome: the master, the two signal chains
   lab/shelf/            the texts, one page per source: lecture, ontology, practice as research,
@@ -92,8 +92,9 @@ bold and a section that has no page yet left as a name; at the right the coffee 
 listed under it.
 
 A page that hides the navigation carries no marker and draws its own corner: `sketch/3Dmath`,
-`sketch/pitch`, the three looper pages (`sketch/{spiral,concentric,pinball}`), `lab/dome-diagram`
-and `sketch/slides` keep their own path in their own styling. The coffee link rides with the header,
+`sketch/pitch`, the three looper pages (`sketch/{spiral,concentric,pinball}`) and `sketch/slides`
+keep their own path in their own styling. `lab/floorplan` used to be one of them and now carries
+the header like the rest of the lab. The coffee link rides with the header,
 so it appears on the pages that carry the site's navigation and nowhere else — off for now.
 
 ## The data
@@ -119,12 +120,52 @@ never become public URLs.
 
 ## Lab
 
-`dist/lab/dome-diagram/index.html` is the SAT dome master, published as it stands and copied in by
-the build: one SVG, no library and no network, with panel rings, projector circles and speaker
-rings drawn as percentages of the dome radius, numbers and a test pattern to switch on. It saves
-to `localStorage` and downloads a JSON save. Panels paint the four states, so it keeps the colours
-of the working tool; the frame and the controls are black on white like the rest of the site. Its
-source is `src/lab/dome-diagram/index.html`.
+`dist/lab/floorplan/index.html` is the SAT dome master with the room around it: one page, three
+views, the master first, so the diagram opens as it has always been. The master is one SVG, no
+library and no network, with panel rings, projector circles and speaker rings drawn as percentages
+of the dome radius, numbers and a test pattern to switch on. It saves to `localStorage` and
+downloads a JSON save. Panels paint the four states, so it keeps the colours of the working tool;
+the frame and the controls are black on white like the rest of the site. Its source is
+`src/lab/floorplan/index.html`.
+
+The dome's own numbers are fields at the left of the first view: the radius and the wall in metres,
+how many speakers, how many projectors, and whether the panels are quads or cut in two. A count is
+read off the rig the room already is and scaled from it, so a number put back where it came from
+returns that rig exactly, whatever was typed in between; a ring that holds one speaker is the pole
+and stays one. `triangles` cuts every panel in two along a diagonal that turns with the band, on the
+plate and on the hemisphere, and the panel keeps its colour and its exit either way. The radius and
+the wall are the floor's own room fields: one room, three panes, one set of numbers.
+
+The same page carries the room: **three views in tabs — dome, floor, 3d** — all in the master's own
+frame, so the plan's top is the back of the house (the master's azimuth 0), x runs east and y back,
+in metres from the middle, and the wall is the circle of radius R. The floor view is a plan with a
+palette of eight items — bean bag, chair, table, stage, front of house, light, projector, misc, each
+with a pale tint of its own, shown as a swatch on the menu. A kind is dragged out of the menu and
+lands where the pointer lets go, or clicked to land in the middle of the room. An item is dragged,
+resized from its corner handles and turned from the handle on its stalk (alt and a
+drag from the body turns it too; ctrl holds a move to the grid, a turn to 15° and a resize to 0.1 m;
+arrows nudge). A resize holds the corner the hand is not on, nothing climbs through the wall, and
+`lay round` lays copies of the item evenly around the middle at its own radius, each keeping the
+middle on the same side of it. `lay out` lays a whole bank of seats: arcs round the middle or rows
+along x, with the seats and the rows, the gap between two seats and between two rows, where the
+first row starts, where round the room the bank is centred, which way every seat faces, and aisles —
+radial ones of a given width round the middle for arcs, gaps between blocks for rows. The gaps are
+the air between two seats rather than their pitch, so the panel says how many of the seats asked for
+fit and what took the rest: the wall, or an aisle. A seat past the wall is dropped rather than slid,
+and laying out again replaces the last bank, so the numbers can be nudged. A switch turns the item
+tints off and leaves the plan as a plain sheet. The selected item's x, y, w, d and turn are fields in metres and
+degrees. The master's rings, speaker marks, projector circles and exit panels are laid over the plan
+where the master holds them. The 3d view stands the room up — the floor disc, the wall the screen
+springs from, the master's panels, seams, speakers, projectors and exits on the hemisphere, the
+floor's items as boxes and cylinders — paints it far to near, and orbits on a drag. `save room`
+writes one file holding the dome's state and the floor's; `load room` takes that file or a master
+save. Its files are `src/lab/floorplan/{index.html,floorplan.js,solid.js,dome.js}`, and the three modules
+load in node, so the check runs the code the page runs — the plan's maths, the room's solids and the
+dome's own counts together in `work/lab/check_floor.cjs`.
+
+```bash
+node work/lab/check_floor.cjs    # the plan's frame and handles, the wall, a ring, the room, the camera
+```
 
 `dist/lab/instrument/index.html` is also hand-written and copied in by the build: a document
 page, not a spreadsheet, for the audience interaction system. Today it carries the summary, one

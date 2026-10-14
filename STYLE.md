@@ -32,7 +32,7 @@ Set by the user, 30 Sep 2026. Applies to every page in this project.
   sketch holds experiments — work that could go on a dome.**
 
 - **A page that hides the navigation carries no marker** and keeps its own corner: the fullscreen
-  dome pages (`sketch/3Dmath`, `sketch/pitch`, `lab/dome-diagram`, `sketch/slides`) draw their own path in their own
+  dome pages (`sketch/3Dmath`, `sketch/pitch`, `sketch/slides`) draw their own path in their own
   styling — and in the sheet's own type: Arial at the sheet's sizes, no uppercase, no letterspacing.
   The three looper pages draw the same corner to the same measure, inverted: an Arial 16px heading
   on a black tab, because the page under it is the prototype's.
@@ -319,12 +319,26 @@ sideways. Authoring in the master removes the inverse problem: the pointer's pos
 
 ## Lab
 
-`dist/lab/dome-diagram/index.html` is the SAT dome master, copied in by the build as it stands. It is
-a tool, not a sheet: `body` is a column of one header and one stage, the drawing fills the stage and
-the controls sit in its two bottom corners. Panel paint, speaker, projector and hover colours are
+`dist/lab/floorplan/index.html` is the SAT dome master with the floor plan and the 3d room beside
+it, three views in tabs. It is a tool, not a sheet: `body` is a column of the site's header, the
+tab strip and the view, the drawing fills what is left and the master's controls sit in the two
+bottom corners of its pane. It carries the header like the rest of the lab, so the page is reachable
+from the index and the section menu. Panel paint, speaker, projector and hover colours are
 kept because they carry meaning — the fourth colour is an exit — and they are the same exception the
 3d math canvas has. The frame, the controls and the numbers are black on white, and the page has no
 dark mode. One JPEG test pattern is embedded as a data URL, which is 0.6 MB of the page.
+
+The same page carries two more views in tabs under the title — `dome`, `floor`, `3d` — and those
+two take a left panel: a ruled column of boxed groups (the palette in two columns, the room's own
+numbers, the selected item, the file), with the active tab filled `#efefef` the way a sheet tab is,
+fields as hairline boxes with no radius, and the drawing centred in what is left beside it. Black on
+white holds throughout. The 3d view draws the room in the sheet's own greys — the floor `#efefef`,
+the grid `#c9c9c9`, and every edge and the screen's own rings black hairlines — so a solid reads as a
+filled shape standing on a grey floor and the screen as a wireframe over it. The floor's items carry a
+pale tint each, one per kind, the working tool's own colour the way the master keeps its four panel
+states: light enough that a black hairline, a black name and the room's own marks all read on top of
+it, and each shown as a swatch on the menu so the room's colours are read off the menu. One switch per
+pane turns them all off and leaves the sheet white with black hairlines, as it was.
 
 `dist/lab/instrument/index.html` is hand-written and copied in by the build, and it is the one
 document page in the project with prose in it: the technology of the audience interaction
