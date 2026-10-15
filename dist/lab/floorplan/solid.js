@@ -254,7 +254,9 @@
                t[1] - d * Math.cos(yaw) * Math.cos(pitch),
                t[2] + d * Math.sin(pitch)];
     var fwd = unit(sub(t, pos)), right = unit(cross(fwd, [0, 0, 1])), up = cross(right, fwd);
-    var k = o.h / 2 / Math.tan((o.fov || 42) * D / 2);
+    /* the scale fits the box's shorter side, so a room in a tall narrow cell is held whole: in a
+       wide view this is the height, which is the framing the page always had */
+    var k = Math.min(o.h, o.w) / 2 / Math.tan((o.fov || 42) * D / 2);
     return {
       pos: pos, fwd: fwd, right: right, up: up, k: k, cx: o.w / 2, cy: o.h / 2,
       at: function (p) {

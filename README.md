@@ -140,7 +140,7 @@ the screen's own span across the room, 180 for the hemisphere: past that the scr
 and its wall and is a larger sphere, so it springs from the wall's top, widens above it and its
 horizon comes up off the wall — the floor, the wall and the plate do not move.
 
-The same page carries the room: **three views in tabs — dome, floor, 3d** — all in the master's own
+The same page carries the room: **four tabs — dome, floor, 3d, all** — all in the master's own
 frame, so the plan's top is the back of the house (the master's azimuth 0), x runs east and y back,
 in metres from the middle, and the wall is the circle of radius R. The floor view is a plan with a
 palette of eight items — bean bag, chair, table, stage, front of house, light, projector, misc, each

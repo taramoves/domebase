@@ -35,6 +35,11 @@ fieldset{border:0;margin:0;padding:0}
 .types button:nth-child(2n){border-right:0}
 .types button:hover{background:#efefef;text-decoration:none}
 .cv{flex:1;position:relative;overflow:hidden;min-width:0}
+.cell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--bd)}
+.cell:last-child{border-right:0}
+.cell .slot{flex:1;min-height:0;display:flex}
+.cell .slot > *{flex:1}
+#av .ov{display:none}
 #fs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);touch-action:none;display:block}
 #gc{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #fst,#gst{color:var(--mu);min-height:1.3em}
@@ -45,7 +50,7 @@ fieldset{border:0;margin:0;padding:0}
 select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--bg);color:var(--fg);max-width:120px}
 </style></head><body>
 <!--nav domebase/lab/floorplan-->
-<nav id="tabs"><button data-v="d">dome</button><button data-v="f">floor</button><button data-v="g">3d</button></nav>
+<nav id="tabs"><button data-v="d">dome</button><button data-v="f">floor</button><button data-v="g">3d</button><button data-v="a">all</button></nav>
 <div id="stage" class="view">
 <div class="pane">
 <h2>dome</h2>
@@ -96,7 +101,7 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 <div class="types"><button id="fsv">save room</button><button id="fld">load room</button><button id="fud">undo</button><button id="fcl">clear items</button></div>
 <div class="row" id="fst"></div>
 </div>
-<div class="cv"><svg id="fs" viewBox="0 0 680 680" role="img"><title>Floor plan</title><defs><clipPath id="wcp"><circle cx="340" cy="340" r="338"/></clipPath></defs><g id="g1" clip-path="url(#wcp)"></g><g id="g2"></g><g id="g3"></g><g id="g4"></g><g id="g5"></g></svg></div>
+<div class="cv" id="fcv"><svg id="fs" viewBox="0 0 680 680" role="img"><title>Floor plan</title><defs><clipPath id="wcp"><circle cx="340" cy="340" r="338"/></clipPath></defs><g id="g1" clip-path="url(#wcp)"></g><g id="g2"></g><g id="g3"></g><g id="g4"></g><g id="g5"></g></svg></div>
 <input type="file" id="lf2" accept=".json,application/json" hidden>
 </div>
 <div id="gv" class="view" hidden>
@@ -110,7 +115,12 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 <div class="row"><label>room <input class="num" id="gR"> m</label><label>wall <input class="num" id="gWa"> m</label></div>
 <div class="row" id="gst"></div>
 </div>
-<div class="cv"><canvas id="gc"></canvas></div>
+<div class="cv" id="gcv"><canvas id="gc"></canvas></div>
+</div>
+<div id="av" class="view" hidden>
+<div class="cell"><h2>dome</h2><div class="slot" id="sa"></div></div>
+<div class="cell"><h2>floor</h2><div class="slot" id="sf"></div></div>
+<div class="cell"><h2>3d</h2><div class="slot" id="sg"></div></div>
 </div>
 <input type="file" id="lf" accept=".json,application/json" hidden>
 <script src="dome.js?v=1"></script>
@@ -292,7 +302,7 @@ render();
 
   /* ---- the plan ------------------------------------------------------------------------- */
   function fitFloor() {
-    var c = $("fl").getElementsByClassName("cv")[0], s = $("fs");
+    var c = $("fcv"), s = $("fs");
     var n = Math.max(160, Math.min(c.clientWidth, c.clientHeight) - 6);
     s.style.width = n + "px";
     s.style.height = n + "px";
@@ -324,7 +334,7 @@ render();
     return h;
   }
   function drawFloor() {
-    if (ui.view !== "f") return;
+    if (ui.view !== "f" && ui.view !== "a") return;
     var R = F.R, U = 340 / R, i, h = "", st = F.step, n;
     while (st * U < 5) st *= 2;
     n = Math.floor(R / st);
@@ -441,7 +451,7 @@ render();
     }
   }
   function draw3d() {
-    if (ui.view !== "g") return;
+    if (ui.view !== "g" && ui.view !== "a") return;
     var c = $("gc"), w = c.clientWidth, h = c.clientHeight, dpr = window.devicePixelRatio || 1;
     if (w < 8 || h < 8) return;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
@@ -554,15 +564,32 @@ render();
     F.items.forEach(function (it) { FP.clampIn(it, F.R); });
     persist(); drawFloor(); draw3d(); fields();
   }
+  /* The three readings side by side are the same three drawings, moved. A canvas draws into the
+     element it lives in, so the all view borrows the master, the plan and the solids rather than
+     growing a second copy of each: the containers go home first, then into the row. */
+  function park() {
+    $("stage").appendChild($("dcv"));
+    $("fl").insertBefore($("fcv"), $("lf2"));
+    $("gv").appendChild($("gcv"));
+  }
+  function spread() {
+    $("sa").appendChild($("dcv"));
+    $("sf").appendChild($("fcv"));
+    $("sg").appendChild($("gcv"));
+  }
   function view(v) {
     ui.view = v;
+    park();
     $("stage").hidden = v !== "d";
     $("fl").hidden = v !== "f";
     $("gv").hidden = v !== "g";
+    $("av").hidden = v !== "a";
+    if (v === "a") spread();
     Array.prototype.forEach.call($("tabs").children, function (b) { b.className = b.getAttribute("data-v") === v ? "on" : ""; });
     if (v === "d") fitDome();
     if (v === "f") { fitFloor(); drawFloor(); }
     if (v === "g") { draw3d(); }
+    if (v === "a") { fitDome(); fitFloor(); drawFloor(); draw3d(); }
     fields();
   }
 
@@ -812,7 +839,7 @@ render();
       if (e.key === "r") preset("reset");
       return;
     }
-    if (e.key === "1" || e.key === "2" || e.key === "3") { view(["d", "f", "g"][+e.key - 1]); return; }
+    if (e.key >= "1" && e.key <= "4") { view(["d", "f", "g", "a"][+e.key - 1]); return; }
     if (ui.view !== "f") return;
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); del(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); $("fdup").click(); return; }

@@ -320,7 +320,8 @@ sideways. Authoring in the master removes the inverse problem: the pointer's pos
 ## Lab
 
 `dist/lab/floorplan/index.html` is the SAT dome master with the floor plan and the 3d room beside
-it, three views in tabs. It is a tool, not a sheet: `body` is a column of the site's header, the
+it, four tabs: the three views and `all`, which puts the three drawings side by side. It is a tool,
+not a sheet: `body` is a column of the site's header, the
 tab strip and the view, the drawing fills what is left and the master's controls sit in the two
 bottom corners of its pane. It carries the header like the rest of the lab, so the page is reachable
 from the index and the section menu. Panel paint, speaker, projector and hover colours are
