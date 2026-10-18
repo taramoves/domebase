@@ -22,8 +22,10 @@ body{margin:0;background:#000;color:#fff;
 #hideBtn{background:transparent;color:#fff;border:1px solid #fff;padding:7px 14px}
 #hideBtn:hover{background:#fff;color:#000}
 /* HIDE leaves the dome master and this one button, nothing else */
-body.bare #title,body.bare #desc,body.bare #phone,body.bare .navA,body.bare #btnRow,body.bare #all,
+body.bare #title,body.bare #desc,body.bare #phone,body.bare .navA,body.bare #all,
 body.bare #topA{display:none!important}
+/* HIDE still leaves the controls you press while presenting */
+body.bare #btnRow{display:flex!important}
 #allBtn{background:#fff;color:#000;border:1px solid #fff;padding:7px 20px}
 #allBtn:hover{background:#000;color:#fff}
 #langBtn{background:transparent;color:#fff;border:1px solid #fff;padding:7px 14px}
@@ -611,8 +613,19 @@ function placeShape(g,kind){
   var v=(kind?LVOICES.filter(function(v){return v.kind===kind;})[0]:null)||LVOICES[Math.floor(Math.random()*LVOICES.length)];
   var m=glyph(v.kind,2.2,v.color);
   var ring=Math.floor(Math.random()*5),split=Math.floor(Math.random()*8);
-  /* where it sits is random, not snapped to a ring and slice: the eight slices are zones, not slots */
-  var raz=Math.random()*360,rel=randEl();
+  /* where it sits is random, not snapped to a ring and slice: the eight slices are zones, not slots.
+     Repeat the draw until it is clear of every shape already there — two shapes a few degrees apart
+     make a pocket a pinball cannot leave. */
+  var raz=Math.random()*360,rel=randEl(),tries;
+  for(tries=0;tries<16;tries++){
+    var clear=true;
+    for(var k2=0;k2<g.userData.items.length;k2++){
+      var o2=g.userData.items[k2].userData;
+      if(Math.abs(((raz-o2.raz+540)%360)-180)<7&&Math.abs(rel-o2.rel)<6){clear=false;break;}
+    }
+    if(clear)break;
+    raz=Math.random()*360;rel=randEl();
+  }
   m.userData={ring:ring,split:split,raz:raz,rel:rel,voice:LVOICES.indexOf(v),kind:v.kind,az:0,el:0,hot:0};
   g.add(m);g.userData.items.push(m);
   resolveLoopers(g);
@@ -1147,6 +1160,10 @@ var SCENES=[
                if(m2.userData.hot<0.02)fireShape(m2);m2.userData.hot=1;}
            }}
        }
+       /* a ball wedged between shapes loses its speed and never comes back; drain it after 0.9 s */
+       var sp2=Math.hypot(b2.vx,b2.vz);
+       b2.stuck=sp2<2.2?(b2.stuck||0)+dt:0;
+       if(b2.stuck>0.9){g.remove(b2.mesh);b2.mesh.material.dispose();u.balls.splice(bi,1);continue;}
        var rr2=Math.hypot(b2.x,b2.z);
        if(rr2>RPLAN){g.remove(b2.mesh);b2.mesh.material.dispose();u.balls.splice(bi,1);continue;}
        b2.mesh.position.copy(sph(wrap360(Math.atan2(b2.x,-b2.z)/D),90*(1-rr2/RPLAN),RS-0.35));
