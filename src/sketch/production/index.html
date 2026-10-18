@@ -1,0 +1,1643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Surface &amp; Space — fulldome lecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#000;color:#fff;
+  font:13px/1.5 "Lato","Segoe UI",system-ui,sans-serif;
+  overflow:hidden}
+#title{position:fixed;top:20px;left:26px;z-index:30;font-size:24px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#fff;pointer-events:none}
+/* one row, right aligned — the two never collide however long the labels get */
+#topR{position:fixed;top:16px;right:20px;z-index:30;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+#topA{display:flex;gap:10px;align-items:stretch}
+#topR button{font:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;line-height:1}
+#hideBtn{background:transparent;color:#fff;border:1px solid #fff;padding:7px 14px}
+#hideBtn:hover{background:#fff;color:#000}
+/* HIDE leaves the dome master and this one button, nothing else */
+body.bare #title,body.bare #desc,body.bare #phone,body.bare .navA,body.bare #btnRow,body.bare #all,
+body.bare #topA{display:none!important}
+#allBtn{background:#fff;color:#000;border:1px solid #fff;padding:7px 20px}
+#allBtn:hover{background:#000;color:#fff}
+#langBtn{background:transparent;color:#fff;border:1px solid #fff;padding:7px 14px}
+#langBtn:hover{background:#fff;color:#000}
+.navA{position:fixed;bottom:16px;z-index:30;width:34px;height:34px;padding:0;background:none;border:0;
+  color:#fff;font:inherit;font-size:19px;line-height:1;cursor:pointer;opacity:.8;
+  display:flex;align-items:center;justify-content:center}
+.navA:hover{opacity:1;color:#ffd400}
+.navA[disabled]{opacity:.16;cursor:default;color:#fff}
+#prevA{left:22px}#nextA{right:22px}
+/* ---- ALL view: circles + table of contents ---- */
+#all{display:flex;height:100vh}
+#grid{flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);
+  gap:18px;padding:88px 22px 24px}
+#toc{width:346px;flex:none;padding:88px 24px 30px 28px;border-right:1px solid #1a1a1a;overflow-y:auto;
+  display:flex;flex-direction:column;gap:0}
+.toc-h{font-size:24px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:16px}
+.toc-item{color:#fff;cursor:pointer;padding:0 0 15px;border-bottom:1px solid transparent}
+/* laptop heights: tighten the list so the closing note still reaches the fold */
+@media (max-height:980px){
+  #toc{padding-top:70px}
+  .toc-h{font-size:20px;margin-bottom:10px}
+  .toc-item{padding-bottom:9px}
+  .toc-n{font-size:12px;line-height:1.35}
+  .toc-d{font-size:9px;line-height:1.45;margin-top:2px}
+  .toc-note{font-size:9px;line-height:1.45;margin-top:10px;padding-top:9px}
+}
+.toc-item:hover .toc-n{color:#05acf8}
+.toc-n{font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;line-height:1.5}
+.toc-d{font-size:10px;line-height:1.65;letter-spacing:.015em;color:#fff;opacity:.78;margin-top:4px}
+.toc-note{font-size:9.5px;line-height:1.62;letter-spacing:.015em;opacity:.78;margin-top:16px;padding-top:12px;
+  border-top:1px solid #1a1a1a;max-width:46ch}
+.toc-note a{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.toc-note a:hover{color:#05acf8}
+.thumb{position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* cells 11 and 12: how to put this thing on a dome, in the same grid as the circles */
+.dome-note{grid-column:span 2;border:1px solid #2a2a2a;padding:16px 20px;display:flex;flex-direction:column;
+  justify-content:center;gap:9px}
+.dome-note h3{font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin:0}
+.dome-note ol{margin:0;padding-left:16px;font-size:10px;line-height:1.6}
+.dome-note li{padding-bottom:3px}
+.thumb canvas{width:min(100%, calc((100vh - 130px)/3));aspect-ratio:1;display:block}
+.thumb .num{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:72px;font-weight:900;color:#fff;
+  text-shadow:0 0 22px rgba(0,0,0,.95),0 2px 10px rgba(0,0,0,.85);pointer-events:none}
+/* ---- FULL view: dome always centred, panels overlay ---- */
+#full{display:none}
+#full.on{display:block;height:100vh;position:relative}
+#domeWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#phonePane{position:absolute;left:0;bottom:0;width:250px;display:flex;align-items:flex-end;justify-content:center;padding:0 16px 24px;z-index:2}
+@media (max-height:920px){#phone{width:168px}#phoneScr{font-size:9px;gap:6px;padding:9px}
+  #phoneWrap{gap:10px}#simBtn{padding:7px 12px;font-size:10px}}
+#phonePane.off{display:none}
+#phoneWrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+#phone{width:210px;aspect-ratio:9/18;background:#000;border-radius:26px;padding:10px;
+  box-shadow:0 18px 40px rgba(0,0,0,.6)}
+#phoneScr{width:100%;height:100%;background:#05acf8;border-radius:17px;overflow:hidden;color:#000;
+  display:flex;flex-direction:column;gap:9px;padding:12px;font-size:10px;line-height:1.4;
+  font-weight:700;text-align:center}
+#phoneScr button{font:inherit;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+  text-align:center;background:#fff;color:#000;border:2px solid #000;padding:11px 10px;cursor:pointer;user-select:none}
+#phoneScr button:active,#phoneScr button.on{background:#ffd400;color:#000}
+#phoneScr button.done{background:#ffd400;color:#000;opacity:1}
+#phoneScr button.big{padding:26px 10px;font-size:16px}
+#phoneScr .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1;align-content:center}
+#phoneScr .grid2 button{font-size:26px;line-height:1;padding:0;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:900;background:#fff;color:#000;border:2px solid #000}
+#phoneScr .grid2 button:active{background:#ffd400;color:#000}
+#phoneScr .grid2 button.q{font-size:9px;letter-spacing:0;text-transform:none;line-height:1.25;aspect-ratio:auto;padding:8px 6px;font-weight:400}
+#phoneScr canvas.draw{width:100%;aspect-ratio:1;flex:none;background:#fff;border:2px solid #000;touch-action:none;cursor:crosshair}
+#phoneScr .hint{color:#000;font-weight:900;font-size:9px;letter-spacing:.10em;text-transform:uppercase}
+#phoneScr .ask{font-size:11px;font-weight:900;line-height:1.45;text-align:center;margin:2px 0 8px}
+#phoneScr .ans{display:block;width:100%;margin:0 0 6px}
+#phoneScr .ans.on{background:#ffd400;color:#000}
+#simBtn{display:none;background:transparent;color:#fff;border:1px solid #555;
+  font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:8px 20px;cursor:pointer}
+#simBtn:hover{border-color:#fff}
+#btnRow{display:flex;gap:8px;align-items:center}
+#resetBtn{display:none;background:transparent;color:#fff;border:1px solid #555;
+  font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;cursor:pointer}
+#resetBtn:hover{border-color:#fff}
+#dome{display:block;max-width:100%;max-height:100%;touch-action:none}
+#desc{position:absolute;left:26px;top:62px;width:300px;display:flex;flex-direction:column;justify-content:flex-start;padding:0;gap:12px;z-index:2}
+#dTitle{font-size:18px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;margin:0;color:#fff}
+#dText{font-size:12px;line-height:1.7;color:#fff;opacity:.9}
+#modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+#modes:empty{display:none}
+#modes button{background:transparent;color:#fff;border:1px solid #444;font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;cursor:pointer}
+#modes button.on{background:#fff;color:#000;border-color:#fff}
+#modes a.poc{background:#00a651;color:#000;border:1px solid #00a651;font:inherit;font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;cursor:pointer;text-decoration:none;
+  font-weight:900}
+#modes a.poc:hover{background:#000;color:#00a651}
+#err{position:fixed;left:0;bottom:0;right:0;background:#a00;color:#fff;font:11px/1.4 "Lato",sans-serif;padding:6px 10px;display:none;z-index:99;white-space:pre-wrap}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="title">Surface &amp; Space</div>
+<div id="topR">
+  <div id="topA"><button id="langBtn" type="button">FR</button><button id="allBtn" type="button">ALL</button></div>
+  <button id="hideBtn" type="button">HIDE</button>
+</div>
+
+<div id="all">
+  <div id="toc"></div>
+  <div id="grid"></div>
+</div>
+
+<div id="full">
+  <div id="phonePane"><div id="phoneWrap">
+    <div id="phone"><div id="phoneScr"></div></div>
+    <div id="btnRow">
+      <button id="simBtn" type="button">SIMULATE</button>
+      <button id="resetBtn" type="button">RESET</button>
+    </div>
+  </div></div>
+  <div id="domeWrap">
+    <canvas id="dome" width="900" height="900"></canvas>
+  </div>
+  <button id="prevA" class="navA" type="button" aria-label="previous">&#9664;</button>
+  <button id="nextA" class="navA" type="button" aria-label="next">&#9654;</button>
+  <div id="desc">
+    <h1 id="dTitle"></h1>
+    <div id="dText"></div>
+    <div id="modes"></div>
+  </div>
+</div>
+
+<div id="err"></div>
+
+<script>
+(function(){
+"use strict";
+var D=Math.PI/180, TAU=Math.PI*2;
+var FOV=210, RES=1024, CUBE=1024, RS=18, PXPU=110, RPLAN=RS*0.98;
+var FONT='"Lato","Segoe UI",system-ui,sans-serif';
+var $=function(id){return document.getElementById(id);};
+function err(e){var el=$('err');el.style.display='block';el.textContent=(el.textContent?el.textContent+'\n':'')+String(e&&e.message?e.message:e);}
+window.addEventListener('error',function(e){err(e.message||e.error);});
+
+/* ================= palette + helpers ================= */
+var BLUE='#05acf8', GREEN='#00a651', RED='#f4511e', YELLOW='#ffd400', CREAM='#ffffff', BLACK='#000000';
+var PAL=[
+ ['#05acf8','#fdf08b'],
+ ['#fdf08b','#02bb5f'],
+ ['#02bb5f','#b4491e'],
+ ['#b4491e','#05acf8'],
+ ['#05acf8','#02bb5f'],
+ ['#fdf08b','#b4491e']
+];
+function PACC(i){return PAL[((i%6)+6)%6];}
+/* the deck speaks two languages; the switch at the top right swaps the copy, not the drawings */
+var LANG='en';try{LANG=localStorage.getItem('ss_lang')||'en';}catch(e){}
+var TXT={
+ en:{storyboard:'STORYBOARD',all:'ALL',full:'FULL',sim:'SIMULATE',reset:'RESET',
+     seats:'S E A T S',stage:'S T A G E',end:'END',phoneThis:'this phone is',
+     q:'What is the top of the dome called?',answers:['zenith','peak','wowza','tip'],
+     phoneDraw:'draw a portrait',phoneSend:'SEND',birdDraw:'draw a bird',grab:'GRAB',
+     hide:'HIDE',unhide:'UNHIDE',poc:'FULL PROOF OF CONCEPT',
+     noteA:"These are 10 proof of concept scenes covering a range of topics, aesthetics, and audience interactions that will appear in the performance lecture. This far from a comprehensive script but a good indicator for creative direction. Key functionality like audio spatialization for 5 and 6, and phone interaction for 2, 6, 7, 8, and 10 are only simulated for ease of sharing through this website. The final project will be built in Godot. ",
+     noteLink:'See work in progress for backend development here.',
+     domeTitle:'Instructions to see this on the dome',domeSteps:["Use TouchDesigner web browser node (from bottom of tool section of palette).","Set dimensions to 1:1 of your choosing in the Layout tab.","Make sure to be clicked into the node to interact with the scene.","Press the hide button to hide all overlays.","Use arrow keys to navigate between slides (make sure to be clicked into node or using arrows will pause project.)"]},
+ fr:{storyboard:'SCÉNARIMAGE',all:'TOUT',full:'PLEIN',sim:'SIMULER',reset:'RÉINITIALISER',
+     seats:'P L A C E S',stage:'S C È N E',end:'FIN',phoneThis:'ce téléphone est',
+     q:'Comment appelle-t-on le sommet du dôme ?',answers:['zénith','sommet','wowza','pointe'],
+     phoneDraw:'dessinez un portrait',phoneSend:'ENVOYER',birdDraw:'dessinez un oiseau',grab:'ATTRAPER',
+     hide:'MASQUER',unhide:'AFFICHER',poc:'PROTOTYPE COMPLET',
+     noteA:"Ces dix scènes de preuve de concept couvrent un éventail de sujets, d’esthétiques et d’interactions avec le public qui figureront dans la conférence-performance. C’est loin d’un scénario complet, mais un bon indicateur de la direction créative. Les fonctionnalités clés — la spatialisation audio pour 5 et 6, l’interaction téléphonique pour 2, 6, 7, 8 et 10 — ne sont ici que simulées, pour faciliter le partage par ce site. Le projet final sera construit dans Godot. ",
+     noteLink:'Voir l’avancement du développement du backend ici.',
+     domeTitle:'Instructions pour voir ceci sur le dôme',domeSteps:["Utilisez le node web browser de TouchDesigner (au bas de la section tool de la palette).","Réglez les dimensions à 1:1 de votre choix dans l’onglet Layout.","Assurez-vous d’être cliqué dans le node pour interagir avec la scène.","Appuyez sur le bouton hide pour masquer toutes les surcouches.","Utilisez les flèches pour naviguer entre les diapositives (assurez-vous d’être cliqué dans le node, sinon les flèches mettront le projet en pause)."]}
+};
+function T(k){return (TXT[LANG]&&TXT[LANG][k])||TXT.en[k];}
+function wrap360(a){return ((a%360)+360)%360;}
+function sph(az,el,r){az*=D;el*=D;return new THREE.Vector3(Math.sin(az)*Math.cos(el)*r,Math.sin(el)*r,-Math.cos(az)*Math.cos(el)*r);}
+function place(m,p){m.up.set(0,1,0);m.position.copy(p);m.lookAt(0,0,0);return m;}
+function c2d(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+function tex(c){var t=new THREE.CanvasTexture(c);t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;return t;}
+function line(pts,color,opacity){var g=new THREE.BufferGeometry().setFromPoints(pts);
+  return new THREE.Line(g,new THREE.LineBasicMaterial({color:new THREE.Color(color),transparent:opacity<1,opacity:opacity}));}
+function ring(azN,el,r,color,opacity){var pts=[];for(var a=0;a<=360;a+=azN)pts.push(sph(a,el,r));return line(pts,color,opacity);}
+function polyline(azel,r,color,opacity){var pts=azel.map(function(p){return sph(p[0],p[1],r);});return line(pts,color,opacity);}
+
+var probe=c2d(8,8).getContext('2d');
+function wrapLines(s,maxW,font){probe.font=font;var out=[],l='';
+  s.split(' ').forEach(function(wd){var t=l?l+' '+wd:wd;
+    if(probe.measureText(t).width>maxW&&l){out.push(l);l=wd;}else l=t;});
+  out.push(l);return out;}
+function textCanvas(str,o){o=Object.assign({size:34,weight:400,color:'#fff',ls:0,padx:24,pady:18,maxW:0,align:'center',cols:null},o);
+  var font=o.weight+' '+o.size+'px '+FONT;probe.font=font;
+  var lines=[str];if(o.maxW)lines=wrapLines(str,o.maxW,font);
+  var w=0;lines.forEach(function(l){w=Math.max(w,probe.measureText(l).width);});
+  if(o.ls)w+=(Math.max(1,str.length)-1)*o.ls*o.size;
+  var lh=Math.round(o.size*1.32);
+  /* a hard offset copy of the same words, in one flat colour: the poster's way of standing type up
+     without a shade anywhere. Its offset is room the canvas has to keep. */
+  var sd=o.shadow?1:0,sdx=sd?Math.abs(o.shadowDx||0):0,sdy=sd?Math.abs(o.shadowDy||0):0;
+  var c=document.createElement('canvas');
+  c.width=Math.ceil(w+o.padx*2+sdx);c.height=Math.ceil(lh*lines.length+o.pady*2+sdy);
+  var g=c.getContext('2d');g.font=font;if('letterSpacing'in g)g.letterSpacing=(o.ls*o.size)+'px';
+  g.textBaseline='middle';g.textAlign=o.align;
+  function paint(fill,dx,dy){g.fillStyle=fill;
+    lines.forEach(function(l,i){g.fillText(l,(o.align==='center'?c.width/2:o.padx)+dx,o.pady+lh*i+lh/2+dy);});}
+  if(o.shadow)paint(o.shadow,o.shadowDx||0,o.shadowDy||0);
+  if(o.cols){var gr=g.createLinearGradient(0,0,c.width,c.height);gr.addColorStop(0,o.cols[0]);gr.addColorStop(1,o.cols[1]);paint(gr,0,0);}
+  else paint(o.color,0,0);
+  return c;}
+function textPlane(str,o){var c=textCanvas(str,o);var t=tex(c);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(c.width/PXPU,c.height/PXPU),
+    new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+  m.userData.cw=c.width;m.userData.ch=c.height;return m;}
+function extrudedText(str,o,depth,look){o=Object.assign({color:'#fff'},o);look=look||{};
+  var c=textCanvas(str,o);var t=tex(c);
+  var grp=new THREE.Group(),N=7,dz=(depth||1.2)/(N-1),w=c.width/PXPU,h=c.height/PXPU;
+  /* the texture is drawn white and every slice takes its colour from the material, so the face is
+     one flat colour and the side another. The side slices are cut hard and write depth, which is
+     what makes the extrusion read as a solid block rather than a stack of soft copies. */
+  var sx=h*0.026,sy=-h*0.020;
+  for(var i=0;i<N;i++){var face=!i;
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+      new THREE.MeshBasicMaterial({map:t,transparent:face,alphaTest:face?0:0.5,
+        side:THREE.DoubleSide,depthWrite:!face}));
+    m.position.set(i*sx,i*sy,-i*dz);
+    m.material.color.set(face?(look.face||'#fff'):(look.side||'#fff'));
+    grp.add(m);}
+  grp.userData.cw=c.width;grp.userData.ch=c.height;return grp;}
+
+/* filled glyphs (gradient pair or solid color) */
+function glyphCanvas(kind,px,fill){var c=c2d(px,px),g=c.getContext('2d'),m=px*0.5;
+  /* one flat fill, no outline: a shape's edge is its own edge */
+  g.fillStyle=Array.isArray(fill)?fill[0]:(fill||'#fff');
+  g.beginPath();
+  if(kind==='square')g.rect(m-px*0.30,m-px*0.30,px*0.60,px*0.60);
+  else if(kind==='triangle'){g.moveTo(m,m-px*0.36);g.lineTo(m+px*0.34,m+px*0.30);g.lineTo(m-px*0.34,m+px*0.30);g.closePath();}
+  else if(kind==='star'){for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,r=i%2?px*0.16:px*0.38;g[i?'lineTo':'moveTo'](m+Math.cos(a)*r,m+Math.sin(a)*r);}g.closePath();}
+  else if(kind==='diamond'){g.moveTo(m,m-px*0.36);g.lineTo(m+px*0.36,m);g.lineTo(m,m+px*0.36);g.lineTo(m-px*0.36,m);g.closePath();}
+  else if(kind==='plus'){g.fillRect(m-px*0.30,m-px*0.09,px*0.60,px*0.18);g.fillRect(m-px*0.09,m-px*0.30,px*0.18,px*0.60);
+    g.strokeStyle='#000';g.lineWidth=px*0.05;
+    g.strokeRect(m-px*0.30,m-px*0.09,px*0.60,px*0.18);g.strokeRect(m-px*0.09,m-px*0.30,px*0.18,px*0.60);return c;}
+  else if(kind==='flower'){
+    for(var p=0;p<6;p++){g.save();g.translate(m,m);g.rotate(p*Math.PI/3);
+      g.beginPath();g.ellipse(px*0.26,0,px*0.17,px*0.10,0,0,TAU);g.fill();g.restore();}
+    g.beginPath();g.arc(m,m,px*0.13,0,TAU);g.fill();g.strokeStyle='#000';g.lineWidth=px*0.05;g.stroke();return c;}
+  else g.arc(m,m,px*0.34,0,TAU);
+  g.fill();g.strokeStyle='#000';g.lineWidth=px*0.05;g.stroke();return c;}
+function glyph(kind,size,fill){var c=glyphCanvas(kind,256,fill);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(size,size),
+    new THREE.MeshBasicMaterial({map:tex(c),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+  m.userData.kind=kind;return m;}
+var GLYPH_CHAR={star:'\u2605',circle:'\u25CF',triangle:'\u25B2',square:'\u25A0',flower:'\u2740'};
+var LVOICES=[
+ {kind:'star',    color:YELLOW},
+ {kind:'circle',  color:GREEN},
+ {kind:'triangle',color:BLUE},
+ {kind:'square',  color:RED},
+ {kind:'flower',  color:CREAM}
+];
+
+function tube(pts,color,radius){var curve=new THREE.CatmullRomCurve3(pts);
+  var geo=new THREE.TubeGeometry(curve,Math.max(8,pts.length*2),radius||0.1,8,false);
+  return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:new THREE.Color(color)}));}
+function rayTube(p0,p1,color,radius){var dir=p1.clone().sub(p0),len=dir.length();
+  var cyl=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,len,8),new THREE.MeshBasicMaterial({color:new THREE.Color(color)}));
+  cyl.position.copy(p0.clone().add(p1).multiplyScalar(0.5));
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  return cyl;}
+function faceCanvas(){var c=c2d(150,150),x=c.getContext('2d');
+  x.strokeStyle='#000';x.lineWidth=3.2;x.lineCap='round';x.lineJoin='round';
+  x.beginPath();x.arc(75,75,44,0,TAU);x.stroke();
+  x.beginPath();x.arc(58,66,4.5,0,TAU);x.stroke();
+  x.beginPath();x.arc(92,66,4.5,0,TAU);x.stroke();
+  x.beginPath();x.arc(75,80,20,0.2*Math.PI,0.8*Math.PI);x.stroke();
+  x.beginPath();x.moveTo(75,70);x.lineTo(70,84);x.lineTo(80,84);x.stroke();
+  x.beginPath();x.moveTo(40,52);x.quadraticCurveTo(75,22,110,52);x.stroke();
+  x.beginPath();x.moveTo(48,44);x.quadraticCurveTo(60,30,72,40);x.stroke();
+  return c;}
+/* The room as an axonometric plate, the way the floor-plan page draws it: floor and its grid, the
+   wall with its two exits, the dome above as panel bands with staggered seams, the speaker rig as
+   dots, a stage, two projectors and labels that name each part. Drawn flat on one canvas, so the
+   fisheye never squeezes it: a drawing is a drawing, and the dome only has to hold it. */
+function axRoom(col,opt){
+  opt=opt||{};
+  /* The canvas is sized for the widest the room can get as it turns, and each drawing is centred in
+     it, so a drag never clips the room and the plate never has to be rebuilt at a new aspect. */
+  var R=1,hw=0.34,ax=Math.cos(30*D),ay=Math.sin(30*D),K=2.9;
+  var W=1500,S=W*0.90/(4*R*ax);
+  var H=Math.ceil(((hw+R)+2*R*ay)*S+W*0.10);
+  var ca=Math.cos((opt.az||0)*D),sa=Math.sin((opt.az||0)*D);
+  /* how far the floor square reaches, after the turn, in iso screen units */
+  var ex=Math.abs(ca+sa)+Math.abs(ca-sa);
+  var topGap=(hw+R)*S,botGap=R*ex*ay*S;
+  var ox=W/2,oy=(H-(topGap+botGap))*0.5+topGap;
+  var c=document.createElement('canvas');c.width=W;c.height=H;
+  var g=c.getContext('2d');
+  g.strokeStyle=col;g.fillStyle=col;g.lineCap='round';g.lineJoin='round';
+  function pr(x,y,z){var xr=x*ca-z*sa,zr=x*sa+z*ca;
+    return [ox+(xr-zr)*ax*S, oy+((xr+zr)*ay-y)*S];}
+  function line(p1,p2,w){g.lineWidth=(w||5)*K;g.beginPath();g.moveTo(p1[0],p1[1]);g.lineTo(p2[0],p2[1]);g.stroke();}
+  function poly(pts,w,close){g.lineWidth=(w||5)*K;g.beginPath();
+    pts.forEach(function(p,i){i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);});
+    if(close)g.closePath();g.stroke();}
+  function ring3(r,y,w,n){var pts=[];for(var i=0;i<=96;i++){var a=i/96*TAU;
+    pts.push(pr(Math.cos(a)*r,y,Math.sin(a)*r));}poly(pts,w);}
+  function domePt(az,el){var a=az*D,e=el*D;
+    return [R*Math.cos(e)*Math.sin(a),hw+R*Math.sin(e),R*Math.cos(e)*Math.cos(a)];}
+  function label(txt,x,y,size,align){g.save();g.font='700 '+((size||30)*K*0.82)+'px "Roboto Mono",ui-monospace,monospace';
+    g.textAlign=align||'left';g.textBaseline='middle';
+    g.fillText(txt,x,y);g.restore();}
+  /* floor */
+  poly([pr(-R,0,-R),pr(R,0,-R),pr(R,0,R),pr(-R,0,R)],11,true);
+  for(var k=-3;k<=3;k++){
+    if(!k)continue;
+    line(pr(k/4,0,-R),pr(k/4,0,R),2.6);
+    line(pr(-R,0,k/4),pr(R,0,k/4),2.6);
+  }
+  ring3(R*0.5,0,3.4);
+  /* the stage, front centre, as a block with its two visible faces */
+  var sw=0.30,sh=0.15,sz=-0.55,ty=0.075;
+  poly([pr(-sw,ty,sz-sh),pr(sw,ty,sz-sh),pr(sw,ty,sz+sh),pr(-sw,ty,sz+sh)],8,true);
+  line(pr(-sw,0,sz+sh),pr(-sw,ty,sz+sh),8);line(pr(sw,0,sz+sh),pr(sw,ty,sz+sh),8);
+  line(pr(-sw,ty,sz+sh),pr(-sw,0,sz+sh),8);line(pr(sw,ty,sz+sh),pr(sw,0,sz+sh),8);
+  /* wall, with two exits */
+  ring3(R,0,7);ring3(R,hw,9);
+  for(var i=0;i<16;i++){var a=i*TAU/16;
+    line(pr(Math.cos(a)*R,0,Math.sin(a)*R),pr(Math.cos(a)*R,hw,Math.sin(a)*R),3.4);}
+  [90,270].forEach(function(az){
+    var a=az*D,cx=Math.cos(a)*R,cz=Math.sin(a)*R,tx=-Math.sin(a)*R*0.11,tz=Math.cos(a)*R*0.11;
+    poly([pr(cx+tx,0,cz+tz),pr(cx+tx,0.16,cz+tz),pr(cx-tx,0.16,cz-tz),pr(cx-tx,0,cz-tz)],10);
+  });
+  /* dome: meridians, bands, seams on two bands, staggered */
+  for(i=0;i<12;i++){var am=i*TAU/12,pts=[];
+    for(var j=0;j<=24;j++){var tt=j/24*Math.PI/2;
+      pts.push(pr(R*Math.cos(tt)*Math.sin(am),hw+R*Math.sin(tt),R*Math.cos(tt)*Math.cos(am)));}
+    poly(pts,4.4);}
+  var bands=[18,36,54,72];
+  bands.forEach(function(el,bi){
+    ring3(R*Math.cos(el*D),hw+R*Math.sin(el*D),4,0);
+    if(bi===1||bi===2){
+      var off=(bi%2)?0.5:0,el0=bands[bi-1];
+      for(var q=0;q<12;q++){
+        var a1=(q+off)*TAU/12;
+        line(pr.apply(null,domePt(a1/D,el0)),pr.apply(null,domePt(a1/D,el)),2.2);}
+    }});
+  /* the rig: dots at the speaker rings, crosses at the two projectors */
+  SPEAKER_RINGS.forEach(function(s){
+    for(var k2=0;k2<s.n;k2++){
+      var az=s.n===1?0:360*k2/s.n,el=90*(1-s.r/100),p=pr.apply(null,domePt(az,el));
+      g.beginPath();g.arc(p[0],p[1],(s.n===1?7:5.4)*K,0,TAU);g.fill();}});
+  [[62,58],[-62,58]].forEach(function(pp){
+    var p=pr.apply(null,domePt(pp[0],pp[1]));
+    g.lineWidth=6*K;g.beginPath();
+    g.moveTo(p[0]-16*K,p[1]);g.lineTo(p[0]+16*K,p[1]);g.moveTo(p[0],p[1]-16*K);g.lineTo(p[0],p[1]+16*K);g.stroke();});
+  return c;
+}
+/* phone drawing helpers: transparent canvas, strokes only */
+function setupDraw(cv){cv.width=210;cv.height=210;
+  var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);
+  x.strokeStyle='#000';x.lineWidth=3;x.lineCap='round';x.lineJoin='round';
+  var drawing=false;
+  cv.addEventListener('pointerdown',function(e){drawing=true;x.beginPath();
+    var r=cv.getBoundingClientRect();x.moveTo((e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height);});
+  cv.addEventListener('pointermove',function(e){if(!drawing)return;
+    var r=cv.getBoundingClientRect();x.lineTo((e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height);x.stroke();});
+  ['pointerup','pointerleave'].forEach(function(ev){cv.addEventListener(ev,function(){drawing=false;});});
+  return x;}
+function tintCanvas(cv,col){var c=c2d(cv.width,cv.height),g=c.getContext('2d');
+  g.drawImage(cv,0,0);g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,c.width,c.height);return c;}
+function birdCanvas(){var c=c2d(140,140),x=c.getContext('2d');
+  drawBirdStroke(x,70,70,2.5+Math.random()*1.8);return c;}
+/* four birds, solid silhouettes so they read as birds and not as scribbles: a gull with its wings
+   up, the same gull with them down, a swallow, and a duck. */
+function birdSilhouette(kind,px){
+  var c=c2d(px,px),g=c.getContext('2d'),m=px/2;
+  g.fillStyle='#000';g.strokeStyle='#000';g.lineCap='round';g.lineJoin='round';
+  if(kind===0||kind===1){
+    var d=kind?1:-1;
+    [-1,1].forEach(function(side){
+      g.beginPath();
+      g.moveTo(m,m+px*0.07);
+      g.bezierCurveTo(m+side*px*0.10,m+d*px*0.14,m+side*px*0.26,m+d*px*0.24,m+side*px*0.43,m+d*px*0.20);
+      g.bezierCurveTo(m+side*px*0.30,m+d*px*0.06,m+side*px*0.13,m+px*0.03,m,m+px*0.07);
+      g.closePath();g.fill();});
+    g.beginPath();g.ellipse(m,m+px*0.10,px*0.052,px*0.125,0,0,TAU);g.fill();
+    g.beginPath();g.arc(m,m-px*0.040,px*0.048,0,TAU);g.fill();
+    g.beginPath();g.moveTo(m,m-px*0.095);g.lineTo(m+px*0.085,m-px*0.070);
+    g.lineTo(m,m-px*0.025);g.closePath();g.fill();
+    g.beginPath();g.moveTo(m-px*0.02,m+px*0.210);g.lineTo(m-px*0.10,m+px*0.275);
+    g.lineTo(m-px*0.01,m+px*0.255);g.closePath();g.fill();
+  } else if(kind===2){
+    g.beginPath();g.ellipse(m,m,px*0.070,px*0.190,-0.30,0,TAU);g.fill();
+    g.beginPath();
+    g.moveTo(m+px*0.03,m-px*0.10);
+    g.quadraticCurveTo(m-px*0.24,m-px*0.29,m-px*0.40,m-px*0.28);
+    g.quadraticCurveTo(m-px*0.20,m-px*0.09,m-px*0.03,m+px*0.05);
+    g.closePath();g.fill();
+    g.beginPath();
+    g.moveTo(m+px*0.03,m-px*0.08);
+    g.quadraticCurveTo(m+px*0.22,m+px*0.03,m+px*0.31,m+px*0.12);
+    g.quadraticCurveTo(m+px*0.12,m+px*0.07,m+px*0.02,m+px*0.06);
+    g.closePath();g.fill();
+    g.beginPath();g.arc(m+px*0.04,m-px*0.175,px*0.048,0,TAU);g.fill();
+    g.beginPath();g.moveTo(m+px*0.07,m-px*0.215);g.lineTo(m+px*0.155,m-px*0.170);
+    g.lineTo(m+px*0.07,m-px*0.140);g.closePath();g.fill();
+    g.beginPath();g.moveTo(m-px*0.02,m+px*0.165);g.lineTo(m-px*0.150,m+px*0.400);
+    g.lineTo(m-px*0.010,m+px*0.300);g.closePath();g.fill();
+    g.beginPath();g.moveTo(m-px*0.02,m+px*0.165);g.lineTo(m-px*0.075,m+px*0.400);
+    g.lineTo(m+px*0.030,m+px*0.290);g.closePath();g.fill();
+  } else {
+    g.beginPath();g.ellipse(m+px*0.03,m+px*0.095,px*0.205,px*0.125,-0.12,0,TAU);g.fill();
+    g.beginPath();g.moveTo(m-px*0.15,m+px*0.055);
+    g.quadraticCurveTo(m-px*0.33,m-px*0.015,m-px*0.35,m-px*0.085);
+    g.quadraticCurveTo(m-px*0.19,m+px*0.020,m-px*0.09,m+px*0.115);
+    g.closePath();g.fill();
+    g.lineWidth=px*0.070;g.beginPath();g.moveTo(m+px*0.125,m+px*0.045);
+    g.quadraticCurveTo(m+px*0.125,m-px*0.150,m+px*0.020,m-px*0.205);g.stroke();
+    g.beginPath();g.arc(m,m-px*0.225,px*0.058,0,TAU);g.fill();
+    g.beginPath();g.moveTo(m-px*0.020,m-px*0.245);g.lineTo(m-px*0.140,m-px*0.220);
+    g.lineTo(m-px*0.020,m-px*0.195);g.closePath();g.fill();
+  }
+  return c;
+}
+/* a bird in one flat colour, at full opacity from its first frame: no tint ramp, no fade */
+function birdSpawn(g,az,el){
+  var COL=[GREEN,RED,CREAM],col=COL[Math.floor(Math.random()*COL.length)];
+  var kind=Math.floor(Math.random()*4);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(4,4),
+    new THREE.MeshBasicMaterial({map:tex(tintCanvas(birdSilhouette(kind,256),col)),transparent:true,
+      side:THREE.DoubleSide,depthWrite:false}));
+  var f={mesh:m,az:az==null?Math.random()*360:az,el:el==null?12+Math.random()*40:el,
+    vaz:(Math.random()<0.5?-1:1)*(30+Math.random()*40),vel:-(6+Math.random()*10),life:9};
+  place(m,sph(f.az,f.el,RS-0.5));
+  g.add(m);g.userData.fly.push(f);
+  return f;}
+function drawBirdStroke(x,cx,cy,s){x.save();x.strokeStyle='#000';x.lineWidth=4.4;x.lineCap='round';x.lineJoin='round';
+  x.beginPath();x.moveTo(cx-s*8,cy-s*2);x.quadraticCurveTo(cx-s*4,cy-s*14,cx+s*6,cy-s*6);x.stroke();
+  x.beginPath();x.moveTo(cx-s*8,cy-s*2);x.quadraticCurveTo(cx-s*3,cy+s*7,cx+s*6,cy-s*4);x.stroke();
+  x.beginPath();x.moveTo(cx+s*6,cy-s*6);x.lineTo(cx+s*12,cy-s*2);x.lineTo(cx+s*6,cy-s*3);x.stroke();
+  x.beginPath();x.moveTo(cx+s*6,cy-s*6);x.arc(cx+s*6,cy-s*8,1.6,0,TAU);x.stroke();
+  x.beginPath();x.moveTo(cx-s*8,cy-s*2);x.lineTo(cx-s*14,cy+s*2);x.lineTo(cx-s*14,cy+s*4);x.lineTo(cx-s*8,cy+s*3);x.stroke();
+  x.beginPath();x.moveTo(cx,cy-s*2);x.lineTo(cx,cy+s*6);x.lineTo(cx-s*1,cy+s*8);x.stroke();
+  x.beginPath();x.moveTo(cx+s*3,cy-s*3);x.lineTo(cx+s*4,cy+s*5);x.lineTo(cx+s*3,cy+s*7);x.stroke();
+  x.restore();}
+function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+var birdImgCache={};
+function preloadBirds(done){var left=BIRD_SPOTS.length;if(!left){done();return;}
+  BIRD_SPOTS.forEach(function(s){var im=new Image();
+    im.onload=function(){birdImgCache[s.img]={im:im,asp:im.width/im.height};settle();};
+    im.onerror=function(){settle();};im.src=s.img;});
+  function settle(){if(--left<=0)done();}}
+function birdTextureFrom(src){var c=birdImgCache[src];if(!c)return null;
+  var t=new THREE.Texture(c.im);t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;
+  return {t:t,asp:c.asp};}
+
+/* ================= fisheye render chain ================= */
+var renderer,cubeRT,cubeCam,scene3,fishScene,fishCam,fishMat;
+function initThree(){
+  renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+  renderer.setSize(RES,RES,false);
+  cubeRT=new THREE.WebGLCubeRenderTarget(CUBE,{minFilter:THREE.LinearFilter});
+  cubeCam=new THREE.CubeCamera(.1,200,cubeRT);
+  scene3=new THREE.Scene();scene3.background=new THREE.Color('#000');
+  scene3.add(cubeCam);
+  scene3.add(new THREE.AmbientLight(0xffffff,0.55));
+  var dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(5,8,3);scene3.add(dl);
+  fishScene=new THREE.Scene();
+  fishCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  fishMat=new THREE.ShaderMaterial({uniforms:{t:{value:cubeRT.texture},fov:{value:FOV*D},flip:{value:1}},
+    vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
+    fragmentShader:'uniform samplerCube t;uniform float fov,flip;varying vec2 v;\n'+
+      'void main(){vec2 p=v*2.-1.;float r=length(p);if(r>1.){gl_FragColor=vec4(0.,0.,0.,1.);return;}\n'+
+      'float th=r*fov*.5,ph=atan(p.y,p.x);vec3 d=vec3(sin(th)*cos(ph),cos(th),sin(th)*sin(ph));d.x*=flip;\n'+
+      'vec3 c=textureCube(t,d).rgb;gl_FragColor=vec4(c,1.);}'});
+  fishScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),fishMat));
+}
+function renderFisheye(){cubeCam.position.set(0,0,0);cubeCam.update(renderer,scene3);
+  fishMat.uniforms.t.value=cubeRT.texture;renderer.render(fishScene,fishCam);}
+function blit(cv){var s=cv.width,g=cv.getContext('2d');
+  g.clearRect(0,0,s,s);g.save();g.beginPath();g.arc(s/2,s/2,s/2,0,TAU);g.clip();
+  g.drawImage(renderer.domElement,0,0,s,s);g.restore();
+  g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=1;g.beginPath();g.arc(s/2,s/2,s/2-1,0,TAU);g.stroke();}
+
+function pointerToAzEl(cv,e){var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width*2-1,y=1-(e.clientY-r.top)/r.height*2;
+  var rr=Math.hypot(x,y);if(rr>1)return null;
+  var th=rr*FOV*D/2,ph=Math.atan2(y,x);
+  var dx=Math.sin(th)*Math.cos(ph),dy=Math.cos(th),dz=Math.sin(th)*Math.sin(ph);
+  var az=wrap360(Math.atan2(dx,-dz)/D),el=Math.asin(Math.max(-1,Math.min(1,dy)))/D;
+  return {az:az,el:el};}
+
+/* ================= audio ================= */
+var audio=null,soundOn=false;
+function armSound(){if(!audio){var AC=window.AudioContext||window.webkitAudioContext;if(AC)audio=new AC();}
+  if(audio&&audio.state!=='running')audio.resume();soundOn=!!audio;}
+addEventListener('pointerdown',armSound,{once:true});addEventListener('keydown',armSound,{once:true});
+function note(az,el,freq,type,dur,gain,when){if(!soundOn||!audio)return;
+  var t0=(when||audio.currentTime)+0.001;dur=dur||0.3;gain=gain||0.07;
+  var o=audio.createOscillator();o.type=type||'sine';o.frequency.value=freq;
+  var g=audio.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(gain,t0+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  var p=audio.createStereoPanner?audio.createStereoPanner():null;
+  if(p){p.pan.value=Math.sin(az*D)*0.8;o.connect(g).connect(p).connect(audio.destination);}
+  else o.connect(g).connect(audio.destination);
+  o.start(t0);o.stop(t0+dur+0.05);}
+
+/* ================= data ================= */
+var TIMELINE=[
+[1923,'the Model I, first projection device for a geodesic dome'],
+[1957,'VORTEX, experimental audiovisual concerts'],
+[1969,'Rainbow Jam, a concert'],
+[2001,'the Panoscope 360, built on anamorphosis'],
+[2003,'TOT, closing in 4D-mix 3'],
+[2008,'the Satmobile, an inflatable immersive dome'],
+[2011,'the Satosphere opens: 210 deg over a dance floor'],
+[2015,'NEST Immersion founded: mobile domes, VJ tools'],
+[2018,'Trajectories: sensing gloves drive particles'],
+[2018,'Disorder: a dancer at the centre'],
+[2020,'the FVL DOME: two domes given to digital art'],
+[2020,'Reverie de Giverny, a 360 film of water lilies'],
+[2020,'The Orchid and the Bee, a VR film'],
+[2021,'an XR residency for indigenous artists'],
+[2021,'Best of Earth, a cooperation of festivals'],
+[2021,'BEATS, a concert at MUTEK'],
+[2021,'the dome of Plymouth Market Hall opens'],
+[2021,'Hubblo founded: a catalogue of immersive works'],
+[2021.5,'CLOUD BODIES, a choreographic performance'],
+[2022,'the first artistic residency under a dome'],
+[2022,'Labyrinth, SAT Fest Excellence Award'],
+[2022,'Introduction to econometrics, an immersive short'],
+[2022,'Antilogy: collective and public in one reality'],
+[2022,'THAN, during Nuit Blanche'],
+[2022,'SWARM: off-screen space and scale play'],
+[2022,'One Sky, six countries'],
+[2023,'the Sphere opens in Las Vegas'],
+[2023,'Entanglement: speakers answer the architecture'],
+[2023,'UNION: the memory game'],
+[2023,'ENN'],
+[2023,'Biliminal and TRIAL'],
+[2023,'Entanglement, Metatact and Iwakura'],
+[2023,'CLOUD BODIES, adapted in Cardiff'],
+[2023,'the Labos Immersifs, co-creation workshops'],
+[2023,'ASTRO at MUTEK Mexico'],
+[2023,'Dancing with Dead Animals'],
+[2023,'CO-CREATE, a residency and exhibition'],
+[2024,'Inner Island, SAT Fest special mention'],
+[2024,'the Satosphere system rebuilt'],
+[2024,'the second Festival Sous dome'],
+[2024,'Ignite!'],
+[2026,'Space Explorers: The ISS Experience']
+];
+var SPEAKER_RINGS=[{n:1,r:0},{n:4,r:22},{n:8,r:40},{n:16,r:58},{n:32,r:78},{n:32,r:97}];
+var BIRD_SPOTS=[
+ {img:'birds/12_baltimore_oriole.png',az:-40,el:18,freq:2200,type:'sine'},
+ {img:'birds/102_blue_jay.png',az:42,el:26,freq:3200,type:'square'},
+ {img:'birds/159_cardinal_grosbeak.png',az:-10,el:46,freq:1900,type:'triangle'},
+ {img:'birds/121_snowy_owl.png',az:86,el:12,freq:520,type:'sawtooth'},
+ {img:'birds/131_american_robin.png',az:-78,el:42,freq:2600,type:'sine'},
+ {img:'birds/100_marsh_wren.png',az:18,el:64,freq:3600,type:'triangle'}
+];
+
+/* ================= loopers ================= */
+function seedLoopers(g){
+  var u=g.userData;
+  u.items.forEach(function(m){g.remove(m);m.geometry.dispose();m.material.map.dispose();m.material.dispose();});
+  u.items=[];
+  for(var k=0;k<5;k++)for(var s=0;s<8;s++){
+    if((k+s)%2)continue;
+    var v=LVOICES[(k+s)%5];
+    var m=glyph(v.kind,2.2,v.color);
+    m.userData={ring:k,split:s,raz:Math.random()*360,rel:randEl(),voice:(k+s)%5,kind:v.kind,az:0,el:0,hot:0};
+    g.add(m);u.items.push(m);
+  }
+}
+function resolveLoopers(g){
+  var u=g.userData;
+  u.items.forEach(function(m,i){
+    var az,el;
+    if(u.mode==='concentric'){az=m.userData.raz;el=m.userData.rel;}
+    else if(u.mode==='spiral'){var idx=m.userData.ring*8+m.userData.split;az=(idx*137.5)%360;el=8+((idx%40)/40)*72;}
+    else{az=(i*83.7)%360;el=14+((i*29)%72);}
+    m.userData.az=az;m.userData.el=el;
+    var rr=RPLAN*(1-el/90);
+    m.userData.peg=[rr*Math.sin(az*D),-rr*Math.cos(az*D)];
+    place(m,sph(az,el,RS-0.4));
+  });
+}
+function randEl(){return 90*(1-Math.sqrt(0.08+Math.random()*0.84));}
+function placeShape(g,kind){
+  var v=(kind?LVOICES.filter(function(v){return v.kind===kind;})[0]:null)||LVOICES[Math.floor(Math.random()*LVOICES.length)];
+  var m=glyph(v.kind,2.2,v.color);
+  var ring=Math.floor(Math.random()*5),split=Math.floor(Math.random()*8);
+  /* where it sits is random, not snapped to a ring and slice: the eight slices are zones, not slots */
+  var raz=Math.random()*360,rel=randEl();
+  m.userData={ring:ring,split:split,raz:raz,rel:rel,voice:LVOICES.indexOf(v),kind:v.kind,az:0,el:0,hot:0};
+  g.add(m);g.userData.items.push(m);
+  resolveLoopers(g);
+  return m;
+}
+function fireShape(m){
+  var waves=['triangle','sine','square','sawtooth','sine'];
+  var wave=waves[m.userData.voice]||'sine';
+  var freq=220*Math.pow(2,m.userData.el/90*2);
+  note(m.userData.az,m.userData.el,freq,wave,0.3,0.06);
+}
+
+/* the dome's own geometry, drawn thick and flat in the scene's ink: the rim, three parallels and
+   eight meridians. Tubes, because a GL line is one pixel wide whatever the dome is doing. */
+function domeOutline(R,color,width){
+  var grp=new THREE.Group(),seg=96,el;
+  function parallel(e){
+    var pts=[],r=Math.cos(e*D)*R,y=Math.sin(e*D)*R;
+    for(var i=0;i<=seg;i++){var a=i/seg*TAU;pts.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}
+    return tube(pts,color,width);
+  }
+  grp.add(tube((function(){var pts=[];for(var i=0;i<=seg;i++){var a=i/seg*TAU;
+    pts.push(new THREE.Vector3(Math.cos(a)*R,0,Math.sin(a)*R));}return pts;})(),color,width*1.6));
+  [20,40,60].forEach(function(e){grp.add(parallel(e));});
+  for(var k=0;k<8;k++){var a=k*45*D,pts=[];
+    for(var j=0;j<=48;j++){var t=j/48*Math.PI/2;
+      pts.push(new THREE.Vector3(R*Math.cos(t)*Math.cos(a),R*Math.sin(t),R*Math.cos(t)*Math.sin(a)));}
+    grp.add(tube(pts,color,width*0.85));}
+  return grp;
+}
+/* a star as a flat shape: five points, one colour, no stroke, no shading */
+function starShape(px,fill){var c=c2d(px,px),g=c.getContext('2d'),m=px*0.5;
+  g.fillStyle=fill;g.beginPath();
+  for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,r=i%2?px*0.17:px*0.42;
+    g[i?'lineTo':'moveTo'](m+Math.cos(a)*r,m+Math.sin(a)*r);}
+  g.closePath();g.fill();return c;}
+function scatterStars(g,n,fill){
+  for(var i=0;i<n;i++){
+    var az=Math.random()*360,el=6+Math.random()*72,s=0.5+Math.random()*0.9;
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(s,s),
+      new THREE.MeshBasicMaterial({map:tex(starShape(128,fill)),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+    place(m,sph(az,el,RS*0.93));g.add(m);
+  }
+}
+
+function plateFromCanvas(c,opt){opt=opt||{};
+  var tx=tex(c),w=opt.fit||18,h=w*c.height/c.width;
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+  m.userData.cw=c.width;m.userData.ch=c.height;return m;}
+
+/* An image laid on the dome the way a projector lays it: equal angle per pixel, centre at the
+   zenith, rim at the horizon. This is the only mapping that fills the dome without pinching, and it
+   is the mapping a domemaster file already has, so a picture drawn flat reads on the dome as drawn. */
+function domeImage(c,r,elMin){
+  var R=r||RS*0.985,ring=44,seg=144,i,j,e0=(elMin==null?0:elMin);
+  var pos=[],uv=[],idx=[];
+  pos.push(0,R,0);uv.push(0.5,0.5);
+  for(i=1;i<=ring;i++){
+    var rad=i/ring,el=e0+(1-rad)*(90-e0);
+    for(j=0;j<seg;j++){
+      var az=360*j/seg,p=sph(az,el,R);
+      pos.push(p.x,p.y,p.z);
+      uv.push(0.5+0.5*rad*Math.sin(az*D),0.5-0.5*rad*Math.cos(az*D));
+    }
+  }
+  for(j=0;j<seg;j++)idx.push(0,1+j,1+(j+1)%seg);
+  for(i=1;i<ring;i++){
+    var a=1+(i-1)*seg,b=1+i*seg;
+    for(j=0;j<seg;j++){var j2=(j+1)%seg;
+      idx.push(a+j,b+j,b+j2,a+j,b+j2,a+j2);}
+  }
+  var geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geo.setIndex(idx);
+  return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex(c),transparent:true,
+    side:THREE.DoubleSide,depthWrite:false}));
+}
+/* the plan as a domemaster: the footprint is the dome, so the drawing fills the room. Seats sit in
+   the middle of the room and the stage stands at the front, out beyond the last row. */
+/* The seating as a block: five rows of ten, each row an arc opening toward the stage. Drawn from the
+   same numbers that place the portraits, so a name tag always lands on a seat. */
+/* a portrait as a name tag: white card, black border, the drawing in black, so it reads at seat size */
+function tagCanvas(src){
+  var c=c2d(256,256),x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,256,256);
+  x.fillStyle='#000';x.fillRect(0,0,256,10);x.fillRect(0,246,256,10);
+  x.fillRect(0,0,10,256);x.fillRect(246,0,10,256);
+  x.drawImage(src,20,20,216,216);
+  return c;
+}
+
+function seatRows(){
+  var rows=[0.40,0.46,0.52,0.58,0.64],cy=0.40,out=[];
+  for(var r=0;r<rows.length;r++){
+    for(var q=0;q<10;q++){
+      var aa=(270-52+(104*q/9))*D;
+      var dx=Math.cos(aa)*rows[r],dy=cy+Math.sin(aa)*rows[r],rad=Math.sqrt(dx*dx+dy*dy);
+      /* the plan is drawn at dx*px from the centre, so a seat's distance from the middle of the disc is
+         2*rad of a radius: elevation follows that, not rad itself */
+      out.push({dx:dx,dy:dy,az:Math.atan2(dx,dy)/D,el:Math.max(2,90*(1-rad*2))});
+    }
+  }
+  return out;
+}
+/* The order the seats fill: every seat once, shuffled, so the room fills like a room and not like a scan
+   left to right. A seat is used up when a tag hangs over it. */
+function seatOrder(n){
+  var out=[],i,s;
+  for(i=0;i<n;i++)out.push(i);
+  for(i=n-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));s=out[i];out[i]=out[j];out[j]=s;}
+  return out;
+}
+/* A tag over the next free seat: one per seat, hung a little off its seat's own line in azimuth, elevation
+   and radius, so forty tags read as forty people and never as a printed grid. The offset is small on
+   purpose: a tag two seats off its row stops reading as belonging to a seat. */
+function hangTag(g,cv){
+  var u=g.userData;
+  if(!u.free.length)return null;
+  var st=u.seats[u.free.shift()];
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(1.05,1.05),
+    new THREE.MeshBasicMaterial({map:tex(tagCanvas(cv)),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+  var az=st.az+(Math.random()*2-1)*2.4,el=st.el+(Math.random()*2-1)*1.5;
+  var r=RS-1.7+(Math.random()*2-1)*0.30;
+  /* the plan is a textured dome under everything; a tag must draw over the seat it belongs to even
+     where the two nearly touch, so the tag ignores depth instead of fighting for a millimetre */
+  m.renderOrder=12;m.material.depthTest=false;
+  place(m,sph(az,el,r));g.add(m);
+  u.sent.push({mesh:m,az:az,el:el,r:r,ph:Math.random()*TAU,side:Math.random()*TAU});
+  return {az:az,el:el};
+}
+function planCanvas(px){
+  var c=c2d(px,px),x=c.getContext('2d'),m=px/2;
+  x.lineCap='round';x.strokeStyle=YELLOW;x.fillStyle=YELLOW;
+  /* the wall, and twelve bays round it */
+  x.lineWidth=px*0.011;x.beginPath();x.arc(m,m,px*0.470,0,TAU);x.stroke();
+  x.lineWidth=px*0.0032;
+  for(var k=0;k<12;k++){var a=k*TAU/12;
+    x.beginPath();x.moveTo(m+Math.cos(a)*px*0.408,m+Math.sin(a)*px*0.408);
+    x.lineTo(m+Math.cos(a)*px*0.470,m+Math.sin(a)*px*0.470);x.stroke();}
+  /* the stage, a band across the front */
+  x.lineWidth=px*0.012;
+  [0.360,0.430].forEach(function(f){x.beginPath();x.arc(m,m,px*f,Math.PI*0.38,Math.PI*0.62);x.stroke();});
+  [0.38,0.62].forEach(function(f){var aa=Math.PI*f;
+    x.beginPath();x.moveTo(m+Math.cos(aa)*px*0.360,m+Math.sin(aa)*px*0.360);
+    x.lineTo(m+Math.cos(aa)*px*0.430,m+Math.sin(aa)*px*0.430);x.stroke();});
+  /* five rows of ten, arcs that open toward the stage */
+  var rows=[0.40,0.46,0.52,0.58,0.64],cy=0.40;
+  seatRows().forEach(function(s){
+    x.beginPath();x.arc(m+s.dx*px,m+s.dy*px,px*0.0090,0,TAU);x.fill();});
+  rows.forEach(function(r){
+    x.lineWidth=px*0.0026;
+    x.beginPath();x.arc(m,m+cy*px,r*px,(270-52)*D,(270+52)*D);x.stroke();});
+  x.fillStyle=RED;x.font='900 '+(px*0.030)+'px '+FONT;x.textAlign='center';x.textBaseline='middle';
+  x.fillText(T('stage'),m,m+px*0.398);
+  x.fillText(T('seats'),m,m+px*0.196);
+  return c;
+}
+
+/* ================= scenes ================= */
+function poetrySim(g,n){
+   var u=g.userData,i;
+   for(i=0;i<n;i++){
+     var free=u.tiles.filter(function(t){return !t.userData.held;});
+     if(!free.length)break;
+     var tp=free[Math.floor(Math.random()*free.length)];
+     tp.userData.held=true;
+     var dot=new THREE.Mesh(new THREE.SphereGeometry(0.30,12,10),
+       new THREE.MeshBasicMaterial({color:new THREE.Color(YELLOW)}));
+     var sAz=Math.random()*360,sEl=16+Math.random()*50;
+     dot.position.copy(sph(sAz,sEl,RS-1.9));g.add(dot);
+     u.agents.push({dot:dot,tile:tp,phase:0,k:0,fromAz:sAz,fromEl:sEl,
+       toAz:Math.random()*120-60,toEl:16+Math.random()*50});
+   }
+}
+
+/* A word set letter by letter along an arc of the dome: the letters fan, so the word curves, and each
+   letter is an extruded block seen slightly off its axis, which is what makes it read as solid. */
+/* Place a flat thing on the dome with its own up kept upright. lookAt picks an arbitrary roll when
+   the view axis is close to vertical, which is why labels on a wide arc came out on their side. */
+function faceUp(m,pos){
+  var p=pos.clone().normalize(),up=new THREE.Vector3(0,1,0);
+  if(Math.abs(p.dot(up))>0.999)up.set(0,0,1);
+  var z=p.clone().negate();
+  var x=new THREE.Vector3().crossVectors(up,z).normalize();
+  var y=new THREE.Vector3().crossVectors(z,x).normalize();
+  m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z));
+}
+
+function arcWord(str,o){
+  o=o||{};
+  var grp=new THREE.Group(),n=str.length,N=8;
+  function block(ch){
+    var c=textCanvas(ch,{size:o.size||330,weight:900,color:'#fff',padx:6,pady:4});
+    var tt=tex(c),w=c.width/PXPU,h=c.height/PXPU,dz=(o.depth||1.2)/(N-1);
+    var blk=new THREE.Group();
+    for(var s=0;s<N;s++){
+      var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+        new THREE.MeshBasicMaterial({map:tt,transparent:!s,alphaTest:s?0.5:0,side:THREE.DoubleSide,depthWrite:!!s}));
+      m.position.set(0,-s*dz*0.92,-s*dz*0.34);
+      m.material.color.set(s?(o.side||'#fff'):(o.color||'#fff'));
+      blk.add(m);
+    }
+    return blk;
+  }
+  for(var k=0;k<n;k++){
+    var f=n>1?k/(n-1):0.5,ch=str.charAt(k);
+    if(ch===' ')continue;
+    var m=block(ch);
+    var az=(o.az||0)+(f-0.5)*(o.span||40);
+    var el=(o.el||40)+(o.bow||0)*Math.sin(Math.PI*f);
+    place(m,sph(az,el,o.r||RS*0.90));
+    m.rotateZ(((o.roll0||0)+((o.roll1||0)-(o.roll0||0))*f)*D);
+    grp.add(m);
+  }
+  return grp;
+}
+
+var FR=[
+ ['BIENVENUE','Introduction à la manière d’une introduction de cours. Salut du professeur, consignes pratiques, etc.'],
+ ['SALLE DE CLASSE','Où êtes-vous dans l’espace ? Le téléphone présenté comme outil et mécanisme de calibration, sous la forme d’un « on se présente » : dessiner son autoportrait comme étiquette-nom.'],
+ ['ARCHITECTURE','Où diable sommes-nous ? Qu’est-ce que ce bâtiment. Un peu de visualisation et d’histoire propres au lieu, puis la chronologie complète plus loin.'],
+ ['PROJECTION','Comment fonctionnent les projecteurs ? Et comment se fabrique le format domemaster ?'],
+ ['ENCEINTES','Visualiser le système de son. Utile d’ajouter plus tard une visualisation SpatGRIS et du routage audio.'],
+ ['BOUCLE AV','Le système démontré dans son ensemble. Rendre le dôme comme instrument audiovisuel lisible et interactif. Calibration requise.'],
+ ['MONDE DES OISEAUX','Penser l’orientation et la technologie. Un entracte poétique. Aucune calibration requise.'],
+ ['POÉSIE MAGNÉTIQUE','Que dit-on du fulldome comme médium ? Une revue de littérature, en quelque sorte. Calibration au début de la scène.'],
+ ['CHRONOLOGIE','Comment en sommes-nous arrivés là ?'],
+ ['QUIZ','Répondez aux questions sur la présentation pour gagner la course des formes ! Un outil d’apprentissage et de collecte de données à parts égales. Aucune calibration requise.']
+];
+function SL(i){return LANG==='fr'&&FR[i]?FR[i][0]:SCENES[i].label;}
+function SD(i){return LANG==='fr'&&FR[i]?FR[i][1]:SCENES[i].desc;}
+var KIND={en:{circle:'circle',square:'square',triangle:'triangle',star:'star',diamond:'diamond',plus:'plus'},
+          fr:{circle:'cercle',square:'carré',triangle:'triangle',star:'étoile',diamond:'losange',plus:'croix'}};
+function KN(k){return KIND[LANG][k]||k;}
+
+var SCENES=[
+/* 1 WELCOME */
+{label:'WELCOME', bg:BLUE,
+ desc:'Introduction formatted like class introduction. Teacher hello, housekeeping, etc.',
+ build:function(g){
+   g.add(domeOutline(RS, BLACK, 0.09));
+   /* stars that drift about the dome rather than sitting still on it */
+   var stars=new THREE.Group();
+   for(var i=0;i<40;i++){
+     var s=0.5+Math.random()*0.9;
+     var m=new THREE.Mesh(new THREE.PlaneGeometry(s,s),
+       new THREE.MeshBasicMaterial({map:tex(starShape(128,YELLOW)),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+     m.userData={az:Math.random()*360,el:10+Math.random()*68,va:(Math.random()-0.5)*10,ve:(Math.random()-0.5)*5};
+     stars.add(place(m,sph(m.userData.az,m.userData.el,RS*0.94)));
+   }
+   g.add(stars);g.userData.stars=stars;
+   g.add(arcWord('SURFACE',{el:38,span:104,bow:8,size:336,color:RED,side:YELLOW,depth:1.9,r:RS*0.90}));
+   g.add(place(textPlane('&',{size:240,weight:900,color:YELLOW}),sph(0,25,RS*0.92)));
+   g.add(arcWord('SPACE',{el:12,span:86,bow:-8,size:336,color:RED,side:YELLOW,depth:1.9,
+     roll0:-15,roll1:15,r:RS*0.90}));
+   /* the horizon, in green */
+   var pts=[];for(var a=0;a<=90;a++)pts.push(sph(360*a/90,0,RS*0.997));
+   g.add(tube(pts,GREEN,0.11));
+ },
+ step:function(g,dt,t){
+   var u=g.userData;if(!u.stars)return;
+   u.stars.children.forEach(function(s){var d=s.userData;
+     d.az+=d.va*dt;d.el+=d.ve*dt;
+     if(d.el>84||d.el<6)d.ve=-d.ve;
+     s.position.copy(sph(d.az,d.el,RS*0.94));s.lookAt(0,0,0);});
+ }},
+
+/* 2 CLASSROOM */
+{label:'CLASSROOM', bg:GREEN,
+ desc:'Where are you in the space? Introduction to phone as tool and calibration mechanism in the guise of "introducing ourselves" activity drawing self portraits as name tags.',
+ build:function(g){
+   g.add(domeImage(planCanvas(1024)));
+   g.userData.sent=[];
+   g.userData.seats=seatRows();
+   g.userData.free=seatOrder(g.userData.seats.length);
+ },
+ /* The tags float where they hang: a slow rise and fall, a slower sway sideways, and each at its own
+    phase, so a wall of them reads as people rather than as a printed grid. Radius breathes by a few
+    centimetres, which is what makes them look hung in the air instead of pasted on the dome. */
+ step:function(g,dt,t){g.userData.sent.forEach(function(s){s.ph+=dt*2;
+   s.mesh.position.copy(sph(s.az+Math.sin(s.ph*0.43+s.side)*0.45,
+     s.el+Math.sin(s.ph)*0.55,s.r+Math.sin(s.ph*0.7+s.side)*0.18));
+   s.mesh.lookAt(0,0,0);});},
+ sendDrawing:function(g,cv){
+   var at=hangTag(g,cv);
+   if(at)note(at.az,at.el,520+Math.random()*300,'sine',0.25,0.04);
+ },
+ phone:function(el){
+   el.innerHTML='<div class="hint">'+T('phoneDraw')+'</div><canvas class="draw" id="fpDraw"></canvas><button id="fpSend">'+T('phoneSend')+'</button>';
+   var cv=el.querySelector('#fpDraw');setupDraw(cv);
+   el.querySelector('#fpSend').onclick=function(){SCENES[idx].sendDrawing(ACTIVE,cv);};
+ },
+ sim:function(g,n){for(var i=0;i<n;i++){
+   var at=hangTag(g,faceCanvas());
+   if(!at)break;
+   note(at.az,at.el,520+Math.random()*300,'sine',0.2,0.03);}}},
+
+/* 3 ARCHITECTURE */
+{label:'ARCHITECTURE', bg:YELLOW,
+ desc:'Where the heck are we? What is this building. A bit of site specific visualization/history here, followed by full timeline later.',
+ build:function(g){
+   var pl=plateFromCanvas(axRoom(RED,{az:0}),{fit:28});
+   g.add(place(pl,sph(0,47,RS*0.93)));
+   g.userData.pl=pl;g.userData.az=0;g.userData.redraw=0;
+ },
+ pointer:function(g,type,az,el,e){var u=g.userData;
+   if(type==='down'){u._x=e.clientX;u._a=u.az;u.drag=1;document.body.style.cursor='grabbing';}
+   else if(type==='move'&&u._x!=null){u.az=u._a+(e.clientX-u._x)*0.45;u.redraw=1;}
+   else if(type==='up'){u._x=null;u.drag=0;document.body.style.cursor='';}},
+ step:function(g,dt,t){var u=g.userData;
+   if(!u.redraw)return;u.redraw=0;
+   u.pl.material.map.image=axRoom(RED,{az:u.az});
+   u.pl.material.map.needsUpdate=true;}},
+
+/* 4 PROJECTION */
+{label:'PROJECTION', bg:BLACK,
+ desc:'How do projectors work? And how does domemaster format work get created?',
+ build:function(g){
+   var u=g.userData;
+   function mat(c){return new THREE.MeshBasicMaterial({color:new THREE.Color(c)});}
+   /* six lenses, one per cube face, paired by axis: X red/green, Y yellow/white, Z blue/blue */
+   var DIRS=[[90,0,RED],[-90,0,GREEN],[0,90,YELLOW],[0,-90,CREAM],[0,0,BLUE],[180,0,BLUE]];
+   function station(az,el){
+     var st=new THREE.Group();
+     st.scale.setScalar(1.12);
+     place(st,sph(az,el,12));g.add(st);
+     u.stations.push(st);return st;}
+   u.stations=[];u.tips=[];
+   /* 01 one camera, five lenses: a circle at the centre with a barrel and an arrow per direction */
+   var s1=station(45,34);
+   /* turned 45 degrees so no lens points at the viewer. Seen from the centre, a barrel aimed straight
+      out collapses to a ring; at 45 the two horizontal lenses sit symmetrically either side and all
+      five keep their length. */
+   var rig=new THREE.Group();rig.scale.setScalar(1.55);
+   /* the rig wears the cube's rotation; this parent only changes the angle it is seen from, so a
+      lens aimed at a face does not also point straight down the viewer's throat */
+   s1.add(rig);
+   u.rig=rig;
+   rig.add(new THREE.Mesh(new THREE.SphereGeometry(0.62,24,18),mat(CREAM)));
+   var UP=new THREE.Vector3(0,1,0);
+   DIRS.forEach(function(d,i){
+     var dir=sph(d[0],d[1],1).normalize();
+     /* the lens: a barrel out of the body, a white rim on its face */
+     rig.add(rayTube(dir.clone().multiplyScalar(0.55),dir.clone().multiplyScalar(2.45),d[2],0.24));
+     var rim=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.38,0.18,20),mat(CREAM));
+     rim.position.copy(dir.clone().multiplyScalar(2.45));
+     rim.quaternion.setFromUnitVectors(UP,dir);rig.add(rim);
+     /* the arrow: out of the lens, in that direction, in that colour */
+     var base=dir.clone().multiplyScalar(2.75);
+     rig.add(rayTube(base,base.clone().add(dir.clone().multiplyScalar(0.80)),d[2],0.085));
+     var head=new THREE.Mesh(new THREE.ConeGeometry(0.28,0.66,18),mat(d[2]));
+     head.position.copy(base.clone().add(dir.clone().multiplyScalar(1.08)));
+     head.quaternion.setFromUnitVectors(UP,dir);rig.add(head);
+     /* a pulse leaving the lens, so the direction reads as a ray and not a stick */
+     var tp=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8),mat(d[2]));
+     tp.userData={az:d[0],el:d[1],i:i};u.tips.push(tp);rig.add(tp);});
+   /* 02 the six faces that catch them */
+   var s2=station(135,34);
+   var cube=new THREE.Group();s2.add(cube);u.cube=cube;
+   var h=2.15,K=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+   [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(function(e){
+     cube.add(rayTube(new THREE.Vector3(K[e[0]][0]*h,K[e[0]][1]*h,K[e[0]][2]*h),
+                      new THREE.Vector3(K[e[1]][0]*h,K[e[1]][1]*h,K[e[1]][2]*h),CREAM,0.055));});
+   [[0,0,1,BLUE],[1,0,0,RED],[-1,0,0,GREEN],[0,1,0,YELLOW],[0,-1,0,CREAM]].forEach(function(f){
+     var d=new THREE.Mesh(new THREE.CircleGeometry(0.30,18),
+       new THREE.MeshBasicMaterial({color:new THREE.Color(f[3]),side:THREE.DoubleSide}));
+     d.position.set(f[0]*h*1.002,f[1]*h*1.002,f[2]*h*1.002);cube.add(d);});
+   var one=new THREE.Mesh(new THREE.CircleGeometry(0.30,18),
+     new THREE.MeshBasicMaterial({color:new THREE.Color(BLUE),side:THREE.DoubleSide}));
+   one.position.set(0,0,h*1.002);cube.add(one);
+   var back=new THREE.Mesh(new THREE.CircleGeometry(0.30,18),
+     new THREE.MeshBasicMaterial({color:new THREE.Color(CREAM),side:THREE.DoubleSide}));
+   back.position.set(0,0,-h*1.002);cube.add(back);
+   /* 03 the same six faces cut open and laid flat */
+   var s3=station(225,34);
+   var S2=170,NW=S2*5,NH=S2*3,nc=c2d(NW,NH),nx=nc.getContext('2d');
+   [['1,1',BLUE],['0,1',GREEN],['2,1',RED],['1,0',YELLOW],['3,1',CREAM],['1,2',CREAM]].forEach(function(q){
+     var xy=q[0].split(','),X=+xy[0]*S2,Y=+xy[1]*S2;
+     nx.fillStyle=q[1];nx.fillRect(X+5,Y+5,S2-10,S2-10);
+     nx.strokeStyle=BLACK;nx.lineWidth=9;nx.strokeRect(X+5,Y+5,S2-10,S2-10);});
+   s3.add(plateFromCanvas(nc,{fit:8.8}));
+   /* 04 all of it folded into one circle */
+   var s4=station(315,34);
+   /* the projection itself: rings and spokes at equal elevation steps, the five directions marked */
+   /* Not a grid drawn beside the mapping — the mapping. Each pixel of the disc is a direction; ask that
+      direction which cube face it lands on and paint that face. The centre face lands as a rounded
+      square, its four neighbours stretch into trapezoids with curved sides, and the corners are the
+      sixth face, which sits below the horizon and so never reaches the disc. */
+   function fisheyeCube(px){
+     var c=c2d(px,px),x=c.getContext('2d'),m=px/2,Rr=px*0.47;
+     var img=x.createImageData(px,px),dd=img.data;
+     function rgb(h){return [parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];}
+     var CY=rgb(YELLOW),CR=rgb(RED),CG=rgb(GREEN),CB=rgb(BLUE),CW=rgb(CREAM);
+     for(var j=0;j<px;j++){
+       for(var i=0;i<px;i++){
+         var o=(j*px+i)*4,dx=i-m,dy=j-m,r=Math.sqrt(dx*dx+dy*dy)/Rr;
+         if(r>1){dd[o+3]=0;continue;}
+         var el=(Math.PI/2)*(1-r),az=Math.atan2(dx,-dy),ce=Math.cos(el);
+         var vx=Math.sin(az)*ce,vy=Math.sin(el),vz=-Math.cos(az)*ce;
+         var ax=Math.abs(vx),ay=Math.abs(vy),az2=Math.abs(vz),q;
+         if(ay>=ax&&ay>=az2)q=vy>0?CY:CW;
+         else if(ax>=az2)q=vx>0?CR:CG;
+         else q=vz>0?CW:CB;
+         dd[o]=q[0];dd[o+1]=q[1];dd[o+2]=q[2];dd[o+3]=255;
+       }
+     }
+     x.putImageData(img,0,0);
+     x.strokeStyle=CREAM;x.lineWidth=px*0.016;
+     x.beginPath();x.arc(m,m,Rr,0,TAU);x.stroke();
+     return c;}
+   var disc=new THREE.Mesh(new THREE.CircleGeometry(4.0,64),
+     new THREE.MeshBasicMaterial({map:tex(fisheyeCube(560)),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+   s4.add(disc);u.disc=disc;
+ },
+ step:function(g,dt,t){
+   var u=g.userData;
+   u.tips.forEach(function(tp){var ph=(t*0.5+tp.userData.i*0.17)%1;
+     tp.position.copy(sph(tp.userData.az,tp.userData.el,2.9+ph*2.4));});
+   if(u.cube){u.cube.rotation.y=t*0.32;u.cube.rotation.x=0.26;}
+   /* the camera wears the cube's rotation, phase included, so each lens points where a face points */
+   if(u.rig&&u.cube){u.rig.rotation.y=u.cube.rotation.y;u.rig.rotation.x=u.cube.rotation.x;}
+   if(u.disc)u.disc.rotation.z=t*0.10;}},
+
+/* 5 SPEAKERS */
+{label:'SPEAKERS', bg:BLACK,
+ desc:'Visualizing speaker system. Useful to add some SpatGRIS / audio routing visualization here too in future.',
+ build:function(g){
+   /* one flat dot and one flat star, both billboards facing the middle of the room */
+   function dotC(px){var c=c2d(px,px),x=c.getContext('2d');
+     x.fillStyle=CREAM;x.beginPath();x.arc(px/2,px/2,px*0.17,0,TAU);x.fill();return c;}
+   var dotT=tex(dotC(96)),starT=tex(starShape(160,YELLOW));
+   var spk=[];
+   SPEAKER_RINGS.forEach(function(s){
+     for(var k=0;k<s.n;k++){
+       var az=s.n===1?0:360*k/s.n,el=90*(1-s.r/100);
+       var m=new THREE.Mesh(new THREE.PlaneGeometry(1.15,1.15),
+         new THREE.MeshBasicMaterial({map:dotT,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+       place(m,sph(az,el,RS*0.96));g.add(m);
+       spk.push({mesh:m,az:az,el:el,t:null});}});
+   g.userData.spk=spk;g.userData.acc=0;g.userData.last=-1;
+   g.userData.dotT=dotT;g.userData.starT=starT;
+ },
+ step:function(g,dt,t){
+   var u=g.userData;u.acc-=dt;
+   if(u.acc<=0){u.acc=0.22+Math.random()*0.22;
+     var i;do{i=Math.floor(Math.random()*u.spk.length);}while(i===u.last);
+     u.last=i;var s=u.spk[i];
+     if(s.t==null){s.t=0;s.mesh.material.map=u.starT;}
+     note(s.az,s.el,220*Math.pow(2,s.el/90*2),'sine',0.4,0.055);}
+   u.spk.forEach(function(s){
+     if(s.t!=null){s.t+=dt;var p=Math.min(1,s.t/0.55);
+       s.mesh.scale.setScalar(1+Math.sin(p*Math.PI)*0.55);
+       if(p>=1){s.t=null;s.mesh.scale.setScalar(1);s.mesh.material.map=u.dotT;}}});}},
+
+/* 6 AV LOOPER */
+{label:'AV LOOPER', bg:BLACK,
+ desc:'System demonstration as a whole. Making the dome as audiovisual instrument legible and interactive. Calibration required.',
+ build:function(g){
+   var u=g.userData;
+   u.items=[];u.mode='concentric';u.t=0;u.balls=[];u.drop=0;
+   /* the sweeping circle: a band a hair under the dome, growing outward from the zenith */
+   u.sweep=new THREE.Mesh(new THREE.RingGeometry(0.968,1,128),
+     new THREE.MeshBasicMaterial({color:new THREE.Color(CREAM),transparent:true,opacity:0.9,side:THREE.DoubleSide}));
+   u.sweep.rotation.x=-Math.PI/2;g.add(u.sweep);
+   /* the spiral the same fall takes when it is wound up */
+   var pts=[];
+   for(var q=0;q<=360;q++){var pr=q/360;
+     pts.push(sph(pr*360*3.2,(1-pr)*86+1,RS-0.45));}
+   u.spiral=tube(pts,CREAM,0.04);u.spiral.visible=false;g.add(u.spiral);
+   u.ballGeo=new THREE.SphereGeometry(0.22,10,8);
+   /* eight sectors: a meridian every 45 degrees, zenith to rim, and the rim itself */
+   var sl=new THREE.Group(),ang,pts2,jj;
+   for(var k2=0;k2<8;k2++){
+     pts2=[];ang=k2*45;
+     for(jj=0;jj<=40;jj++){pts2.push(sph(ang,jj/40*90,RS-0.5));}
+     sl.add(tube(pts2,CREAM,0.032));
+   }
+   var rimPts=[];for(jj=0;jj<=120;jj++){rimPts.push(sph(jj/120*360,0,RS-0.5));}
+   sl.add(tube(rimPts,CREAM,0.055));
+   sl.visible=false;u.slices=sl;g.add(sl);
+   seedLoopers(g);
+   
+ },
+ step:function(g,dt,t){
+   var u=g.userData;u.t+=dt;
+   resolveLoopers(g);
+   function hit(az,el,da,de){
+     u.items.forEach(function(m){
+       var near=Math.abs(((az-m.userData.az+540)%360)-180)<da&&Math.abs(el-m.userData.el)<de;
+       if(near){if(m.userData.hot<0.02)fireShape(m);m.userData.hot=1;}
+       else m.userData.hot*=0.9;});}
+   if(u.mode==='concentric'){
+     u.spiral.visible=false;u.sweep.visible=true;if(u.slices)u.slices.visible=true;
+     var el=86-((u.t*20)%80);
+     var r2=RS*Math.cos(el*D);
+     u.sweep.scale.set(r2,r2,1);
+     u.sweep.position.y=RS*Math.sin(el*D);
+     u.items.forEach(function(m){
+       if(Math.abs(m.userData.el-el)<2.6){if(m.userData.hot<0.02)fireShape(m);m.userData.hot=1;}
+       else m.userData.hot*=0.9;});
+   } else if(u.mode==='spiral'){
+     u.sweep.visible=false;u.spiral.visible=true;if(u.slices)u.slices.visible=false;
+     var prog=(u.t*0.10)%1;
+     hit(wrap360(prog*360*3.2),(1-prog)*86+1,9,7);
+   } else {
+     u.sweep.visible=false;u.spiral.visible=false;if(u.slices)u.slices.visible=false;
+     /* pinball as the looper prototype runs it: born at the centre, pulled along a fixed aim,
+        deflected by the shapes, drained at the rim. No bounce off the floor, because the rim is
+        the edge of the picture. */
+     u.drop-=dt;
+     if(u.drop<=0&&u.balls.length<4){
+       u.drop=1.2+Math.random()*0.9;
+       var a=Math.random()*TAU;
+       var b={x:0,z:0,vx:Math.cos(a)*7,vz:Math.sin(a)*7,gx:Math.cos(a),gz:Math.sin(a)};
+       b.mesh=new THREE.Mesh(u.ballGeo,new THREE.MeshBasicMaterial({color:new THREE.Color(CREAM)}));
+       g.add(b.mesh);u.balls.push(b);}
+     for(var bi=u.balls.length-1;bi>=0;bi--){
+       var b2=u.balls[bi];
+       for(var it=0;it<3;it++){
+         b2.vx+=b2.gx*15*dt;b2.vz+=b2.gz*15*dt;
+         b2.x+=b2.vx*dt;b2.z+=b2.vz*dt;
+         for(var ii=0;ii<u.items.length;ii++){
+           var m2=u.items[ii],pe=m2.userData.peg;if(!pe)continue;
+           var dx=b2.x-pe[0],dz=b2.z-pe[1],d=Math.hypot(dx,dz);
+           if(d<1.28&&d>0.0001){
+             var nx=dx/d,nz=dz/d;
+             b2.x+=nx*(1.28-d);b2.z+=nz*(1.28-d);
+             var vn=b2.vx*nx+b2.vz*nz;
+             if(vn<0){b2.vx-=1.7*vn*nx;b2.vz-=1.7*vn*nz;
+               if(m2.userData.hot<0.02)fireShape(m2);m2.userData.hot=1;}
+           }}
+       }
+       var rr2=Math.hypot(b2.x,b2.z);
+       if(rr2>RPLAN){g.remove(b2.mesh);b2.mesh.material.dispose();u.balls.splice(bi,1);continue;}
+       b2.mesh.position.copy(sph(wrap360(Math.atan2(b2.x,-b2.z)/D),90*(1-rr2/RPLAN),RS-0.35));
+     }
+   }
+   u.items.forEach(function(m){m.scale.setScalar(1+m.userData.hot*0.7);});
+ },
+ modes:function(el){
+   el.innerHTML='';
+   ['concentric','pinball','spiral'].forEach(function(m){
+     var b=document.createElement('button');b.textContent=m;
+     if(m===ACTIVE.userData.mode)b.className='on';
+     b.onclick=function(){ACTIVE.userData.mode=m;resolveLoopers(ACTIVE);
+       el.querySelectorAll('button[data-m]').forEach(function(q){q.className=q===b?'on':'';});
+       var a=el.querySelector('a.poc');if(a)a.href='https://domebase.vercel.app/sketch/'+m+'/';};
+     b.setAttribute('data-m',m);
+     el.appendChild(b);
+   });
+   /* the looper as it actually runs, outside the deck */
+   var poc=document.createElement('a');
+   poc.className='poc';poc.target='_blank';poc.rel='noopener';
+   poc.href='https://domebase.vercel.app/sketch/'+(ACTIVE.userData.mode||'concentric')+'/';
+   poc.textContent=T('poc');
+   el.appendChild(poc);
+ },
+ phone:function(el){
+   el.innerHTML='<div class="hint">stamp</div><div class="grid2" id="loopGrid">'+
+     '<button data-s="star">\u2605</button><button data-s="circle">\u25CF</button>'+
+     '<button data-s="triangle">\u25B2</button><button data-s="square">\u25A0</button></div>';
+   el.querySelectorAll('#loopGrid button').forEach(function(b){
+     var kind=b.getAttribute('data-s');
+     var v=LVOICES.filter(function(v){return v.kind===kind;})[0];
+     if(v)b.style.color=v.color;
+     b.onclick=function(){placeShape(ACTIVE,kind);note(0,30,500,'sine',0.2,0.05);};
+   });
+ },
+ sim:function(g,n){for(var i=0;i<n;i++)placeShape(g);}},
+
+/* 7 BIRD WORLD */
+{label:'BIRD WORLD', bg:BLUE,
+ desc:'Thinking about orientation and technology. A poetic interlude. No calibration required.',
+ build:function(g){
+   g.userData.fly=[];g.userData.top=0;
+   scatterStars(g,44,YELLOW);
+   for(var i=0;i<16;i++)birdSpawn(g);
+ },
+ step:function(g,dt,t){
+   var u=g.userData;
+   /* keep the dome stocked: a bird that has flown its nine seconds is replaced */
+   u.top+=dt;
+   if(u.fly.length<16&&u.top>0.8){u.top=0;birdSpawn(g);}
+   u.fly.forEach(function(f){
+     f.az=wrap360(f.az+f.vaz*dt);f.el+=f.vel*dt;
+     if(f.el<6){f.el=6;f.vel=Math.abs(f.vel);}
+     if(f.el>82){f.el=82;f.vel=-Math.abs(f.vel);}
+     place(f.mesh,sph(f.az,f.el,RS-0.5));});
+   for(var i=u.fly.length-1;i>=0;i--){var f=u.fly[i];f.life-=dt;
+     if(f.life<=0){g.remove(f.mesh);f.mesh.geometry.dispose();
+       if(f.mesh.material.map)f.mesh.material.map.dispose();f.mesh.material.dispose();
+       u.fly.splice(i,1);}}
+ },
+ phone:function(el){
+   el.innerHTML='<div class="hint">'+T('birdDraw')+'</div><canvas class="draw" id="bwDraw"></canvas><button id="bwSend">'+T('phoneSend')+'</button>';
+   var cv=el.querySelector('#bwDraw');var x=setupDraw(cv);
+   drawBirdStroke(x,cv.width/2,cv.height/2,3);
+   el.querySelector('#bwSend').onclick=function(){
+     var col=[RED,GREEN,BLUE,YELLOW,CREAM][Math.floor(Math.random()*5)];
+     var m=new THREE.Mesh(new THREE.PlaneGeometry(4,4),
+       new THREE.MeshBasicMaterial({map:tex(tintCanvas(cv,col)),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+     ACTIVE.add(m);
+     ACTIVE.userData.fly.push({mesh:m,az:-40,el:18,vaz:(Math.random()<0.5?-1:1)*(30+Math.random()*30),vel:-(6+Math.random()*8),life:9});
+     note(-40,18,900+Math.random()*600,'sine',0.3,0.05);
+     x.clearRect(0,0,cv.width,cv.height);drawBirdStroke(x,cv.width/2,cv.height/2,3);
+   };
+ },
+ sim:function(g,n){for(var i=0;i<n;i++)birdSpawn(g);}},
+
+/* 8 MAGNETIC POETRY */
+{label:'MAGNETIC POETRY', bg:BLUE,
+ desc:'What are people saying about fulldome as a medium? A literature review of sorts. Calibration at beginning of scene.',
+ build:function(g){
+   /* the rim: the reference poster's orange-red edge, drawn as a domemaster band so it hugs the
+      dome and reads as a border instead of a line seen edge-on */
+   var rc=c2d(1024,1024),rx=rc.getContext('2d'),rm=512;
+   rx.fillStyle=RED;
+   rx.beginPath();rx.arc(rm,rm,rm,0,TAU);rx.arc(rm,rm,rm*0.923,0,TAU,true);rx.fill();
+   g.add(domeImage(rc,RS*0.985,-14));
+   var words=('we are all astronauts what does it feel like that is all we have ever experienced '+
+     'how do we think in terms of wholes the dome is a room with no corners every direction is a '+
+     'direction to somewhere the inside of a sphere is the whole world we are standing under a '+
+     'picture of the sky').split(' ');
+   var tiles=[],spots=[];
+   words.forEach(function(w){
+     /* a scatter with a bias, not a ring: most words toward the front, a few anywhere, and no
+        two tiles sat on top of each other */
+     var best=null,bd=-1;
+     for(var k=0;k<28;k++){
+       var front=Math.random()<0.62;
+       var az=wrap360(front?(Math.random()*150-75):Math.random()*360);
+       var el=Math.max(10,Math.min(80,20+Math.random()*55-Math.random()*14));
+       var d=1e9;
+       spots.forEach(function(q){
+         var da=Math.abs(((az-q[0]+540)%360)-180)*Math.cos(el*D);
+         d=Math.min(d,Math.hypot(da,el-q[1]));});
+       if(d>bd){bd=d;best=[az,el];}
+       if(bd>7.5)break;
+     }
+     spots.push(best);
+     var tc=textCanvas(w,{size:42,weight:700,ls:0.05,padx:13,pady:9,color:'#000'});
+     var pad=14,tile=c2d(tc.width+pad*2,tc.height+pad*2),tg=tile.getContext('2d');
+     tg.fillStyle=CREAM;roundRect(tg,3,3,tile.width-6,tile.height-6,9);tg.fill();
+     tg.drawImage(tc,pad,pad);
+     var tp=new THREE.Mesh(new THREE.PlaneGeometry(tile.width/PXPU,tile.height/PXPU),
+       new THREE.MeshBasicMaterial({map:tex(tile),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+     place(tp,sph(best[0],best[1],RS-1));
+     tp.userData={az:best[0],el:best[1],word:w};
+     g.add(tp);tiles.push(tp);});
+   g.userData.tiles=tiles;g.userData.drag=null;g.userData.agents=[];
+ },
+ step:function(g,dt,t){
+   var u=g.userData;
+   /* hands: a dot goes to a word, takes it, and sets it down somewhere else */
+   u.agents.forEach(function(a){
+     a.k+=dt;
+     if(a.phase===0){
+       var f=Math.min(1,a.k/0.7),d=((a.tile.userData.az-a.fromAz+540)%360)-180;
+       a.dot.position.copy(sph(a.fromAz+d*f,a.fromEl+(a.tile.userData.el-a.fromEl)*f,RS-1.9));
+       if(f>=1){a.phase=1;a.k=0;a.az0=a.tile.userData.az;a.el0=a.tile.userData.el;
+         note(a.az0,a.el0,560,'sine',0.18,0.04);}
+     } else if(a.phase===1){
+       var q=Math.min(1,a.k/1.1),e2=q<0.5?2*q*q:1-Math.pow(-2*q+2,2)/2;
+       var dz=((a.toAz-a.az0+540)%360)-180;
+       var az=a.az0+dz*e2,el=a.el0+(a.toEl-a.el0)*e2;
+       a.tile.userData.az=az;a.tile.userData.el=el;
+       a.dot.position.copy(sph(az,el,RS-1.9));
+       if(q>=1){a.phase=2;a.k=0;}
+     } else {
+       a.dot.scale.setScalar(Math.max(0.001,1-a.k/0.3));
+       if(a.k>=0.3){a.tile.userData.held=false;a.dead=1;
+         g.remove(a.dot);a.dot.geometry.dispose();a.dot.material.dispose();}
+     }
+   });
+   u.agents=u.agents.filter(function(a){return !a.dead;});
+   u.tiles.forEach(function(t){if(t!==u.drag){
+     t.position.copy(sph(t.userData.az,t.userData.el,RS-1));t.lookAt(0,0,0);}});
+ },
+ pointer:function(g,type,az,el,e){
+   var u=g.userData;
+   if(type==='down'){var best=null,bd=1e9;
+     u.tiles.forEach(function(t){var da=Math.abs(((az-t.userData.az+540)%360)-180),de=Math.abs(el-t.userData.el);
+       var d=Math.hypot(da,de);if(d<bd){bd=d;best=t;}});
+     if(best&&bd<14)u.drag=best;else u.drag=null;}
+   else if(type==='move'&&u.drag){u.drag.userData.az=az;u.drag.userData.el=Math.max(6,Math.min(84,el));
+     u.drag.position.copy(sph(az,u.drag.userData.el,RS-1));u.drag.lookAt(0,0,0);}
+   else if(type==='up'){u.drag=null;}},
+ phone:function(el){
+   el.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center"><button class="big" id="mpGrab">'+T('grab')+'</button></div>';
+   el.querySelector('#mpGrab').onclick=function(){
+     var t=ACTIVE.userData.tiles;if(!t.length)return;
+     var best=null,bd=1e9;
+     t.forEach(function(tp){var da=Math.abs(((tp.userData.az+540)%360)-180),de=Math.abs(tp.userData.el-32);
+       var d=Math.hypot(da,de);if(d<bd){bd=d;best=tp;}});
+     if(best){best.userData.az=0;best.userData.el=32;note(0,32,440,'sine',0.25,0.05);}
+   };
+ },
+ sim:function(g,n){poetrySim(g,n);}},
+
+/* 9 TIMELINE */
+{label:'TIMELINE', bg:BLACK,
+ desc:'How did we get here?',
+ build:function(g){
+   var T0=TIMELINE[0][0],T1=TIMELINE[TIMELINE.length-1][0],TURNS=5;
+   var pts=[];
+   for(var a=0;a<=1200;a++){var f=a/1200;pts.push(sph(-f*360*TURNS,78-f*74,RS-0.6));}
+   g.add(tube(pts,RED,0.085));
+   var items=[];
+   TIMELINE.forEach(function(e,idx){
+     var f=idx/(TIMELINE.length-1),az=-f*360*TURNS,el=78-f*74;
+     var kind=/opens|built|rebuilt|founded|market hall/i.test(e[1])?'venue'
+             :/film|concert|performance|dance|dancer|award|exhibition|residency|festival|works|workshop/i.test(e[1])?'work':'other';
+     var col=kind==='venue'?GREEN:(kind==='work'?YELLOW:BLUE);
+     var dot=new THREE.Mesh(new THREE.SphereGeometry(0.24,10,8),
+       new THREE.MeshBasicMaterial({color:new THREE.Color(col)}));
+     dot.position.copy(sph(az,el,RS-0.55));g.add(dot);
+     /* a label only where the dome shows it head on; round the back it is a sliver seen from
+        behind, which reads as reversed type, so those events keep the dot and nothing else */
+     var waz=((az+540)%360)-180,face=!(Math.abs(waz)>78&&Math.abs(waz)<100);
+     if(face){
+       var yr=textPlane(String(Math.round(e[0])),{size:110,weight:900,color:CREAM});
+       g.add(yr);items.push({m:yr,az:az,el:Math.max(5,el-2.8),r:RS-1.0});
+       if(idx%5===0){
+         var ttl=textPlane(e[1].split(/[,:]/)[0].slice(0,15),{size:118,weight:700,color:col});
+         g.add(ttl);items.push({m:ttl,az:az,el:Math.min(87,el+3.0),r:RS-1.0});
+       }
+     }
+   });
+   g.userData.items=items;g.userData.yaw=0;
+ },
+ step:function(g,dt,t){
+   var u=g.userData;
+   u.items.forEach(function(it){
+     var az=wrap360(it.az+u.yaw);
+     it.m.position.copy(sph(az,it.el,it.r));it.m.up.set(0,1,0);it.m.lookAt(0,0,0);
+     /* the fisheye draws the far half of the dome through the seam, which mirrors type laid on
+        it; flipping those labels' own x puts them back the right way round */
+     var w0=wrap360(az),far=(w0>90&&w0<270);
+     it.m.scale.x=far?-1:1;
+     if(far)it.m.rotateZ(Math.PI);});
+ },
+ pointer:function(g,type,az,el,e){
+   var u=g.userData;
+   if(type==='down'){u._dx=e.clientX;u._y0=u.yaw;}
+   else if(type==='move'&&u._dx!=null){u.yaw=u._y0+(e.clientX-u._dx)*0.25;}
+   else if(type==='up'){u._dx=null;}}},
+
+/* 10 QUIZ */
+{label:'QUIZ',
+ desc:'Answer questions about the presentation to win the shape race! A learning and data collection tool in equal measure. No calibration required.',
+ build:function(g){
+   var kinds=['circle','square','triangle','star','diamond','plus'];
+   var players=[];
+   kinds.forEach(function(k,i){var az=-40+i*16;var m=glyph(k,3.6,PACC(i));
+     place(m,sph(az,15,RS-1.9));m.userData={az:az,base:15,score:0,k:k,col:PACC(i)[0]};g.add(m);players.push(m);});
+   /* four colours striking out from the centre, the run repeated four times */
+   var band=[RED,YELLOW,BLUE,GREEN];
+   for(var q=0;q<16;q++){
+     var el=86-q*5,ringPts=[];
+     for(var a2=0;a2<=120;a2++)ringPts.push(sph(360*a2/120,el,RS-0.18));
+     g.add(tube(ringPts,band[q%4],0.80));
+   }
+   g.userData.players=players;g.userData.phase='questions';g.userData.chosen=null;g.userData.ansCount=0;g.userData.rates=[];g.userData.winner=null;g.userData.won=false;
+ },
+ step:function(g,dt,t){
+   var u=g.userData;
+   if(u.phase==='race'){
+     if(!u.rates.length)u.rates=u.players.map(function(){return 5+Math.random()*6;});
+     u.players.forEach(function(m,i){
+       if(u.winner!=null)return;
+       m.userData.base=Math.min(86,m.userData.base+u.rates[i]*dt);
+       if(m.userData.base>=86&&u.winner==null)u.winner=i;
+       place(m,sph(m.userData.az,m.userData.base,RS-1.9));});
+     if(u.winner!=null&&!u.won){u.won=true;var w=u.players[u.winner];w.scale.setScalar(1.5);
+       note(w.userData.az,80,880,'triangle',0.6,0.1);}
+   } else {
+     u.players.forEach(function(m){
+       var el=m.userData.base+m.userData.score*14;
+       place(m,sph(m.userData.az,el,RS-1.9));});
+   }
+ },
+ pointer:function(g,type,az,el,e){
+   var u=g.userData;
+   if(u.phase==='race'&&type==='down'){var best=null,bd=1e9;
+     u.players.forEach(function(m){var da=Math.abs(((az-m.userData.az+540)%360)-180),de=Math.abs(el-m.userData.base);
+       var d=Math.hypot(da,de);if(d<bd){bd=d;best=m;}});
+     if(best&&bd<20)best.userData.base=Math.min(86,best.userData.base+3);}},
+ phone:function(el){quizPhone(el);},
+ reset:function(g){var u=g.userData;
+   u.phase='questions';u.chosen=null;u.ansCount=0;u.rates=[];u.winner=null;u.won=false;
+   u.players.forEach(function(m){m.userData.base=15;m.userData.score=0;m.scale.setScalar(1);
+     place(m,sph(m.userData.az,15,RS-1.9));});},
+ sim:function(g,n){var u=g.userData;
+   if(u.phase==='questions'){
+     while(u.ansCount<4){var p=u.players[u.ansCount];p.userData.score=(p.userData.score||0)+1;u.ansCount++;}
+     u.phase='race';u.rates=[];u.winner=null;u.won=false;
+     u.players.forEach(function(m){m.userData.base=15;});
+   } else {
+     for(var i=0;i<n;i++){var m=u.players[Math.floor(Math.random()*u.players.length)];m.userData.base=Math.min(86,m.userData.base+2.5);}
+   }}}
+];
+
+/* ---- quiz phone: 4 question boxes, then TAP ---- */
+var QUIZ=[
+ 'First dome projector?',
+ 'We are all astronauts?',
+ 'Voice of memory?',
+ 'eBird collects?'
+];
+function quizPhone(el){
+  var u=ACTIVE.userData,pl=u.players[0];
+  var NAMES={},NAMES_FR={};
+  NAMES[BLUE]='blue';NAMES[GREEN]='green';NAMES[RED]='orange red';NAMES[YELLOW]='yellow';NAMES[CREAM]='white';
+  NAMES_FR[BLUE]='bleu';NAMES_FR[GREEN]='vert';NAMES_FR[RED]='rouge orangé';NAMES_FR[YELLOW]='jaune';NAMES_FR[CREAM]='blanc';
+  var COLN=(LANG==='fr'?NAMES_FR:NAMES);
+  var ANSWERS=T('answers');
+  var rows=ANSWERS.map(function(a,k){
+    return '<button data-a="'+k+'" class="ans'+(u.chosen===k?' on':'')+'">'+a+'</button>';}).join('');
+  el.innerHTML='<div class="hint">'+T('phoneThis')+'</div>'+
+    '<div id="qpCard"></div>'+
+    '<div style="font-weight:900;letter-spacing:.10em;text-transform:uppercase;font-size:10px;line-height:1.35">'+
+      (LANG==='fr'?KN(pl.userData.k)+' '+(COLN[pl.userData.col]||''):(COLN[pl.userData.col]||'')+' '+KN(pl.userData.k))+'</div>'+
+    '<div class="ask">'+T('q')+'</div>'+rows;
+  var cv=glyphCanvas(pl.userData.k,300,pl.userData.col);
+  cv.style.cssText='width:58%;margin:0 auto;display:block;background:#fff;border:2px solid #000';
+  el.querySelector('#qpCard').appendChild(cv);
+  el.querySelectorAll('button[data-a]').forEach(function(b){
+    b.onclick=function(){
+      var u2=ACTIVE.userData;
+      if(u2.chosen!=null)return;
+      var k=+b.getAttribute('data-a');
+      u2.chosen=k;
+      var right=(k===0);
+      u2.phase='race';u2.winner=null;u2.won=false;
+      /* this phone's shape answers for itself: right answer, it runs; wrong, it crawls */
+      u2.rates=u2.players.map(function(m,idx){
+        if(idx===0)return right?34:7;
+        return 6+Math.random()*8;});
+      u2.players.forEach(function(m){m.userData.base=15;});
+      note(0,40,right?880:420,'sine',0.3,0.06);
+      quizPhone(el);
+    };
+  });
+}
+
+
+/* ================= view management ================= */
+var ACTIVE=null, idx=-1, mode='ALL', raf=null, lastMs=0;
+
+function setBtn(l){$('allBtn').textContent=l;}
+
+function buildGroup0(sc){var g=new THREE.Group();sc.build(g);return g;}
+function buildGroup(i){var g=new THREE.Group();SCENES[i].build(g);SCENES[i].init&&SCENES[i].init(g);return g;}
+/* the last page of the deck: not a scene, not in the storyboard */
+var ENDSCENE={label:'END',bg:BLUE,desc:'',
+  build:function(g){
+    scatterStars(g,64,YELLOW);
+    g.add(place(textPlane(T('end'),{size:660,weight:900,ls:0.14,color:CREAM}),sph(0,68,RS*0.92)));
+  }};
+function curScene(){return SCENES[idx]||ENDSCENE;}
+function goPrev(){if(idx>0)showFull(idx-1);}
+function goNext(){if(idx<SCENES.length)showFull(idx+1);}
+function updateNav(){
+  $('prevA').disabled=idx<=0;
+  $('nextA').disabled=idx>=SCENES.length;
+  $('prevA').style.display='flex';$('nextA').style.display='flex';
+}
+
+function showAll(){
+  mode='ALL';setBtn(T('full'));
+  $('all').style.display='flex';$('full').classList.remove('on');
+  stopLoop();
+  if(ACTIVE){scene3.remove(ACTIVE);disposeGroup(ACTIVE);}
+  ACTIVE=null;
+  $('prevA').style.display='none';$('nextA').style.display='none';
+  var grid=$('grid');grid.innerHTML='';
+  var toc=$('toc');toc.innerHTML='<div class="toc-h">'+T('storyboard')+'</div>';
+  SCENES.forEach(function(sc,i){
+    var g=buildGroup(i);scene3.add(g);
+    scene3.background=new THREE.Color(sc.bg||'#000');
+    sc.step&&sc.step(g,0.016,i*0.7);
+    renderFisheye();
+    var cell=document.createElement('div');cell.className='thumb';
+    var cv=document.createElement('canvas');cv.width=cv.height=440;blit(cv);
+    var num=document.createElement('div');num.className='num';num.textContent=i+1;
+    cell.appendChild(cv);cell.appendChild(num);
+    cell.onclick=function(){showFull(i);};
+    grid.appendChild(cell);
+    if(i===SCENES.length-1){
+      var dn=document.createElement('div');dn.className='dome-note';
+      var h3=document.createElement('h3');h3.textContent=T('domeTitle');
+      var ol=document.createElement('ol');
+      T('domeSteps').forEach(function(s){var li=document.createElement('li');li.textContent=s;ol.appendChild(li);});
+      dn.appendChild(h3);dn.appendChild(ol);grid.appendChild(dn);
+    }
+    scene3.remove(g);disposeGroup(g);
+    var it=document.createElement('div');it.className='toc-item';
+    it.innerHTML='<div class="toc-n">'+(i+1)+') '+SL(i)+'</div><div class="toc-d"></div>';
+    it.querySelector('.toc-d').textContent=SD(i);
+    it.onclick=function(){showFull(i);};
+    toc.appendChild(it);
+  });
+  /* what this deck is, and what it is only pretending to do */
+  var note=document.createElement('div');note.className='toc-note';
+  var lnk=document.createElement('a');
+  lnk.href='https://drive.google.com/file/d/1KzHxSPPZdQlBkXZmZveoWC2jGmDP9GDJ/view?usp=sharing';
+  lnk.target='_blank';lnk.rel='noopener';lnk.textContent=T('noteLink');
+  note.textContent=T('noteA');note.appendChild(lnk);
+  toc.appendChild(note);
+}
+function showFull(i){
+  idx=i;mode='FULL';setBtn(T('all'));
+  $('all').style.display='none';$('full').classList.add('on');
+  stopLoop();
+  if(ACTIVE){scene3.remove(ACTIVE);disposeGroup(ACTIVE);}
+  var end=i>=SCENES.length;
+  ACTIVE=end?buildGroup0(ENDSCENE):buildGroup(i);scene3.add(ACTIVE);
+  var sc=curScene();
+  scene3.background=new THREE.Color(sc.bg||'#000');
+  $('desc').style.display=end?'none':'flex';
+  $('dTitle').textContent=end?'':((i+1)+') '+SL(i));
+  $('dText').textContent=end?'':SD(i);
+  var hasPhone=!!sc.phone;
+  $('phonePane').classList.toggle('off',!hasPhone);
+  var ps=$('phoneScr');ps.innerHTML='';
+  if(hasPhone)sc.phone(ps);
+  var sim=$('simBtn'),rb=$('resetBtn');
+  if(sc.sim){sim.style.display='block';sim.onclick=function(){sc.sim(ACTIVE,18);if(sc.phone)sc.phone($('phoneScr'));};}
+  else sim.style.display='none';
+  if(sc.reset){rb.style.display='block';
+    rb.onclick=function(){sc.reset(ACTIVE);if(sc.phone)sc.phone($('phoneScr'));};}
+  else rb.style.display='none';
+  var md=$('modes');md.innerHTML='';
+  if(sc.modes)sc.modes(md);
+  sizeDome();
+  updateNav();
+  lastMs=0;
+  raf=requestAnimationFrame(frame);
+}
+function stopLoop(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function frame(now){
+  var dt=lastMs?Math.min(0.05,(now-lastMs)/1000):0;lastMs=now;
+  if(ACTIVE){var sc=curScene();sc.step&&sc.step(ACTIVE,dt,now/1000);
+    renderFisheye();blit($('dome'));}
+  raf=requestAnimationFrame(frame);
+}
+function disposeGroup(g){g.traverse(function(o){if(o.geometry)o.geometry.dispose();
+  if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose();}});}
+
+function sizeDome(){var w=$('domeWrap');var d=$('dome');
+  var n=Math.max(320,Math.min(w.clientWidth,w.clientHeight)-8);
+  d.style.width=d.style.height=n+'px';d.style.marginLeft='0px';}
+
+/* pointer on the dome (FULL view) */
+var pdrag=false;
+$('dome').addEventListener('pointerdown',function(e){
+  pdrag=true;var p=pointerToAzEl($('dome'),e);
+  if(p&&ACTIVE&&curScene().pointer)curScene().pointer(ACTIVE,'down',p.az,p.el,e);
+  $('dome').setPointerCapture(e.pointerId);});
+$('dome').addEventListener('pointermove',function(e){
+  if(!pdrag)return;var p=pointerToAzEl($('dome'),e);
+  if(p&&ACTIVE&&curScene().pointer)curScene().pointer(ACTIVE,'move',p.az,p.el,e);});
+$('dome').addEventListener('pointerup',function(e){
+  pdrag=false;var p=pointerToAzEl($('dome'),e);
+  if(p&&ACTIVE&&curScene().pointer)curScene().pointer(ACTIVE,'up',p.az,p.el,e);});
+$('dome').addEventListener('pointercancel',function(){pdrag=false;});
+
+/* ALL/FULL toggle + arrow keys */
+function applyLang(){
+  $('langBtn').textContent=LANG==='en'?'FR':'EN';
+  $('simBtn').textContent=T('sim');
+  $('resetBtn').textContent=T('reset');
+  $('hideBtn').textContent=document.body.classList.contains('bare')?T('unhide'):T('hide');
+  $('allBtn').textContent=(mode==='FULL')?T('all'):T('full');
+  if(mode==='FULL')showFull(idx>=SCENES.length?SCENES.length:(idx<0?0:idx));
+  else showAll();
+}
+function toggleBare(){
+  if(mode==='ALL')showFull(idx>=0?idx:0);
+  var b=document.body.classList.toggle('bare');
+  $('hideBtn').textContent=b?T('unhide'):T('hide');
+}
+$('hideBtn').onclick=function(){toggleBare();};
+$('langBtn').onclick=function(){
+  LANG=(LANG==='en')?'fr':'en';
+  try{localStorage.setItem('ss_lang',LANG);}catch(e){}
+  applyLang();
+};
+$('prevA').onclick=goPrev;
+$('nextA').onclick=goNext;
+$('allBtn').onclick=function(){ if(mode==='FULL')showAll(); else showFull(idx>=0?idx:0); };
+window.addEventListener('keydown',function(e){
+  if(mode!=='FULL')return;
+  if(e.key==='ArrowRight')goNext();
+  else if(e.key==='ArrowLeft')goPrev();
+});
+window.addEventListener('resize',function(){if(mode==='FULL')sizeDome();});
+
+/* ================= boot ================= */
+function boot(){initThree();
+  /* ?lang=fr forces the French copy, handy when linking someone into the deck */
+  var qm=/[?&]lang=(fr|en)/.exec(location.search);if(qm)LANG=qm[1];
+  /* ?bare=1 opens on the dome alone — a clean link for showing, or for a dome file */
+  var qb=/[?&]bare=1/.test(location.search);
+  $('langBtn').textContent=LANG==='en'?'FR':'EN';
+  $('simBtn').textContent=T('sim');
+  $('resetBtn').textContent=T('reset');
+  preloadBirds(function(){
+  showAll();
+  /* a slide can be linked to: #1 opens the first scene whole, the way a lecture jump works */
+  var m=/^#(\d+)$/.exec(location.hash);
+  if(m){var k=Math.min(SCENES.length+1,Math.max(1,parseInt(m[1],10)));showFull(k-1);}
+  if(qb){document.body.classList.add('bare');$('hideBtn').textContent=T('unhide');}
+});}
+try{
+  if(document.fonts&&document.fonts.load){
+    document.fonts.load('400 16px Lato')
+      .then(function(){return document.fonts.load('700 40px Lato');})
+      .then(function(){return document.fonts.load('900 72px Lato');})
+      .then(boot,boot);
+  } else boot();
+}catch(e){err(e);}
+})();
+</script>
+</body>
+</html>
