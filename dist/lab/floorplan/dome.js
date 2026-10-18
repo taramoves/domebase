@@ -1,5 +1,5 @@
 /* The dome's own numbers, as parameters: how many speakers over how many rings, how many
-   projectors, and the shape of a panel.
+   projectors, how a ring is spread, and the shape of a panel.
 
    Nothing here draws. The master keeps its state in percentages of the radius and paints on a 680
    plate with K px to the percent; this file hands it a panel's path and works out the counts a
@@ -7,6 +7,11 @@
 
    The counts are read off the rig the state already is, never invented: put a number back where it
    was and nothing moves. A ring that holds a single speaker is the pole and stays one.
+
+   A rig is laid one of two ways. `rings` keeps the rig's own circles and scales them with the count,
+   which is what the page has always done; `round` lays the whole count on one circle of its own, at
+   a radius and over a span the fields give it. A small count needs the second: one speaker a ring,
+   every one of them on the same bearing, reads as a line out from the middle, not as a rig.
    Loaded before the master's own script — its render asks this file for the path of a panel. */
 (function (root, factory) {
   var api = factory();
@@ -69,6 +74,43 @@
     return out;
   }
 
+  /* The readings of one ring. A full turn spaces its `n` evenly round 360 from the ring's own start;
+     an arc spreads them from the start to the end, edge to edge; a ring of one sits at the start.
+     A state from before `span` existed reads as a full turn, which is what those rings were. */
+  function azOf(s, i) {
+    var n = Math.max(1, Math.round(s.n) || 1);
+    var span = s.span == null ? 360 : Math.max(0, Math.min(360, s.span));
+    var o = s.o || 0;
+    if (n === 1) return norm(o);
+    if (span >= 360) return norm(o + 360 * i / n);
+    return norm(o + span * i / (n - 1));
+  }
+
+  /* One ring of `n` at `r` % of the radius, spread over `span` degrees about `at`: a full turn
+     starts at `at`, a shorter arc is centred on it. `tpl` is the ring it replaces, so the speaker's
+     own size and the LFE cap come along. */
+  function round(n, o, tpl) {
+    n = Math.max(1, Math.min(180, Math.round(n) || 1));
+    var span = o.span == null ? 360 : Math.max(1, Math.min(360, +o.span));
+    var at = whole(o.at) ? o.at : 0;
+    var r = Math.max(0, Math.min(100, whole(o.r) ? o.r : 80));
+    var t = tpl || {};
+    return { n: n, r: r, o: norm(n > 1 && span < 360 ? at - span / 2 : at), span: span,
+             w: t.w || 8, h: t.h || 10, cap: t.cap ? t.cap : 0 };
+  }
+
+  /* `count` projectors on one circle: each its own entry, evenly over the span about `at`, at the
+     radius and the diameter the circle has. A count of one leaves it at the centre of the arc. */
+  function around(count, o) {
+    var n = Math.max(1, Math.min(48, Math.round(count) || 1));
+    var span = o.span == null ? 360 : Math.max(1, Math.min(360, +o.span));
+    var at = whole(o.at) ? o.at : 0;
+    var r = Math.max(0, Math.min(100, whole(o.r) ? o.r : 45));
+    var dia = o.dia == null ? 1.5 : o.dia, ring = round(n, { r: r, span: span, at: at }), out = [], i;
+    for (i = 0; i < n; i++) out.push({ d: r, dia: dia, az: +azOf(ring, i).toFixed(1) });
+    return out;
+  }
+
   /* `count` projectors over the rings the rig already hangs them in, each ring keeping its own
      radius and diameter, the circles spread evenly from where the rig's first one points. A count
      equal to the number there already is changes nothing at all — a rig placed by hand stays put. */
@@ -123,5 +165,6 @@
   }
 
   return { CX: CX, K: K, shares: shares, speakers: speakers, projectors: projectors,
+           azOf: azOf, round: round, around: around,
            shape: shape, panelCount: panelCount, cellPath: cellPath, norm: norm };
 });

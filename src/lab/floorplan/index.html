@@ -47,6 +47,7 @@ fieldset{border:0;margin:0;padding:0}
 .types button[data-t]{display:flex;align-items:center;cursor:grab;touch-action:none;user-select:none;text-align:left}
 .types button[data-t] i{width:9px;height:9px;flex:none;margin-right:5px;border:1px solid #000}
 .types button[data-t].hot{background:#e6e6e6;cursor:grabbing}
+.sw{display:inline-block;width:8px;height:8px;border:1px solid #000;vertical-align:-1px}
 select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--bg);color:var(--fg);max-width:120px}
 </style></head><body>
 <!--nav domebase/lab/floorplan-->
@@ -55,8 +56,13 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 <div class="pane">
 <h2>dome</h2>
 <div class="row"><label>radius <input class="num" id="dR"> m</label><label>wall <input class="num" id="dW"> m</label></div>
-<div class="row"><label>degrees <input class="num" id="dG"> &#176;</label></div>
+<div class="row"><label>degrees <input class="num" id="dG"> &#176;</label><label>tilt <input class="num" id="dT"> &#176;</label><label>lean at <input class="num" id="dTa"> &#176;</label></div>
 <div class="row"><label>speakers <input class="num" id="dSp"></label><label>projectors <input class="num" id="dPr"></label></div>
+<h2>rig</h2>
+<div class="row"><label>sound <select id="dSm"><option value="rings">as rings</option><option value="round">round</option></select></label><label>ring <input class="num" id="dSr"> %</label></div>
+<div class="row"><label>span <input class="num" id="dSs"> &#176;</label><label>centre <input class="num" id="dSa"> &#176;</label></div>
+<div class="row"><label>light <select id="dPm"><option value="rings">as rings</option><option value="round">round</option></select></label><label>ring <input class="num" id="dPr2"> %</label></div>
+<div class="row"><label>span <input class="num" id="dPs"> &#176;</label><label>centre <input class="num" id="dPa"> &#176;</label></div>
 <div class="row"><label>panels <select id="dSh"><option value="quad">quads</option><option value="tri">triangles</option></select></label></div>
 <div class="note" id="dst"></div>
 </div>
@@ -110,6 +116,7 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 <div class="types"><button data-cam="plan">plan</button><button data-cam="front">front</button><button data-cam="34">three quarters</button><button data-cam="reset">reset</button></div>
 <h2>show</h2>
 <div class="row" id="gsh"></div>
+<div class="note" id="gkey"><i class="sw" style="background:#ff8a3d"></i> speaker &nbsp; <i class="sw" style="background:#2f6fed"></i> projector &nbsp; <i class="sw" style="background:#000"></i> lfe</div>
 <h2>master</h2>
 <div class="row"><label>radius <select id="gmap"><option value="dome">from the zenith</option><option value="plan">across the plan</option></select></label></div>
 <div class="row"><label>room <input class="num" id="gR"> m</label><label>wall <input class="num" id="gWa"> m</label></div>
@@ -129,19 +136,37 @@ select{font:inherit;border:1px solid var(--bd);border-radius:0;background:var(--
 const N=[1,2,20,40,40,80,80,80,80,80,80,80],CX=340,K=3.38,rad=Math.PI/180,C=['#fff','#e5484d','#f5c518','#2f6fed','#000'];
 const def=()=>({w:[2.7,5.4,null,null,null,null,null,null,null,null,null,null],col:{},circ:[{d:20,dia:1.5,az:45},{d:20,dia:1.5,az:135},{d:20,dia:1.5,az:225},{d:20,dia:1.5,az:315},{d:45,dia:1.5,az:45},{d:45,dia:1.5,az:135},{d:45,dia:1.5,az:225},{d:45,dia:1.5,az:315}],
 spk:[{n:1,r:0,o:0,w:8,h:10,cap:0},{n:4,r:22,o:0,w:8,h:10,cap:0},{n:8,r:34,o:0,w:8,h:10,cap:0},{n:16,r:47,o:0,w:8,h:10,cap:0},{n:32,r:62,o:0,w:8,h:10,cap:4},{n:32,r:80,o:0,w:8,h:10,cap:1}],
-lfe:[[],[],[],[],[],[]],show:{p:1,c:1,s:1,n:1,t:0},op:100});
+lfe:[[],[],[],[],[],[]],show:{p:1,c:1,s:1,n:1,t:0},op:100,
+rig:{spk:{mode:'rings',r:80,span:360,at:0},prj:{mode:'rings',r:45,span:360,at:0}}});
 let S=def();
 try{const t=localStorage.getItem('domeMaster2');if(t)S=Object.assign(def(),JSON.parse(t))}catch(e){}
 S.show.t=0;   // the pattern is a working layer for lining the map up, not what the page opens on
 S.show=Object.assign(def().show,S.show);
+/* Which way the rig is laid: `rings` keeps the rig's own circles and scales them with the count,
+   `round` lays the whole count on one circle at a radius of its own. A state from before this
+   field is a rings rig, which is what the page drew. */
+function n0(v,d){v=+v;return isFinite(v)?v:d}
+function fixRig(){
+  S.rig=(S.rig&&typeof S.rig==='object')?S.rig:{};
+  ['spk','prj'].forEach(k=>{
+    const d={mode:'rings',r:k==='spk'?80:45,span:360,at:0};
+    const o=Object.assign({},d,S.rig[k]||{});
+    o.mode=o.mode==='round'?'round':'rings';
+    o.r=Math.max(0,Math.min(100,n0(o.r,k==='spk'?80:45)));
+    o.span=Math.max(1,Math.min(360,n0(o.span,360)));
+    o.at=n0(o.at,0);
+    S.rig[k]=o;
+  });
+}
 (function(){ /* a saved state from the paired model: expand it, and quarter the diameter */
   if(S.circ&&S.circ.length&&S.circ[0].az===undefined){const src=S.circ,out=[];
     src.forEach(g=>{for(let i=0;i<4;i++)out.push({d:g.d,dia:+(g.dia/4).toFixed(3),az:+(((S.az||45)+90*i)%360).toFixed(1)})});
     S.circ=out}
   S.circ.forEach(g=>{if(g.az===undefined)g.az=0;if(g.dia===undefined)g.dia=1.5});
+  fixRig();
 })();
 const $=id=>document.getElementById(id);
-const spXY=(s,i)=>{const t=s.n==1?0:s.o+360*i/s.n;return{t,x:CX+s.r*K*Math.sin(t*rad),y:CX-s.r*K*Math.cos(t*rad)}};
+const spXY=(s,i)=>{const t=dome.azOf(s,i);return{t,x:CX+s.r*K*Math.sin(t*rad),y:CX-s.r*K*Math.cos(t*rad)}};
 const cXY=g=>{const t=(g.az||0)*rad;return{x:CX+g.d*K*Math.sin(t),y:CX-g.d*K*Math.cos(t)}};
 const spR=(s,p,x)=>`<rect x="${-s.w*K/2}" y="${-s.h*K/2}" width="${s.w*K}" height="${s.h*K}" transform="translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.t})" ${x}/>`;
 let hv=null,T1='';const hist=[];
@@ -163,7 +188,7 @@ else if(hv.t==='c'){const c=cXY(S.circ[hv.g]);h+=`<circle cx="${c.x.toFixed(2)}"
 else if(hv.t==='s'){const s=S.spk[hv.r];for(let i=0;i<s.n;i++)h+=spR(s,spXY(s,i),'fill="none" stroke="#2f6fed" stroke-width="3"')}}
 $('H').innerHTML=h}
 function render(){const{b,auto,warn}=bounds();
-S.lfe.forEach((a,r)=>S.lfe[r]=a.filter(i=>i<S.spk[r].n));
+S.lfe.forEach((a,r)=>S.lfe[r]=S.spk[r]?a.filter(i=>i<S.spk[r].n):[]);
 let h=`<g style="display:${S.show.p?'':'none'}">`;
 const SH=dome.shape(S);
 N.forEach((m,k)=>{const ri=b[k]*K,ro=b[k+1]*K;for(let i=0;i<m;i++){
@@ -227,21 +252,25 @@ render()}});
 function up(){if(!drag)return;const d=drag,h=d.h;drag=null;
 if(!d.moved){if(h.t==='p'&&d.m==='click'){const id=h.k+'-'+h.i,v=S.col[id]||0;setCol(id,v>=3?0:v+1)}
 else if(h.t==='s'&&d.m==='dist'&&S.spk[h.r].cap){const a=S.lfe[h.r],j=a.indexOf(h.i);if(j>=0)a.splice(j,1);else{a.push(h.i);if(a.length>S.spk[h.r].cap)a.shift()}render()}}
-if(snapS()!==d.snap)pushH(d.snap)}
+/* a ring dragged on a round rig is that rig's ring, so the fields follow the hand */
+if(d.moved&&h.t==='s'&&S.rig.spk.mode==='round'){const r0=S.spk[h.r];
+S.rig.spk.r=+r0.r;S.rig.spk.at=+dome.norm(r0.span<360?r0.o+r0.span/2:r0.o).toFixed(1)}
+if(snapS()!==d.snap)pushH(d.snap);
+if(window.domeFields)window.domeFields()}
 ['pointerup','pointercancel'].forEach(t=>svg.addEventListener(t,up));
 svg.addEventListener('pointerleave',()=>{if(!drag){hv=null;drawH()}});
 function cnt(){}
 const say=t=>{$('st').textContent=t;setTimeout(()=>$('st').textContent='',2500)};
 function saveJSON(){const sp=[];let n=0;
-S.spk.forEach((q,r)=>{for(let i=0;i<q.n;i++){n++;const t=q.n==1?0:q.o+360*i/q.n;sp.push({n,ring:r+1,azimuth:+(((t%360)+360)%360).toFixed(2),radius:q.r,x:+(q.r/100*Math.sin(t*rad)).toFixed(4),y:+(q.r/100*Math.cos(t*rad)).toFixed(4),lfe:S.lfe[r].includes(i)})}});
+S.spk.forEach((q,r)=>{for(let i=0;i<q.n;i++){n++;const t=dome.azOf(q,i);sp.push({n,ring:r+1,azimuth:+(((t%360)+360)%360).toFixed(2),radius:q.r,x:+(q.r/100*Math.sin(t*rad)).toFixed(4),y:+(q.r/100*Math.cos(t*rad)).toFixed(4),lfe:S.lfe[r].includes(i)})}});
 const pj=[];S.circ.forEach((g,i)=>{const t=g.az||0;pj.push({n:i+1,azimuth:+(((t%360)+360)%360).toFixed(2),radius:g.d,diameter:g.dia,x:+(g.d/100*Math.sin(t*rad)).toFixed(4),y:+(g.d/100*Math.cos(t*rad)).toFixed(4)})});
 return JSON.stringify({app:'sat-dome-master',version:4,units:'radii and sizes are % of dome radius (100 = dome edge); azimuth in degrees clockwise from top; x,y in dome radii with +y up',state:S,derived:{ringEdges:bounds().b.slice(1).map(v=>+v.toFixed(3)),speakers:sp,projectors:pj,exitPanels:Object.keys(S.col).filter(k=>S.col[k]===4)}},null,1)}
 const keep=()=>({show:S.show,op:S.op});
 function store(){try{localStorage.setItem('domeMaster2',JSON.stringify(S));return 1}catch(e){return 0}}
 $('save').onclick=async()=>{const ok=store(),json=saveJSON();let f=0;try{const d=window.claude&&await claude.use('downloads');if(d){await d.save({filename:'dome-master-save.json',data:json});f=1}}catch(e){}if(!f){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download='dome-master-save.json';a.click();URL.revokeObjectURL(a.href);f=1}catch(e){}}say(f?'Saved + file':ok?'Saved':'Save failed')};
 $('load').onclick=()=>$('lf').click();
-$('lf').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const j=JSON.parse(rd.result),st=j.state||j;if(!st.spk||st.spk.length!==6||!st.lfe)throw 0;pushH(snapS());S=Object.assign(def(),st,keep());store();render();say('Loaded')}catch(x){say('Invalid save file')}};rd.readAsText(f);e.target.value=''};
-$('rst').onclick=()=>{pushH(snapS());let st={};try{const t=localStorage.getItem('domeMaster2');if(t)st=JSON.parse(t)}catch(e){}S=Object.assign(def(),st,keep());render();say('Reset to last save')};
+$('lf').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const j=JSON.parse(rd.result),st=j.state||j;if(!st.spk||!st.spk.length||!st.lfe)throw 0;pushH(snapS());S=Object.assign(def(),st,keep());fixRig();store();render();say('Loaded')}catch(x){say('Invalid save file')}};rd.readAsText(f);e.target.value=''};
+$('rst').onclick=()=>{pushH(snapS());let st={};try{const t=localStorage.getItem('domeMaster2');if(t)st=JSON.parse(t)}catch(e){}S=Object.assign(def(),st,keep());fixRig();render();say('Reset to last save')};
 $('undo').onclick=undo;
 $('clr').onclick=()=>{pushH(snapS());S.col={};render()};
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
@@ -286,8 +315,8 @@ render();
     var b = bounds().b, out = { rings: b, panels: N, shape: dome.shape(S), spk: [], circ: [], exits: [] }, i, r;
     S.spk.forEach(function (s, ri) {
       for (i = 0; i < s.n; i++) {
-        var t = s.n === 1 ? 0 : s.o + 360 * i / s.n;
-        out.spk.push({ az: t, r: s.r, w: s.w, h: s.h, lfe: S.lfe[ri].indexOf(i) >= 0 });
+        var t = dome.azOf(s, i);
+        out.spk.push({ az: t, r: s.r, w: s.w, h: s.h, lfe: (S.lfe[ri] || []).indexOf(i) >= 0 });
       }
     });
     (S.circ || []).forEach(function (g) { out.circ.push({ az: g.az || 0, r: g.d, dia: g.dia }); });
@@ -314,21 +343,30 @@ render();
     s.style.height = n + "px";
   }
   function master2d() {
-    var f = facts(), h = "", k = 3.4;                      // % of the radius -> px in the 680 box
-    for (var i = 1; i < f.rings.length; i++)
-      h += '<circle cx="340" cy="340" r="' + (f.rings[i] * k).toFixed(1) + '" fill="none" stroke="#c9c9c9" stroke-width=".6"/>';
+    var f = facts(), h = "", U = 340 / F.R;                 // px to the metre in the 680 box
+    /* Every reading of the master lands on the plan where the screen does, so a tilt turns the
+       master's circles into the ellipse the tilted rim makes. */
+    function at(az, pct) {
+      var p = SD.planPoint(az, pct, { R: F.R, wall: F.wall, deg: F.deg, tilt: F.tilt, tiltAz: F.tiltAz });
+      return [(340 + p[0] * U).toFixed(1), (340 - p[1] * U).toFixed(1)];
+    }
+    for (var i = 1; i < f.rings.length; i++) {
+      var q = [], j;
+      for (j = 0; j <= 96; j++) q.push(at(360 * j / 96, f.rings[i]).join(","));
+      h += '<polyline points="' + q.join(" ") + '" fill="none" stroke="#c9c9c9" stroke-width=".6"/>';
+    }
     f.spk.forEach(function (s) {
-      var x = (340 + s.r * k * Math.sin(s.az * DEG)).toFixed(1), y = (340 - s.r * k * Math.cos(s.az * DEG)).toFixed(1);
-      h += '<rect x="' + (-s.w * k / 2).toFixed(1) + '" y="' + (-s.h * k / 2).toFixed(1) + '" width="' + (s.w * k).toFixed(1) +
-           '" height="' + (s.h * k).toFixed(1) + '" transform="translate(' + x + " " + y + ") rotate(" + s.az.toFixed(1) +
+      var p = at(s.az, s.r);
+      h += '<rect x="' + (-s.w * 1.7).toFixed(1) + '" y="' + (-s.h * 1.7).toFixed(1) + '" width="' + (s.w * 3.4).toFixed(1) +
+           '" height="' + (s.h * 3.4).toFixed(1) + '" transform="translate(' + p[0] + " " + p[1] + ") rotate(" + s.az.toFixed(1) +
            ')" fill="' + (s.lfe ? "#c9c9c9" : "#fff") + '" stroke="#c9c9c9" stroke-width=".7"/>';
     });
     f.circ.forEach(function (g) {
-      var x = (340 + g.r * k * Math.sin(g.az * DEG)).toFixed(1), y = (340 - g.r * k * Math.cos(g.az * DEG)).toFixed(1);
-      h += '<circle cx="' + x + '" cy="' + y + '" r="' + Math.max(.8, g.dia / 2 * k).toFixed(1) + '" fill="none" stroke="#c9c9c9" stroke-width=".7"/>';
+      var p = at(g.az, g.r);
+      h += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + Math.max(.8, g.dia / 2 * 3.4).toFixed(1) + '" fill="none" stroke="#c9c9c9" stroke-width=".7"/>';
     });
     f.exits.forEach(function (e) {
-      var x = (340 + e.r * k * Math.sin(e.az * DEG)).toFixed(1), y = (340 - e.r * k * Math.cos(e.az * DEG)).toFixed(1);
+      var p = at(e.az, e.r), x = +p[0], y = +p[1];
       h += '<rect x="' + (x - 2.5) + '" y="' + (y - 2.5) + '" width="5" height="5" fill="#000"/>';
     });
     return h;
@@ -463,7 +501,8 @@ render();
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, w, h);
     var sc = SD.scene({
-      R: F.R, wall: F.wall, deg: F.deg, map: ui.map, rings: f.rings, panels: f.panels, shape: f.shape, speakers: f.spk,
+      R: F.R, wall: F.wall, deg: F.deg, tilt: F.tilt, tiltAz: F.tiltAz, map: ui.map,
+      rings: f.rings, panels: f.panels, shape: f.shape, speakers: f.spk,
       projectors: f.circ, exits: f.exits, grid: F.step, show: F.show,
       items: F.items.map(function (it) {
         var t = T[it.t];
@@ -471,21 +510,33 @@ render();
                  c: FP.corners(it), fill: F.show.colour ? t.c : "#fff" };
       })
     });
-    var cm = SD.camera({ R: F.R, yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist, fov: cam.fov, w: w, h: h });
+    /* a leaning dome is a taller room, so the camera stands back and looks higher to hold it */
+    var lean = Math.sin((F.tilt || 0) * DEG);
+    var cm = SD.camera({ R: F.R, yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist * (1 + .55 * lean), fov: cam.fov,
+                         target: [0, 0, F.R * (.35 + .6 * lean)], w: w, h: h });
     paint(ctx, SD.project(sc.ground, cm));
     paint(ctx, SD.project(sc.solids, cm));
-    var lb = SD.projectLabels(sc.labels, cm);
-    ctx.font = "10px Arial,Helvetica,sans-serif";
+    var lb = SD.projectLabels(sc.labels, cm), kept = [];
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     lb.forEach(function (l) {
+      /* the rig's own labels are numbered, so where two of them would sit on top of each other the
+         farther one steps aside and the near one keeps its number readable */
+      if (l.kind === "dev") {
+        /* a speaker on the far side of the screen is drawn through it; its number need not be */
+        if (l.n && l.n[0] * (cm.pos[0] - l.p[0]) + l.n[1] * (cm.pos[1] - l.p[1]) + l.n[2] * (cm.pos[2] - l.p[2]) <= 0) return;
+        for (var i = 0; i < kept.length; i++) if (Math.hypot(kept[i][0] - l.x, kept[i][1] - l.y) < 14) return;
+        kept.push([l.x, l.y]);
+      }
+      ctx.font = (l.kind === "dev" ? "9px" : "10px") + " Arial,Helvetica,sans-serif";
       ctx.lineWidth = 3;
       ctx.strokeStyle = "#fff";
       ctx.strokeText(l.text, l.x, l.y);
       ctx.fillStyle = "#000";
       ctx.fillText(l.text, l.x, l.y);
     });
-    say("gst", F.R + " m · wall " + F.wall + " m · " + F.deg + "° · " + f.spk.length + " speakers · " +
+    say("gst", F.R + " m · wall " + F.wall + " m · " + F.deg + "°" +
+              (F.tilt ? " · tilt " + F.tilt + "° at " + F.tiltAz + "°" : "") + " · " + f.spk.length + " speakers · " +
               f.circ.length + " projectors · " + f.exits.length + " exits · " + F.items.length + " items");
   }
   function gmove(e) {
@@ -560,6 +611,8 @@ render();
     F.R = R;
     F.wall = Math.max(0, Math.min(R, parseFloat($("fWa").value) || 0));
     F.deg = FP.degrees(parseFloat($("dG").value));
+    F.tilt = FP.tiltDeg(parseFloat($("dT").value));
+    F.tiltAz = FP.norm360(parseFloat($("dTa").value) || 0);
     F.step = Math.max(.05, parseFloat($("fS").value) || .5);
     F.items.forEach(function (it) { FP.clampIn(it, F.R); });
     persist(); drawFloor(); draw3d(); fields();
@@ -620,6 +673,7 @@ render();
       var d = j.dome || (j.app === "sat-dome-master" ? j.state : null);
       if (d && d.spk && d.lfe) {
         S = Object.assign(def(), d, keep());
+        fixRig();
         if (!S.spk0 || S.spk0.length !== S.spk.length) S.spk0 = S.spk.map(function (q) { return q.n; });
         store(); render();
       }
@@ -716,7 +770,7 @@ render();
     $(p[0]).onchange = function () { F.show[p[1]] = $(p[0]).checked ? 1 : 0; persist(); drawFloor(); };
   });
   ["fx", "fy", "fw", "fd", "frt"].forEach(function (id) { $(id).onchange = function () { push(); field(id); }; });
-  $("dG").onchange = function () { push(); room(); };
+  ["dG", "dT", "dTa"].forEach(function (id) { $(id).onchange = function () { push(); room(); }; });
   ["gR", "gWa", "dR", "dW"].forEach(function (id) {
     $(id).onchange = function () {
       $(/W$/.test(id) ? "fWa" : "fR").value = $(id).value;
@@ -789,15 +843,45 @@ render();
     var tot = 0, rings = [];
     S.spk.forEach(function (r) { tot += r.n; rings.push(r.n); });
     setv("dR", F.R); setv("dW", F.wall); setv("dG", F.deg);
+    setv("dT", F.tilt, 0); setv("dTa", F.tiltAz, 0);
     setv("dSp", tot); setv("dPr", S.circ.length);
     $("dSh").value = dome.shape(S);
-    say("dst", dome.panelCount(N) + " panels · " + S.spk.length + " rings " + rings.join("·") +
-        " = " + tot + " speakers · " + S.circ.length + " projectors");
+    var rs = S.rig.spk, rp = S.rig.prj;
+    $("dSm").value = rs.mode; $("dPm").value = rp.mode;
+    setv("dSr", rs.r); setv("dSs", rs.span); setv("dSa", rs.at);
+    setv("dPr2", rp.r); setv("dPs", rp.span); setv("dPa", rp.at);
+    ["dSr", "dSs", "dSa"].forEach(function (k) { $(k).disabled = rs.mode !== "round"; });
+    ["dPr2", "dPs", "dPa"].forEach(function (k) { $(k).disabled = rp.mode !== "round"; });
+    say("dst", dome.panelCount(N) + " panels · " +
+        (rs.mode === "round"
+          ? tot + " speakers round one ring at " + rs.r + "% · " + rs.span + "° about " + rs.at + "°"
+          : tot + " speakers over " + S.spk.length + " rings " + rings.join("·")) + " · " +
+        (rp.mode === "round"
+          ? S.circ.length + " projectors round one circle at " + rp.r + "% · " + rp.span + "° about " + rp.at + "°"
+          : S.circ.length + " projectors"));
   }
   /* A number put back where it was leaves the state alone, so nothing here rewrites a rig that is
      already the one asked for. Each change is one step of the master's own undo. */
   function domeDone() { store(); render(); drawFloor(); draw3d(); fields(); }
+  /* The rig, laid the way the fields ask: one ring of `n` at the ring's radius, over its span. */
+  function buildSpk() {
+    var g = S.rig.spk, tpl = S.spk[S.spk.length - 1] || {};
+    S.spk = [dome.round(parseFloat($("dSp").value), g, tpl)];
+    domeDone();
+  }
+  function buildPrj() {
+    var g = S.rig.prj, dia = (S.circ[0] || {}).dia || 1.5;
+    S.circ = dome.around(parseFloat($("dPr").value), { r: g.r, span: g.span, at: g.at, dia: dia });
+    domeDone();
+  }
   function domeSpk() {
+    if (S.rig.spk.mode === "round") {
+      var n = Math.max(1, Math.round(parseFloat($("dSp").value) || 0));
+      if (S.spk.length === 1 && S.spk[0].n === n) { domeFields(); return; }
+      pushH(snapS());
+      buildSpk();
+      return;
+    }
     if (!S.spk0 || S.spk0.length !== S.spk.length) S.spk0 = S.spk.map(function (r) { return r.n; });
     var want = dome.speakers(S.spk, parseFloat($("dSp").value), S.spk0);
     if (!want.length || want.join() === S.spk.map(function (r) { return r.n; }).join()) { domeFields(); return; }
@@ -806,11 +890,61 @@ render();
     domeDone();
   }
   function domePr() {
+    if (S.rig.prj.mode === "round") {
+      var n = Math.max(1, Math.round(parseFloat($("dPr").value) || 0));
+      if (S.circ.length === n) { domeFields(); return; }
+      pushH(snapS());
+      buildPrj();
+      return;
+    }
     var want = dome.projectors(S.circ, parseFloat($("dPr").value));
     if (!want.length || JSON.stringify(want) === JSON.stringify(S.circ)) { domeFields(); return; }
     pushH(snapS());
     S.circ = want;
     domeDone();
+  }
+  /* The two ways to lay a rig, side by side: switching takes the rig that is there apart into the
+     one asked for and puts it aside, so switching back leaves the circles where they were. */
+  function modeSpk() {
+    var m = $("dSm").value === "round" ? "round" : "rings", g = S.rig.spk;
+    if (m === g.mode) { domeFields(); return; }
+    pushH(snapS());
+    if (m === "round") {
+      g.rings = S.spk.map(function (r) { return { n: r.n, r: r.r, o: r.o, w: r.w, h: r.h, cap: r.cap }; });
+      g.r = (S.spk.length && S.spk[S.spk.length - 1].r) || 80;
+      g.mode = "round";
+      buildSpk();
+    } else {
+      var base = g.rings && g.rings.length ? g.rings : def().spk;
+      S.spk = base.map(function (r) { return { n: r.n, r: r.r, o: r.o, w: r.w, h: r.h, cap: r.cap }; });
+      g.mode = "rings";
+      domeDone();
+    }
+  }
+  function modePrj() {
+    var m = $("dPm").value === "round" ? "round" : "rings", g = S.rig.prj;
+    if (m === g.mode) { domeFields(); return; }
+    pushH(snapS());
+    if (m === "round") {
+      g.circ = S.circ.map(function (q) { return { d: q.d, dia: q.dia, az: q.az }; });
+      g.r = (S.circ.length && S.circ[0].d) || 45;
+      g.mode = "round";
+      buildPrj();
+    } else {
+      S.circ = (g.circ && g.circ.length ? g.circ : def().circ).map(function (q) { return { d: q.d, dia: q.dia, az: q.az }; });
+      g.mode = "rings";
+      domeDone();
+    }
+  }
+  /* A radius, a span or a centre typed into a rig that is round is the same ring, laid again. */
+  function rigField(kind, id) {
+    var g = S.rig[kind], v = parseFloat($(id).value);
+    if (!isFinite(v)) { domeFields(); return; }
+    pushH(snapS());
+    if (id === "dSr" || id === "dPr2") g.r = Math.max(0, Math.min(100, v));
+    else if (id === "dSs" || id === "dPs") g.span = Math.max(1, Math.min(360, v));
+    else g.at = FP.norm360(v);
+    kind === "spk" ? buildSpk() : buildPrj();
   }
   function domeShape() {
     var sh = $("dSh").value === "tri" ? "tri" : "quad";
@@ -821,7 +955,15 @@ render();
   }
   $("dSp").onchange = domeSpk;
   $("dPr").onchange = domePr;
+  $("dSm").onchange = modeSpk;
+  $("dPm").onchange = modePrj;
   $("dSh").onchange = domeShape;
+  ["dSr", "dSs", "dSa"].forEach(function (id) {
+    $(id).onchange = function () { rigField("spk", id); };
+  });
+  ["dPr2", "dPs", "dPa"].forEach(function (id) {
+    $(id).onchange = function () { rigField("prj", id); };
+  });
 
   addEventListener("resize", function () { fitFloor(); fitDome(); draw3d(); });
   /* Capture, and stopped here: the master's own ctrl+z listens on window too, and an undo in the
@@ -858,6 +1000,7 @@ render();
   F = saved || FP.def();
   F.show = { floor: 1, grid: 1, names: 1, colour: 1, walls: 1, dome: 1, seams: 1, speakers: 1, projectors: 1, exits: 1, items: 1 };
   F.sel = null;
+  window.domeFields = domeFields;      // the master's own drags report back to this pane
   view("d");
   bankNote();
 })();

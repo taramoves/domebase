@@ -44,8 +44,11 @@
   /* The screen's span across the room, in degrees: 180 is a hemisphere. A screen past a hemisphere
      hangs below the horizon; a shallower one stops above it. Anything typed is read to a screen. */
   function degrees(v) { return fin(v) && v >= 60 && v <= 340 ? v : 180; }
+  /* How far the dome leans off the room's vertical, in degrees, and the azimuth it leans toward. A
+     dome stands at 0; a tilted one is a room like any other, and the number is the room's own. */
+  function tiltDeg(v) { return fin(v) ? Math.min(70, Math.max(0, v)) : 0; }
 
-  function def() { return { R: 10, wall: 0, deg: 180, step: 0.5, next: 1, items: [] }; }
+  function def() { return { R: 10, wall: 0, deg: 180, tilt: 0, tiltAz: 0, step: 0.5, next: 1, items: [] }; }
 
   /* the item's own frame: s its right hand, f the way it faces */
   function axes(it) {
@@ -229,6 +232,7 @@
       units: "metres; x east, y back; rot the way an item faces, degrees clockwise from the back",
       floor: {
         R: r3(F.R), wall: r3(F.wall), deg: Math.round(F.deg * 10) / 10, step: r3(F.step),
+        tilt: Math.round(F.tilt * 10) / 10, tiltAz: Math.round(norm360(F.tiltAz) * 10) / 10,
         items: F.items.map(function (it) {
           return { t: it.t, x: r3(it.x), y: r3(it.y), w: r3(it.w), d: r3(it.d),
                    rot: Math.round(norm360(it.rot) * 10) / 10 };
@@ -246,6 +250,8 @@
     if (fin(s.R) && s.R > 0) F.R = Math.min(1000, s.R);
     if (fin(s.wall) && s.wall >= 0) F.wall = Math.min(F.R, s.wall);
     if (fin(s.deg)) F.deg = degrees(s.deg);
+    if (fin(s.tilt)) F.tilt = tiltDeg(s.tilt);
+    if (fin(s.tiltAz)) F.tiltAz = norm360(s.tiltAz);
     if (fin(s.step) && s.step > 0) F.step = s.step;
     for (i = 0; i < s.items.length; i++) {
       var q = s.items[i];
@@ -268,6 +274,6 @@
     az: az, radius: radius, clampIn: clampIn, move: move, turn: turn, resize: resize, ring: ring,
     layout: layout,
     hit: hit, pix: pix, m2p: m2p, p2m: p2m, snap: snap, norm360: norm360, degrees: degrees,
-    out: out, load: load
+    tiltDeg: tiltDeg, out: out, load: load
   };
 });

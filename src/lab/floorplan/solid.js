@@ -16,6 +16,11 @@
    r% of the angle from the zenith, which is the frame this page's own test pattern is drawn in;
    `plan` puts it at the horizontal radius r% of R, which is what a plan seen from above shows.
 
+   `tilt` leans the screen off the room's vertical toward the azimuth `tiltAz`: every reading turns
+   about the horizontal axis across the lean, and the whole screen then rises so its rim's lowest
+   point rests on the wall. A tilted dome is a room like any other — the floor, the wall and the
+   items stay where they are, the screen leans over them, and its plan is the ellipse its rim makes.
+
    scene() returns solids, project() returns screen coordinates, and painter's rule is the page's:
    the floor is ground and is drawn first — nothing above the plane can be behind it — and
    everything else is drawn far to near. No dependencies, no DOM, so work/lab/check_floor.cjs can
@@ -27,6 +32,9 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   var D = Math.PI / 180, TAU = Math.PI * 2;
   var GREY = "#c9c9c9", INK = "#000", PAPER = "#fff", FILL = "#efefef";
+  /* the master's own two rig colours, so a speaker and a projector read apart in the room:
+     the plate's orange for sound, the hover blue for light */
+  var SPK = "#ff8a3d", PRJ = "#2f6fed";
 
   function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
   function addv(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
@@ -59,6 +67,38 @@
     return [Rs * sn * Math.sin(a), Rs * sn * Math.cos(a), zc + Rs * Math.cos(t)];
   }
   function rim(az, R, z) { var a = az * D; return [R * Math.sin(a), R * Math.cos(a), z || 0]; }
+
+  /* The dome tilted: `tilt` degrees off the room's vertical, its axis leaning toward `tiltAt`. Every
+     reading of the master turns about the horizontal axis across the lean, then the whole screen
+     rises by R.sin(tilt), so its rim's lowest point sits on the wall and nothing goes through the
+     floor. A dome standing upright is the same numbers with nothing to do: the lean is 0. */
+  function lean(spec) {
+    var t = Math.max(0, Math.min(70, spec.tilt || 0)) * D;
+    var at = spec.tiltAz == null ? (spec.tiltAt || 0) : spec.tiltAz;
+    var a = at * D;
+    return { s: Math.sin(t), c: Math.cos(t), d: [Math.sin(a), Math.cos(a), 0], at: at,
+             e: [Math.cos(a), -Math.sin(a), 0], lift: (spec.R || 0) * Math.sin(t), wall: spec.wall || 0 };
+  }
+  /* A vector turned about that axis. The frame is (d along the lean, e across it, z up), and the turn
+     only mixes d with z, so the part across the lean comes back untouched. */
+  function turn(v, L) {
+    var a = dot(v, L.d), w = v[2];
+    return addv(addv(mul(L.d, a * L.c + w * L.s), mul(L.e, dot(v, L.e))), [0, 0, w * L.c - a * L.s]);
+  }
+  /* A reading leaned about the rim's centre and lifted with the rest of the screen */
+  function tilted(p, L) {
+    var v = turn([p[0], p[1], p[2] - L.wall], L);
+    return [v[0], v[1], v[2] + L.wall + L.lift];
+  }
+  /* Where the rim stands over the wall at an azimuth: on the wall at the low point of the lean, two
+     R.sin(tilt) over it at the high point, and the wall's top edge follows it. */
+  function rimZ(az, L) { return L.wall + L.lift * (1 - Math.cos((az - (L.at || 0)) * D)); }
+
+  /* A master reading as the plan of it: the horizontal radius is the ring's percentage of R, which
+     is what the plan has always drawn, and a tilt turns that reading where the screen turns. */
+  function planPoint(az, pct, spec) {
+    return tilted(sph(az, pct, "plan", spec.R, spec.wall || 0, spec.deg || 180), lean(spec));
+  }
 
   function ringPts(n, R, z, az0) {
     var out = [], i;
@@ -95,6 +135,20 @@
   function patchPts(f, w, h) {
     var t = mul(f.t, w / 2), u = mul(f.u, h / 2);
     return [addv(addv(f.p, t), u), sub(addv(f.p, t), u), sub(sub(f.p, t), u), addv(sub(f.p, t), u)];
+  }
+
+  /* That marker stood up into a box: the same four corners on the surface, the same four out along
+     the normal at `e`, four flanks and a face. A speaker and a projector are the two things on the
+     screen that a white patch cannot tell apart, so each is one of these in its own colour. */
+  function prism(f, w, h, e, fill, side) {
+    var base = patchPts(f, w, h), n = mul(f.n, e), top = [], out = [], i;
+    for (i = 0; i < 4; i++) top.push(addv(base[i], n));
+    for (i = 0; i < 4; i++) {
+      var j = (i + 1) % 4;
+      out.push(face([base[i], base[j], top[j], top[i]], side === undefined ? fill : side));
+    }
+    out.push(face(top, fill));
+    return out;
   }
 
   /* A tint mixed toward white (k > 0) or black (k < 0). A solid's flank takes its top's own tint
@@ -143,11 +197,14 @@
      speakers, projectors, exits, items and switches. */
   function scene(spec) {
     var R = spec.R, wall = spec.wall || 0, map = spec.map, show = spec.show || {};
-    var deg = spec.deg || 180;
+    var deg = spec.deg || 180, L = lean(spec);
     var ground = [], solids = [], labels = [], i, j;
-    /* every reading of the master lands on the same screen */
-    function at(az, pct) { return sph(az, pct, map, R, wall, deg); }
-    function fr(az, pct) { return frame(az, pct, map, R, wall, deg); }
+    /* every reading of the master lands on the same screen, and the screen leans as one */
+    function at(az, pct) { return tilted(sph(az, pct, map, R, wall, deg), L); }
+    function fr(az, pct) {
+      var f = frame(az, pct, map, R, wall, deg), n = turn(f.n, L), t = turn(f.t, L);
+      return { p: tilted(f.p, L), n: n, t: t, u: cross(n, t) };
+    }
 
     /* the floor, and the grid ruled on it */
     if (show.floor !== 0) {
@@ -163,9 +220,13 @@
       }
     }
 
-    /* the wall the screen springs from */
-    if (wall > 0.02 && show.walls !== 0) {
-      for (i = 0; i < 24; i++) solids.push(seg(rim(i * 15, R, 0), rim(i * 15, R, wall), INK, 0.6));
+    /* the wall the screen springs from, its top edge following the rim it carries; a tilted dome
+       over a floor and no wall still shows the skirt that carries it */
+    if ((wall > 0.02 || (spec.tilt || 0) > 0) && show.walls !== 0) {
+      for (i = 0; i < 24; i++) {
+        var wa = i * 15;
+        solids.push(seg(rim(wa, R, 0), rim(wa, R, rimZ(wa, L)), INK, 0.6));
+      }
     }
 
     /* the panels: the rings, and each band's own seams between its two rings */
@@ -193,23 +254,26 @@
       }
     }
 
-    /* the speakers of the master: a patch on the surface, its own size in % of the radius,
-       LFE filled where the resting speaker is not */
+    /* the speakers of the master, orange cubes standing off the surface: their own size in % of the
+       radius, the LFE one in ink where the resting speaker is orange, and each its own number so a
+       speaker on the dome can be found on the master */
     if (show.speakers !== 0) {
-      (spec.speakers || []).forEach(function (s) {
+      (spec.speakers || []).forEach(function (s, si) {
         if (s.hide) return;
         var f = fr(s.az, s.r);
-        var w = (s.w || 8) / 100 * R, h = (s.h || 10) / 100 * R;
-        solids.push(face(patchPts(f, w, h), s.lfe ? INK : PAPER, INK, 0.8));
+        var w = (s.w || 8) / 100 * R, h = (s.h || 10) / 100 * R, e = Math.min(w, h) * .35;
+        prism(f, w, h, e, s.lfe ? INK : SPK, s.lfe ? INK : shade(SPK, -.18)).forEach(function (p) { solids.push(p); });
+        if (show.names !== 0) labels.push({ p: addv(f.p, mul(f.n, e)), n: f.n, text: "s" + (si + 1), kind: "dev" });
       });
     }
 
-    /* the projectors: a cross at each of the master's circles */
+    /* the projectors, blue cubes on the circles the master hangs them in: one look each, so a lens
+       patch and a speaker at the same ring are not the same white square */
     if (show.projectors !== 0) {
-      (spec.projectors || []).forEach(function (g) {
-        var f = fr(g.az, g.r), k = 0.45;
-        solids.push(seg(addv(f.p, mul(f.t, -k)), addv(f.p, mul(f.t, k)), INK, 1));
-        solids.push(seg(addv(f.p, mul(f.u, -k)), addv(f.p, mul(f.u, k)), INK, 1));
+      (spec.projectors || []).forEach(function (g, gi) {
+        var f = fr(g.az, g.r), d = Math.max(.3, (g.dia || 1.5) / 100 * R * 2.5);
+        prism(f, d, d, d * .6, PRJ, shade(PRJ, -.18)).forEach(function (p) { solids.push(p); });
+        if (show.names !== 0) labels.push({ p: addv(f.p, mul(f.n, d * .6)), n: f.n, text: "p" + (gi + 1), kind: "dev" });
       });
     }
 
@@ -290,13 +354,14 @@
     list.forEach(function (l) {
       var q = cam.at(l.p);
       if (!(q.d > 0.05)) return;
-      out.push({ x: q.x, y: q.y, d: q.d, text: l.text, kind: l.kind });
+      out.push({ x: q.x, y: q.y, d: q.d, text: l.text, kind: l.kind, p: l.p, n: l.n });
     });
     out.sort(function (a, b) { return b.d - a.d; });
     return out;
   }
 
-  return { sph: sph, rim: rim, ringPts: ringPts, arcs: arcs, frame: frame, patchPts: patchPts,
+  return { sph: sph, rim: rim, ringPts: ringPts, arcs: arcs, frame: frame, patchPts: patchPts, prism: prism,
+           lean: lean, tilted: tilted, rimZ: rimZ, planPoint: planPoint, SPK: SPK, PRJ: PRJ,
            box: box, cyl: cyl, shade: shade, scene: scene, camera: camera, project: project,
            projectLabels: projectLabels, sub: sub, dot: dot, cross: cross, unit: unit, mul: mul };
 });
